@@ -1,5 +1,7 @@
 package hub
 
+import "time"
+
 // Hub maintains the set of active clients and broadcasts messages
 // to the clients.
 type Hub struct {
@@ -19,17 +21,22 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
+	ticket := time.NewTicker(time.Second * 1)
+	playersCount := -1
 	for {
 		select {
+		case <-ticket.C:
+			if playersCount != len(h.clients) {
+				playersCount = len(h.clients)
+				println("Players: ", playersCount)
+			}
 		case client := <-h.register:
 			h.clients[client] = true
-			println("Players: ", len(h.clients))
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
-			println("Players: ", len(h.clients))
 		case message := <-h.broadcast:
 			for client := range h.clients {
 				select {
