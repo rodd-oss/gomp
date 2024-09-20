@@ -78,21 +78,21 @@ func (world *World) Evolve() {
 		select {
 		case <-ticker.C:
 			world.mx.Lock()
-			for _, unit := range world.Units {
-				if unit.Action == UnitActionMove {
-					switch unit.Direction {
+			for i := range world.Units {
+				if world.Units[i].Action == UnitActionMove {
+					switch world.Units[i].Direction {
 					case Direction_left:
-						unit.X -= unit.Speed
-						unit.Side = Direction_left
+						world.Units[i].X -= world.Units[i].Speed
+						world.Units[i].Side = Direction_left
 					case Direction_right:
-						unit.X += unit.Speed
-						unit.Side = Direction_right
+						world.Units[i].X += world.Units[i].Speed
+						world.Units[i].Side = Direction_right
 					case Direction_up:
-						unit.Y -= unit.Speed
+						world.Units[i].Y -= world.Units[i].Speed
 					case Direction_down:
-						unit.Y += unit.Speed
+						world.Units[i].Y += world.Units[i].Speed
 					default:
-						log.Println("UNKNOWN DIRECTION: ", unit.Direction)
+						log.Println("UNKNOWN DIRECTION: ", world.Units[i].Direction)
 					}
 				}
 			}
