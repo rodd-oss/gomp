@@ -53,7 +53,9 @@ func (c *Client) readPump(world *engine.World) {
 				Exit: &engine.EventExit{PlayerId: c.id},
 			},
 		}
+		world.Mx.Lock()
 		message, err := proto.Marshal(event)
+		world.Mx.Unlock()
 		if err != nil {
 			log.Println(err)
 		}
@@ -75,7 +77,9 @@ func (c *Client) readPump(world *engine.World) {
 			break
 		}
 		event := &engine.Event{}
+		world.Mx.Lock()
 		err = proto.Unmarshal(message, event)
+		world.Mx.Unlock()
 		if err != nil {
 			return
 		}
@@ -150,7 +154,9 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 			},
 		},
 	}
+	world.Mx.Lock()
 	message, err := proto.Marshal(event)
+	world.Mx.Unlock()
 	if err != nil {
 		//todo: remove unit
 		log.Println(err)
@@ -164,11 +170,14 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 			Connect: &engine.EventConnect{Unit: unit},
 		},
 	}
+	world.Mx.Lock()
 	message, err = proto.Marshal(event)
+	world.Mx.Unlock()
 	if err != nil {
 		//todo: remove unit
 		log.Println(err)
 	}
+
 	hub.broadcast <- message
 
 	// Allow collection of memory referenced by the caller by doing all work

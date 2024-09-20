@@ -11,7 +11,7 @@ import (
 
 // World represents game state
 type World struct {
-	mx      sync.Mutex
+	Mx      sync.Mutex
 	Replica bool
 	Units   map[string]*Unit
 	MyID    string
@@ -36,8 +36,8 @@ func (world *World) AddPlayer() string {
 }
 
 func (world *World) HandleEvent(event *Event) {
-	world.mx.Lock()
-	defer world.mx.Unlock()
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
 
 	switch event.GetType() {
 	case Event_type_connect:
@@ -83,7 +83,7 @@ func (world *World) Evolve() {
 	for {
 		select {
 		case <-ticker.C:
-			world.mx.Lock()
+			world.Mx.Lock()
 			for i := range world.Units {
 				if world.Units[i].Action == UnitActionMove {
 					switch world.Units[i].Direction {
@@ -102,7 +102,7 @@ func (world *World) Evolve() {
 					}
 				}
 			}
-			world.mx.Unlock()
+			world.Mx.Unlock()
 		}
 	}
 }

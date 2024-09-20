@@ -165,7 +165,9 @@ func main() {
 			}
 
 			event := &engine.Event{}
+			world.Mx.Lock()
 			err = proto.Unmarshal(message, event)
+			world.Mx.Unlock()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -295,7 +297,9 @@ func handleKeyboard(c *websocket.Conn) {
 
 	if event.Type == engine.Event_type_move {
 		if prevKey != lastKey {
+			world.Mx.Lock()
 			message, err := proto.Marshal(event)
+			world.Mx.Unlock()
 			if err != nil {
 				log.Println(err)
 				return
@@ -314,7 +318,9 @@ func handleKeyboard(c *websocket.Conn) {
 					Idle: &engine.EventIdle{PlayerId: world.MyID},
 				},
 			}
+			world.Mx.Lock()
 			message, err := proto.Marshal(event)
+			world.Mx.Unlock()
 			if err != nil {
 				log.Println(err)
 				return
