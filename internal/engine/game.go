@@ -26,7 +26,7 @@ func (world *World) AddPlayer() string {
 		Frame:  int32(rnd.Intn(4)),
 		Skin:   skins[rnd.Intn(len(skins))],
 		Action: "idle",
-		Speed:  1,
+		Speed:  2,
 	}
 	world.Units[id] = unit
 
@@ -67,7 +67,7 @@ func (world *World) HandleEvent(event *Event) {
 }
 
 func (world *World) Evolve() {
-	ticker := time.NewTicker(time.Second / 60)
+	ticker := time.NewTicker(time.Second / 30)
 
 	for {
 		select {
