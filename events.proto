@@ -1,0 +1,63 @@
+syntax="proto3";
+
+package tinyrpg;
+
+enum Direction {
+    left = 0;
+    right = 1;
+    up = 2;
+    down = 3;
+}
+
+message Unit {
+    string id = 1;
+    double x = 2;
+    double y = 3;
+    int32 frame = 4;
+    string skin = 5;
+    string action = 6;
+    double speed = 7;
+    Direction direction = 8;
+    Direction side = 9;
+}
+
+message Event {
+    enum Type {
+        type_init = 0;
+        type_connect = 1;
+        type_exit = 2;
+        type_idle = 3;
+        type_move = 4;
+        type_empty = 5;
+    }
+    Type type = 1;
+    oneof data {
+        EventInit init = 2;
+        EventConnect connect = 3;
+        EventExit exit = 4;
+        EventIdle idle = 5;
+        EventMove move = 6;
+    }
+}
+
+message EventInit {
+    string player_id = 1;
+    map<string, Unit> units = 2;
+}
+
+message EventConnect {
+    Unit unit = 1;
+}
+
+message EventExit {
+    string player_id = 1;
+}
+
+message EventIdle {
+    string player_id = 1;
+}
+
+message EventMove {
+    string player_id = 1;
+    Direction direction = 2;
+}

@@ -1,0 +1,17 @@
+version: "3"
+
+tasks:
+  dev:
+    deps: [server, client]
+
+  server:
+    cmds:
+      - go run ./cmd/server *go
+
+  client:
+    cmds:
+      - go run ./cmd/client main.go
+
+  web-client:
+    cmds:
+      - go run github.com/hajimehoshi/wasmserve@latest ./cmd/client/main.go
