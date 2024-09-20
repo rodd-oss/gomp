@@ -39,7 +39,7 @@ func main() {
 			return strings.Contains(c.Path(), "ws") // Change "metrics" for your own path
 		},
 	}))
-	e.Renderer = web.New()
+	e.Renderer = web.UiTemplates
 
 	e.Static("/static", "assets")
 	e.Static("/dist", "./.dist")

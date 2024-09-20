@@ -15,8 +15,4 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
-func New() *Template {
-	return &Template{
-		templates: template.Must(template.ParseGlob("web/src/*.html")),
-	}
-}
+var UiTemplates *Template

@@ -5,7 +5,7 @@ tmp_dir = ".tmp"
 [build]
   args_bin = []
   bin = "./.tmp/main"
-  cmd = "task build-web-client && go build -o ./.tmp/main ./cmd/server/main.go"
+  cmd = "task build-web-client && go build -tags=dev  -o ./.tmp/main ./cmd/server/main.go"
   delay = 1000
   exclude_dir = ["assets", ".tmp", "vendor", "testdata", ".dist"]
   exclude_file = []
