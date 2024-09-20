@@ -74,12 +74,12 @@ func (c *Client) readPump(world *engine.World) {
 			}
 			break
 		}
-		c.hub.broadcast <- message // ?
 		event := &engine.Event{}
 		err = proto.Unmarshal(message, event)
 		if err != nil {
-			log.Println(err)
+			return
 		}
+		c.hub.broadcast <- message
 		world.HandleEvent(event)
 	}
 }
