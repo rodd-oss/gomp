@@ -1,8 +1,18 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"net/http"
+	"os"
+	"strings"
+	"tomb_mates/internal/hub"
+	"tomb_mates/web"
+
+	"github.com/gorilla/sessions"
 	engine "github.com/jilio/tomb_mates"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/time/rate"
 )
 
 var world *engine.World
@@ -15,18 +25,51 @@ func init() {
 }
 
 func main() {
+	e := echo.New()
+
+	e.Use(middleware.Logger())
+	// e.Use(middleware.Recover())
+
+	e.Use(middleware.BodyLimit("2M"))
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(20))))
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte(getEnv("AUTH_SECRET", "jdkljskldjslk")))))
+	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level: 5,
+		Skipper: func(c echo.Context) bool {
+			return strings.Contains(c.Path(), "ws") // Change "metrics" for your own path
+		},
+	}))
+	e.Renderer = web.New()
+
+	e.Static("/static", "assets")
+	e.Static("/dist", "./.dist")
+
 	go world.Evolve()
 
-	hub := newHub()
-	go hub.run()
+	h := hub.NewHub()
+	go h.Run()
 
-	r := gin.New()
-	r.GET("/ws", ginWsServe(hub, world))
-	r.Run(":3000")
+	// r.GET("/ws", ginWsServe(hub, world))
+	e.GET("/", func(c echo.Context) error {
+
+		return c.Render(http.StatusOK, "IndexPage", "HakaHata")
+	})
+
+	e.GET("/ws", wsHandler(h, world))
+
+	e.Logger.Fatal(e.Start(":3000"))
 }
 
-func ginWsServe(hub *Hub, world *engine.World) gin.HandlerFunc {
-	return gin.HandlerFunc(func(c *gin.Context) {
-		serveWs(hub, world, c.Writer, c.Request)
-	})
+func wsHandler(h *hub.Hub, world *engine.World) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		hub.ServeWs(h, world, c.Response().Writer, c.Request())
+		return nil
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
