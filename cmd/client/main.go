@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"log"
 	"os"
 	"sort"
 
+	"github.com/coder/websocket"
 	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	engine "github.com/jilio/tomb_mates"
@@ -54,6 +55,10 @@ type Game struct {
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
 	// Write your game's logical update.
+	if world.Units[world.MyID] == nil {
+		return nil
+	}
+
 	handleKeyboard(g.Conn)
 
 	return nil
@@ -62,8 +67,15 @@ func (g *Game) Update() error {
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
 func (g *Game) Draw(screen *e.Image) {
+	if world.Units[world.MyID] == nil {
+		return
+	}
+
 	// Write your game's rendering.
 	handleCamera(screen)
+	if camera == nil {
+		return
+	}
 
 	frame++
 
@@ -135,14 +147,20 @@ func main() {
 	go world.Evolve()
 
 	host := getEnv("HOST", "localhost")
-	c, _, _ := websocket.DefaultDialer.Dial("ws://"+host+":3000/ws", nil)
+	url := "ws://" + host + ":3000/ws"
+
+	ws, _, err := websocket.Dial(context.TODO(), url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	go func(c *websocket.Conn) {
-		defer c.Close()
+		defer c.CloseNow()
 
 		for {
-			_, message, err := c.ReadMessage()
+			var _, message, err = c.Read(context.TODO())
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("Error reading message:", err)
 			}
 
 			event := &engine.Event{}
@@ -162,12 +180,12 @@ func main() {
 				}
 			}
 		}
-	}(c)
+	}(ws)
 
 	e.SetRunnableOnUnfocused(true)
 	e.SetWindowSize(config.width, config.height)
 	e.SetWindowTitle(config.title)
-	game := &Game{Conn: c}
+	game := &Game{Conn: ws}
 	if err := e.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
@@ -281,7 +299,11 @@ func handleKeyboard(c *websocket.Conn) {
 				log.Println(err)
 				return
 			}
-			c.WriteMessage(websocket.BinaryMessage, message)
+			err = c.Write(context.Background(), websocket.MessageBinary, message)
+			if err != nil {
+				// ...
+				log.Fatal(err)
+			}
 		}
 	} else {
 		if unit.Action != engine.UnitActionIdle {
@@ -296,7 +318,11 @@ func handleKeyboard(c *websocket.Conn) {
 				log.Println(err)
 				return
 			}
-			c.WriteMessage(websocket.BinaryMessage, message)
+			err = c.Write(context.Background(), websocket.MessageBinary, message)
+			if err != nil {
+				// ...
+				log.Fatal(err)
+			}
 			lastKey = -1
 		}
 	}
