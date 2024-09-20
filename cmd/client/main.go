@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"syscall/js"
 
 	"github.com/coder/websocket"
 	"github.com/golang/protobuf/proto"
@@ -146,8 +147,8 @@ func init() {
 func main() {
 	go world.Evolve()
 
-	host := getEnv("WS_SERVER", "ws://localhost:3000")
-	url := host + "/ws"
+	url := js.Global().Get("document").Get("location").Get("origin").String()
+	url = "ws" + url[4:] + "/ws"
 
 	ws, _, err := websocket.Dial(context.TODO(), url, nil)
 	if err != nil {
@@ -334,5 +335,7 @@ func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
+
+	fmt.Println("Env not found: ", key, " - Using fallback: ", fallback)
 	return fallback
 }
