@@ -146,8 +146,8 @@ func init() {
 func main() {
 	go world.Evolve()
 
-	host := getEnv("HOST", "localhost")
-	url := "ws://" + host + ":3000/ws"
+	host := getEnv("WS_SERVER", "ws://localhost:3000")
+	url := host + "/ws"
 
 	ws, _, err := websocket.Dial(context.TODO(), url, nil)
 	if err != nil {
