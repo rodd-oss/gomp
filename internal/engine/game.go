@@ -34,9 +34,6 @@ func (world *World) AddPlayer() string {
 }
 
 func (world *World) HandleEvent(event *Event) {
-	log.Println(event.GetType())
-	log.Println(event.GetData())
-
 	switch event.GetType() {
 	case Event_type_connect:
 		data := event.GetConnect()
