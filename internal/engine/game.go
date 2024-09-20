@@ -3,6 +3,7 @@ package engine
 import (
 	"log"
 	"math/rand"
+	"sync"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -10,6 +11,7 @@ import (
 
 // World represents game state
 type World struct {
+	mx      sync.Mutex
 	Replica bool
 	Units   map[string]*Unit
 	MyID    string
@@ -34,6 +36,9 @@ func (world *World) AddPlayer() string {
 }
 
 func (world *World) HandleEvent(event *Event) {
+	world.mx.Lock()
+	defer world.mx.Unlock()
+
 	switch event.GetType() {
 	case Event_type_connect:
 		data := event.GetConnect()
