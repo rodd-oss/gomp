@@ -8,8 +8,7 @@ RUN env GOOS=js GOARCH=wasm go build -o dist/.dist/web-client.wasm ./cmd/client/
 RUN cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" dist/.dist/wasm_exec.js
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o dist/app ./cmd/server/main.go
 
-# FROM scratch
-FROM alpine:latest
+FROM scratch
 COPY --from=backend-builder /app/dist /server
 WORKDIR /server
 ENTRYPOINT ["./app"]
