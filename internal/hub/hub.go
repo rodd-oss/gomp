@@ -23,11 +23,13 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			println("Players: ", len(h.clients))
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
+			println("Players: ", len(h.clients))
 		case message := <-h.broadcast:
 			for client := range h.clients {
 				select {
