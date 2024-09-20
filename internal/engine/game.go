@@ -58,12 +58,18 @@ func (world *World) HandleEvent(event *Event) {
 	case Event_type_move:
 		data := event.GetMove()
 		unit := world.Units[data.PlayerId]
+		if unit == nil {
+			return
+		}
 		unit.Action = UnitActionMove
 		unit.Direction = data.Direction
 
 	case Event_type_idle:
 		data := event.GetIdle()
 		unit := world.Units[data.PlayerId]
+		if unit == nil {
+			return
+		}
 		unit.Action = UnitActionIdle
 
 	default:
