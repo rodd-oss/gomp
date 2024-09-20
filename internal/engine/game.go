@@ -77,6 +77,7 @@ func (world *World) Evolve() {
 	for {
 		select {
 		case <-ticker.C:
+			world.mx.Lock()
 			for _, unit := range world.Units {
 				if unit.Action == UnitActionMove {
 					switch unit.Direction {
@@ -95,6 +96,7 @@ func (world *World) Evolve() {
 					}
 				}
 			}
+			world.mx.Unlock()
 		}
 	}
 }
