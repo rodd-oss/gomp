@@ -8,12 +8,12 @@ import (
 	"os"
 	"sort"
 	"syscall/js"
+	"tomb_mates/internal/engine"
 
 	"github.com/coder/websocket"
 	"github.com/golang/protobuf/proto"
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	engine "github.com/jilio/tomb_mates"
 )
 
 type Config struct {

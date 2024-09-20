@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"tomb_mates/internal/engine"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
-	engine "github.com/jilio/tomb_mates"
 )
 
 const (

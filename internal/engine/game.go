@@ -1,4 +1,4 @@
-package tinyrpg
+package engine
 
 import (
 	"log"

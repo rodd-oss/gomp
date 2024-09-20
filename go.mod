@@ -8,7 +8,6 @@ require (
 	github.com/coder/websocket v1.8.12
 	github.com/golang/protobuf v1.5.4
 	github.com/hajimehoshi/ebiten/v2 v2.7.10
-	github.com/jilio/tomb_mates v0.0.0-20231027092247-10fcb3137df8
 	github.com/labstack/echo-contrib v0.17.1
 	github.com/markbates/pkger v0.17.1
 	github.com/satori/go.uuid v1.2.0
@@ -19,10 +18,14 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
 require (

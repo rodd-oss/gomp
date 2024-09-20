@@ -1,6 +1,6 @@
 syntax="proto3";
 
-package tinyrpg;
+package engine;
 
 enum Direction {
     left = 0;

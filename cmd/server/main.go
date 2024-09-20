@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"tomb_mates/internal/engine"
 	"tomb_mates/internal/hub"
 	"tomb_mates/web"
 
 	"github.com/gorilla/sessions"
-	engine "github.com/jilio/tomb_mates"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -27,11 +27,11 @@ func init() {
 func main() {
 	e := echo.New()
 
-	e.Use(middleware.Logger())
-	// e.Use(middleware.Recover())
+	// e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
 	e.Use(middleware.BodyLimit("2M"))
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(20))))
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(60))))
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(getEnv("AUTH_SECRET", "jdkljskldjslk")))))
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
@@ -49,7 +49,6 @@ func main() {
 	h := hub.NewHub()
 	go h.Run()
 
-	// r.GET("/ws", ginWsServe(hub, world))
 	e.GET("/", func(c echo.Context) error {
 
 		return c.Render(http.StatusOK, "IndexPage", "HakaHata")

@@ -2,7 +2,7 @@
 
 // +build !skippkger
 
-package tinyrpg
+package engine
 
 import (
 	"github.com/markbates/pkger"
