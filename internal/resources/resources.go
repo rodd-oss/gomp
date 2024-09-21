@@ -1,11 +1,10 @@
-package engine
+package resources
 
 import (
+	"embed"
+	"fmt"
 	"image"
 	"image/png"
-	"os"
-
-	"github.com/markbates/pkger"
 )
 
 type Frames struct {
@@ -13,47 +12,58 @@ type Frames struct {
 	image.Config
 }
 
-func LoadResources() (map[string]Frames, error) {
+//go:embed **/*.png
+var fs embed.FS
+
+func Load() (frames map[string]Frames, err error) {
 	images := map[string]image.Image{}
 	cfgs := map[string]image.Config{}
 	sprites := map[string]Frames{}
 
-	prefix := "/resources/sprites"
-	err := pkger.Walk(prefix, func(path string, info os.FileInfo, err error) error {
+	prefix := "sprites"
+	dirEntries, err := fs.ReadDir(prefix)
+	if err != nil {
+		return nil, err
+	}
 
-		if info.IsDir() == false {
-			filename := prefix + "/" + info.Name()
-			file, err := pkger.Open(filename)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			img, err := png.Decode(file)
-			if err != nil {
-				return err
-			}
-
-			fileCfg, err := pkger.Open(filename)
-			if err != nil {
-				return err
-			}
-			defer fileCfg.Close()
-
-			cfg, err := png.DecodeConfig(fileCfg)
-			if err != nil {
-				return err
-			}
-
-			images[info.Name()] = img
-			cfgs[info.Name()] = cfg
+	for _, entry := range dirEntries {
+		if entry.IsDir() {
+			continue
 		}
 
-		return nil
-	})
+		filename := prefix + "/" + entry.Name()
+		file, err := fs.Open(filename)
+		if err != nil {
+			fmt.Println("Error opening file")
+			return nil, err
+		}
+		defer file.Close()
+
+		img, err := png.Decode(file)
+		if err != nil {
+			fmt.Println("Error decoding file")
+			return nil, err
+		}
+
+		fileCfg, err := fs.Open(filename)
+		if err != nil {
+			fmt.Println("Error decoding file")
+			return nil, err
+		}
+		defer fileCfg.Close()
+
+		cfg, err := png.DecodeConfig(fileCfg)
+		if err != nil {
+			fmt.Println("Error decoding cfg file")
+			return nil, err
+		}
+
+		images[entry.Name()] = img
+		cfgs[entry.Name()] = cfg
+	}
 
 	if err != nil {
-		return sprites, err
+		return nil, err
 	}
 
 	sprites["big_demon_idle"] = Frames{

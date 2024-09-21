@@ -10,6 +10,7 @@ import (
 	"syscall/js"
 	"tomb_mates/internal/engine"
 	"tomb_mates/internal/protos"
+	"tomb_mates/internal/resources"
 
 	"github.com/coder/websocket"
 	e "github.com/hajimehoshi/ebiten/v2"
@@ -42,7 +43,7 @@ type Camera struct {
 var config *Config
 var world *engine.World
 var camera *Camera
-var frames map[string]engine.Frames
+var frames map[string]resources.Frames
 var frame int
 var lastKey e.Key
 var prevKey e.Key
@@ -134,7 +135,7 @@ func init() {
 	}
 
 	var err error
-	frames, err = engine.LoadResources()
+	frames, err = resources.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -197,7 +198,7 @@ func main() {
 
 func prepareLevelImage() (*e.Image, error) {
 	tileSize := 16
-	level := engine.LoadLevel()
+	level := resources.LoadLevel()
 	width := len(level[0])
 	height := len(level)
 	levelImage := e.NewImage(width*tileSize, height*tileSize)
