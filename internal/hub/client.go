@@ -160,6 +160,7 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		//todo: remove unit
 		log.Println(err)
+		return
 	}
 	conn.WriteMessage(websocket.BinaryMessage, message)
 
@@ -176,6 +177,7 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		//todo: remove unit
 		log.Println(err)
+		return
 	}
 
 	hub.broadcast <- message
