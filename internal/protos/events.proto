@@ -1,6 +1,7 @@
 syntax="proto3";
 
-option go_package = "./protos";
+package protos;
+option go_package = "internal/protos";
 
 enum Direction {
     left = 0;

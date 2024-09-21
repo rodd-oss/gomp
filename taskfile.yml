@@ -20,4 +20,4 @@ tasks:
 
   proto:
     cmds:
-      - protoc --proto_path=internal/protos --go_out=internal/protos --go_opt=paths=source_relative events.proto
+      - protoc --go_out=. internal/**/*.proto
