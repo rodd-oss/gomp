@@ -6,6 +6,7 @@ import (
 	"strings"
 	"tomb_mates/internal/engine"
 	"tomb_mates/internal/hub"
+	"tomb_mates/internal/protos"
 	"tomb_mates/web"
 
 	"github.com/gorilla/sessions"
@@ -20,7 +21,7 @@ var world *engine.World
 func init() {
 	world = &engine.World{
 		Replica: false,
-		Units:   map[string]*engine.Unit{},
+		Units:   map[string]*protos.Unit{},
 	}
 }
 

@@ -17,3 +17,7 @@ tasks:
     cmds:
       - env GOOS=js GOARCH=wasm go build -o ./.dist/web-client.wasm ./cmd/client/main.go
       - cp $(go env GOROOT)/misc/wasm/wasm_exec.js ./.dist
+
+  proto:
+    cmds:
+      - protoc --proto_path=internal/protos --go_out=internal/protos --go_opt=paths=source_relative events.proto

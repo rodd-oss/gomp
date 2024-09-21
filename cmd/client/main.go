@@ -9,11 +9,12 @@ import (
 	"sort"
 	"syscall/js"
 	"tomb_mates/internal/engine"
+	"tomb_mates/internal/protos"
 
 	"github.com/coder/websocket"
-	"github.com/golang/protobuf/proto"
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"google.golang.org/protobuf/proto"
 )
 
 type Config struct {
@@ -28,7 +29,7 @@ type Sprite struct {
 	Frame  int
 	X      float64
 	Y      float64
-	Side   engine.Direction
+	Side   protos.Direction
 	Config image.Config
 }
 
@@ -100,7 +101,7 @@ func (g *Game) Draw(screen *e.Image) {
 	for _, sprite := range sprites {
 		op := &e.DrawImageOptions{}
 
-		if sprite.Side == engine.Direction_left {
+		if sprite.Side == protos.Direction_left {
 			op.GeoM.Scale(-1, 1)
 			op.GeoM.Translate(float64(sprite.Config.Width), 0)
 		}
@@ -129,7 +130,7 @@ func init() {
 
 	world = &engine.World{
 		Replica: true,
-		Units:   map[string]*engine.Unit{},
+		Units:   map[string]*protos.Unit{},
 	}
 
 	var err error
@@ -164,7 +165,7 @@ func main() {
 				log.Fatal("Error reading message:", err)
 			}
 
-			event := &engine.Event{}
+			event := &protos.Event{}
 			world.Mx.Lock()
 			err = proto.Unmarshal(message, event)
 			world.Mx.Unlock()
@@ -174,7 +175,7 @@ func main() {
 
 			world.HandleEvent(event)
 
-			if event.Type == engine.Event_type_connect {
+			if event.Type == protos.Event_type_connect {
 				me := world.Units[world.MyID]
 				camera = &Camera{
 					X:       me.X,
@@ -231,15 +232,15 @@ func handleCamera(screen *e.Image) {
 }
 
 func handleKeyboard(c *websocket.Conn) {
-	event := &engine.Event{}
+	event := &protos.Event{}
 
 	if e.IsKeyPressed(e.KeyA) || e.IsKeyPressed(e.KeyLeft) {
-		event = &engine.Event{
-			Type: engine.Event_type_move,
-			Data: &engine.Event_Move{
-				Move: &engine.EventMove{
+		event = &protos.Event{
+			Type: protos.Event_type_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
-					Direction: engine.Direction_left,
+					Direction: protos.Direction_left,
 				},
 			},
 		}
@@ -249,12 +250,12 @@ func handleKeyboard(c *websocket.Conn) {
 	}
 
 	if e.IsKeyPressed(e.KeyD) || e.IsKeyPressed(e.KeyRight) {
-		event = &engine.Event{
-			Type: engine.Event_type_move,
-			Data: &engine.Event_Move{
-				Move: &engine.EventMove{
+		event = &protos.Event{
+			Type: protos.Event_type_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
-					Direction: engine.Direction_right,
+					Direction: protos.Direction_right,
 				},
 			},
 		}
@@ -264,12 +265,12 @@ func handleKeyboard(c *websocket.Conn) {
 	}
 
 	if e.IsKeyPressed(e.KeyW) || e.IsKeyPressed(e.KeyUp) {
-		event = &engine.Event{
-			Type: engine.Event_type_move,
-			Data: &engine.Event_Move{
-				Move: &engine.EventMove{
+		event = &protos.Event{
+			Type: protos.Event_type_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
-					Direction: engine.Direction_up,
+					Direction: protos.Direction_up,
 				},
 			},
 		}
@@ -279,12 +280,12 @@ func handleKeyboard(c *websocket.Conn) {
 	}
 
 	if e.IsKeyPressed(e.KeyS) || e.IsKeyPressed(e.KeyDown) {
-		event = &engine.Event{
-			Type: engine.Event_type_move,
-			Data: &engine.Event_Move{
-				Move: &engine.EventMove{
+		event = &protos.Event{
+			Type: protos.Event_type_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
-					Direction: engine.Direction_down,
+					Direction: protos.Direction_down,
 				},
 			},
 		}
@@ -295,7 +296,7 @@ func handleKeyboard(c *websocket.Conn) {
 
 	unit := world.Units[world.MyID]
 
-	if event.Type == engine.Event_type_move {
+	if event.Type == protos.Event_type_move {
 		if prevKey != lastKey {
 			world.Mx.Lock()
 			message, err := proto.Marshal(event)
@@ -312,10 +313,10 @@ func handleKeyboard(c *websocket.Conn) {
 		}
 	} else {
 		if unit.Action != engine.UnitActionIdle {
-			event = &engine.Event{
-				Type: engine.Event_type_idle,
-				Data: &engine.Event_Idle{
-					Idle: &engine.EventIdle{PlayerId: world.MyID},
+			event = &protos.Event{
+				Type: protos.Event_type_idle,
+				Data: &protos.Event_Idle{
+					Idle: &protos.EventIdle{PlayerId: world.MyID},
 				},
 			}
 			world.Mx.Lock()

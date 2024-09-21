@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+	"tomb_mates/internal/protos"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -13,7 +14,7 @@ import (
 type World struct {
 	Mx      sync.Mutex
 	Replica bool
-	Units   map[string]*Unit
+	Units   map[string]*protos.Unit
 	MyID    string
 }
 
@@ -21,7 +22,7 @@ func (world *World) AddPlayer() string {
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := uuid.NewV4().String()
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	unit := &Unit{
+	unit := &protos.Unit{
 		Id:     id,
 		X:      rnd.Float64()*300 + 10,
 		Y:      rnd.Float64()*220 + 10,
@@ -35,27 +36,27 @@ func (world *World) AddPlayer() string {
 	return id
 }
 
-func (world *World) HandleEvent(event *Event) {
+func (world *World) HandleEvent(event *protos.Event) {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
 
 	switch event.GetType() {
-	case Event_type_connect:
+	case protos.Event_type_connect:
 		data := event.GetConnect()
 		world.Units[data.Unit.Id] = data.Unit
 
-	case Event_type_init:
+	case protos.Event_type_init:
 		data := event.GetInit()
 		if world.Replica {
 			world.MyID = data.PlayerId
 			world.Units = data.Units
 		}
 
-	case Event_type_exit:
+	case protos.Event_type_exit:
 		data := event.GetExit()
 		delete(world.Units, data.PlayerId)
 
-	case Event_type_move:
+	case protos.Event_type_move:
 		data := event.GetMove()
 		unit := world.Units[data.PlayerId]
 		if unit == nil {
@@ -64,7 +65,7 @@ func (world *World) HandleEvent(event *Event) {
 		unit.Action = UnitActionMove
 		unit.Direction = data.Direction
 
-	case Event_type_idle:
+	case protos.Event_type_idle:
 		data := event.GetIdle()
 		unit := world.Units[data.PlayerId]
 		if unit == nil {
@@ -87,15 +88,15 @@ func (world *World) Evolve() {
 			for i := range world.Units {
 				if world.Units[i].Action == UnitActionMove {
 					switch world.Units[i].Direction {
-					case Direction_left:
+					case protos.Direction_left:
 						world.Units[i].X -= world.Units[i].Speed
-						world.Units[i].Side = Direction_left
-					case Direction_right:
+						world.Units[i].Side = protos.Direction_left
+					case protos.Direction_right:
 						world.Units[i].X += world.Units[i].Speed
-						world.Units[i].Side = Direction_right
-					case Direction_up:
+						world.Units[i].Side = protos.Direction_right
+					case protos.Direction_up:
 						world.Units[i].Y -= world.Units[i].Speed
-					case Direction_down:
+					case protos.Direction_down:
 						world.Units[i].Y += world.Units[i].Speed
 					default:
 						log.Println("UNKNOWN DIRECTION: ", world.Units[i].Direction)

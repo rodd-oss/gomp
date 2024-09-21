@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 	"tomb_mates/internal/engine"
+	"tomb_mates/internal/protos"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -47,10 +48,10 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump(world *engine.World) {
 	defer func() {
-		event := &engine.Event{
-			Type: engine.Event_type_exit,
-			Data: &engine.Event_Exit{
-				Exit: &engine.EventExit{PlayerId: c.id},
+		event := &protos.Event{
+			Type: protos.Event_type_exit,
+			Data: &protos.Event_Exit{
+				Exit: &protos.EventExit{PlayerId: c.id},
 			},
 		}
 		world.Mx.Lock()
@@ -76,7 +77,7 @@ func (c *Client) readPump(world *engine.World) {
 			}
 			break
 		}
-		event := &engine.Event{}
+		event := &protos.Event{}
 		world.Mx.Lock()
 		err = proto.Unmarshal(message, event)
 		world.Mx.Unlock()
@@ -145,10 +146,10 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 	client := &Client{id: id, hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
-	event := &engine.Event{
-		Type: engine.Event_type_init,
-		Data: &engine.Event_Init{
-			Init: &engine.EventInit{
+	event := &protos.Event{
+		Type: protos.Event_type_init,
+		Data: &protos.Event_Init{
+			Init: &protos.EventInit{
 				PlayerId: id,
 				Units:    world.Units,
 			},
@@ -165,10 +166,10 @@ func ServeWs(hub *Hub, world *engine.World, w http.ResponseWriter, r *http.Reque
 	conn.WriteMessage(websocket.BinaryMessage, message)
 
 	unit := world.Units[id]
-	event = &engine.Event{
-		Type: engine.Event_type_connect,
-		Data: &engine.Event_Connect{
-			Connect: &engine.EventConnect{Unit: unit},
+	event = &protos.Event{
+		Type: protos.Event_type_connect,
+		Data: &protos.Event_Connect{
+			Connect: &protos.EventConnect{Unit: unit},
 		},
 	}
 	world.Mx.Lock()
