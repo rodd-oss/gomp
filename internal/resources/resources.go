@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"os"
 )
 
 type Frames struct {
@@ -15,52 +16,73 @@ type Frames struct {
 //go:embed **/*.png
 var fs embed.FS
 
+func walkDir(prefix string, fn func(path string, info os.FileInfo, err error) error) error {
+	dirEntries, err := fs.ReadDir(prefix)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range dirEntries {
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if err := fn(entry.Name(), info, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func Load() (frames map[string]Frames, err error) {
 	images := map[string]image.Image{}
 	cfgs := map[string]image.Config{}
 	sprites := map[string]Frames{}
 
 	prefix := "sprites"
-	dirEntries, err := fs.ReadDir(prefix)
-	if err != nil {
-		return nil, err
-	}
 
-	for _, entry := range dirEntries {
-		if entry.IsDir() {
-			continue
+	err = walkDir(prefix, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
 
-		filename := prefix + "/" + entry.Name()
+		if info.IsDir() {
+			return nil
+		}
+
+		filename := prefix + "/" + info.Name()
 		file, err := fs.Open(filename)
 		if err != nil {
 			fmt.Println("Error opening file")
-			return nil, err
+			return err
 		}
 		defer file.Close()
 
 		img, err := png.Decode(file)
 		if err != nil {
 			fmt.Println("Error decoding file")
-			return nil, err
+			return err
 		}
 
 		fileCfg, err := fs.Open(filename)
 		if err != nil {
 			fmt.Println("Error decoding file")
-			return nil, err
+			return err
 		}
 		defer fileCfg.Close()
 
 		cfg, err := png.DecodeConfig(fileCfg)
 		if err != nil {
 			fmt.Println("Error decoding cfg file")
-			return nil, err
+			return err
 		}
 
-		images[entry.Name()] = img
-		cfgs[entry.Name()] = cfg
-	}
+		images[info.Name()] = img
+		cfgs[info.Name()] = cfg
+
+		return nil
+	})
 
 	if err != nil {
 		return nil, err
