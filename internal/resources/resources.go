@@ -27,7 +27,9 @@ func walkDir(prefix string, fn func(path string, info os.FileInfo, err error) er
 		if err != nil {
 			return err
 		}
-		if err := fn(entry.Name(), info, nil); err != nil {
+
+		err = fn(entry.Name(), info, nil)
+		if err != nil {
 			return err
 		}
 	}
