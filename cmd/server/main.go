@@ -16,17 +16,10 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var world *engine.World
-
-func init() {
-	world = &engine.World{
-		Replica: false,
-		Units:   map[string]*protos.Unit{},
-	}
-}
-
 func main() {
 	e := echo.New()
+	h := hub.New()
+	w := engine.New(false, map[string]*protos.Unit{})
 
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -45,26 +38,13 @@ func main() {
 	e.Static("/static", "assets")
 	e.Static("/dist", "./.dist")
 
-	go world.Evolve()
-
-	h := hub.NewHub()
-	go h.Run()
-
 	e.GET("/", func(c echo.Context) error {
-
 		return c.Render(http.StatusOK, "IndexPage", "HakaHata")
 	})
 
-	e.GET("/ws", wsHandler(h, world))
+	e.GET("/ws", h.WsHandler(w))
 
 	e.Logger.Fatal(e.Start(":3000"))
-}
-
-func wsHandler(h *hub.Hub, world *engine.World) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		hub.ServeWs(h, world, c.Response().Writer, c.Request())
-		return nil
-	}
 }
 
 func getEnv(key, fallback string) string {

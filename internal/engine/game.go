@@ -18,6 +18,17 @@ type World struct {
 	MyID    string
 }
 
+func New(isReplica bool, units map[string]*protos.Unit) *World {
+	world := &World{
+		Replica: isReplica,
+		Units:   units,
+	}
+
+	go world.evolve()
+
+	return world
+}
+
 func (world *World) AddPlayer() string {
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := uuid.NewV4().String()
@@ -78,7 +89,7 @@ func (world *World) HandleEvent(event *protos.Event) {
 	}
 }
 
-func (world *World) Evolve() {
+func (world *World) evolve() {
 	ticker := time.NewTicker(time.Second / 30)
 
 	for {

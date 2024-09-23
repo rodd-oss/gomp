@@ -129,11 +129,6 @@ func init() {
 		height: 480,
 	}
 
-	world = &engine.World{
-		Replica: true,
-		Units:   map[string]*protos.Unit{},
-	}
-
 	var err error
 	frames, err = resources.Load()
 	if err != nil {
@@ -147,8 +142,7 @@ func init() {
 }
 
 func main() {
-	go world.Evolve()
-
+	world = engine.New(true, map[string]*protos.Unit{})
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"
 

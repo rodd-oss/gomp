@@ -1,6 +1,8 @@
 package hub
 
-import "time"
+import (
+	"time"
+)
 
 // Hub maintains the set of active clients and broadcasts messages
 // to the clients.
@@ -11,16 +13,20 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func NewHub() *Hub {
-	return &Hub{
+func New() *Hub {
+	h := &Hub{
 		broadcast:  make(chan []byte, 1),
 		register:   make(chan *Client, 1),
 		unregister: make(chan *Client, 1),
 		clients:    make(map[*Client]bool),
 	}
+
+	go h.run()
+
+	return h
 }
 
-func (h *Hub) Run() {
+func (h *Hub) run() {
 	ticket := time.NewTicker(time.Second * 1)
 	playersCount := -1
 	for {
