@@ -8,7 +8,8 @@ import (
 	"os"
 	"sort"
 	"syscall/js"
-	"tomb_mates/internal/engine"
+	"time"
+	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 	"tomb_mates/internal/resources"
 
@@ -41,7 +42,7 @@ type Camera struct {
 }
 
 var config *Config
-var world *engine.World
+var world *game.Game
 var camera *Camera
 var frames map[string]resources.Frames
 var frame int
@@ -141,8 +142,11 @@ func init() {
 	}
 }
 
+const tickRate = time.Second / 60
+
 func main() {
-	world = engine.New(true, map[string]*protos.Unit{})
+	world = game.New(true, map[string]*protos.Unit{}, tickRate)
+
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"
 
@@ -307,7 +311,7 @@ func handleKeyboard(c *websocket.Conn) {
 			}
 		}
 	} else {
-		if unit.Action != engine.UnitActionIdle {
+		if unit.Action != game.UnitActionIdle {
 			event = &protos.Event{
 				Type: protos.Event_type_idle,
 				Data: &protos.Event_Idle{

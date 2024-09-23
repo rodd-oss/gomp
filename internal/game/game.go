@@ -1,4 +1,4 @@
-package engine
+package game
 
 import (
 	"log"
@@ -10,26 +10,26 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// World represents game state
-type World struct {
+// Game represents game state
+type Game struct {
 	Mx      sync.Mutex
 	Replica bool
 	Units   map[string]*protos.Unit
 	MyID    string
 }
 
-func New(isReplica bool, units map[string]*protos.Unit) *World {
-	world := &World{
+func New(isReplica bool, units map[string]*protos.Unit, tickRate time.Duration) *Game {
+	world := &Game{
 		Replica: isReplica,
 		Units:   units,
 	}
 
-	go world.evolve()
+	go world.evolve(tickRate)
 
 	return world
 }
 
-func (world *World) AddPlayer() string {
+func (world *Game) AddPlayer() string {
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := uuid.NewV4().String()
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -40,14 +40,14 @@ func (world *World) AddPlayer() string {
 		Frame:  int32(rnd.Intn(4)),
 		Skin:   skins[rnd.Intn(len(skins))],
 		Action: "idle",
-		Speed:  2,
+		Speed:  200,
 	}
 	world.Units[id] = unit
 
 	return id
 }
 
-func (world *World) HandleEvent(event *protos.Event) {
+func (world *Game) HandleEvent(event *protos.Event) {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
 
@@ -89,32 +89,33 @@ func (world *World) HandleEvent(event *protos.Event) {
 	}
 }
 
-func (world *World) evolve() {
-	ticker := time.NewTicker(time.Second / 30)
+func (world *Game) evolve(tickRate time.Duration) {
+	ticker := time.NewTicker(tickRate)
+	lastEvolveTime := time.Now()
 
 	for {
 		select {
 		case <-ticker.C:
-			world.Mx.Lock()
+			dt := time.Now().Sub(lastEvolveTime).Seconds()
 			for i := range world.Units {
 				if world.Units[i].Action == UnitActionMove {
 					switch world.Units[i].Direction {
 					case protos.Direction_left:
-						world.Units[i].X -= world.Units[i].Speed
+						world.Units[i].X -= world.Units[i].Speed * dt
 						world.Units[i].Side = protos.Direction_left
 					case protos.Direction_right:
-						world.Units[i].X += world.Units[i].Speed
+						world.Units[i].X += world.Units[i].Speed * dt
 						world.Units[i].Side = protos.Direction_right
 					case protos.Direction_up:
-						world.Units[i].Y -= world.Units[i].Speed
+						world.Units[i].Y -= world.Units[i].Speed * dt
 					case protos.Direction_down:
-						world.Units[i].Y += world.Units[i].Speed
+						world.Units[i].Y += world.Units[i].Speed * dt
 					default:
 						log.Println("UNKNOWN DIRECTION: ", world.Units[i].Direction)
 					}
 				}
 			}
-			world.Mx.Unlock()
+			lastEvolveTime = time.Now()
 		}
 	}
 }

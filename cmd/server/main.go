@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"tomb_mates/internal/engine"
+	"time"
+	"tomb_mates/internal/game"
 	"tomb_mates/internal/hub"
 	"tomb_mates/internal/protos"
 	"tomb_mates/web"
@@ -16,10 +17,12 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const tickRate = time.Second / 60
+
 func main() {
 	e := echo.New()
 	h := hub.New()
-	w := engine.New(false, map[string]*protos.Unit{})
+	w := game.New(false, map[string]*protos.Unit{}, tickRate)
 
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())

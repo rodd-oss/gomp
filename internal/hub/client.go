@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"tomb_mates/internal/engine"
+	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 
 	"github.com/gorilla/websocket"
@@ -46,7 +46,7 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump(world *engine.World) {
+func (c *Client) readPump(world *game.Game) {
 	defer func() {
 		event := &protos.Event{
 			Type: protos.Event_type_exit,

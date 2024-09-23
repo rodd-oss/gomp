@@ -3,7 +3,7 @@ package hub
 import (
 	"log"
 	"net/http"
-	"tomb_mates/internal/engine"
+	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 
 	"github.com/gorilla/websocket"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (h *Hub) WsHandler(world *engine.World) echo.HandlerFunc {
+func (h *Hub) WsHandler(world *game.Game) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		h.handleWsConnection(world, c.Response().Writer, c.Request())
 		return nil
@@ -19,7 +19,7 @@ func (h *Hub) WsHandler(world *engine.World) echo.HandlerFunc {
 }
 
 // serveWs handles websocket requests from the peer.
-func (h *Hub) handleWsConnection(world *engine.World, w http.ResponseWriter, r *http.Request) {
+func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
