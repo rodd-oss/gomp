@@ -15,9 +15,9 @@ type Hub struct {
 
 func New() *Hub {
 	h := &Hub{
-		broadcast:  make(chan []byte, 1),
-		register:   make(chan *Client, 1),
-		unregister: make(chan *Client, 1),
+		broadcast:  make(chan []byte, 256),
+		register:   make(chan *Client, 32),
+		unregister: make(chan *Client, 32),
 		clients:    make(map[*Client]bool),
 	}
 
