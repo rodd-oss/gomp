@@ -189,6 +189,8 @@ func main() {
 	go func(c *websocket.Conn) {
 		defer c.CloseNow()
 
+		c.SetReadLimit(-1)
+
 		for {
 			var _, message, err = c.Read(context.TODO())
 			if err != nil {
