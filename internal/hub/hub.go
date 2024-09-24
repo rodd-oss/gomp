@@ -60,7 +60,9 @@ func (h *Hub) run() {
 
 			fmt.Println("ss")
 			for client := range h.clients {
-				client.send <- messages
+				if len(client.send) != cap(client.send) {
+					client.send <- messages
+				}
 			}
 			fmt.Println("se")
 		case client := <-h.register:
