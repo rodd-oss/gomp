@@ -9,9 +9,9 @@ tasks:
     cmds:
       - go run ./cmd/server .
 
-  client:
+  client-desktop:
     cmds:
-      - go run ./cmd/client .
+      - go run ./cmd/client-desktop .
 
   build-web-client:
     cmds:

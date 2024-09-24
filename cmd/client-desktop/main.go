@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"syscall/js"
 	"time"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
@@ -86,14 +85,13 @@ func (g *Game) Update() error {
 	return nil
 }
 
-var sprites = make([]*Sprite, 10000)
+var sprites = make([]Sprite, 10000)
 
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
 func (g *Game) Draw(screen *e.Image) {
 	l := len(world.Units)
 	if l == 0 {
-		log.Println("No units")
 		return
 	}
 
@@ -108,7 +106,7 @@ func (g *Game) Draw(screen *e.Image) {
 	i := 0
 	world.Mx.Lock()
 	for _, unit := range world.Units {
-		sprites[i] = &Sprite{
+		sprites[i] = Sprite{
 			Frames: frames[unit.Skin+"_"+unit.Action].Frames,
 			Frame:  int(unit.Frame),
 			X:      unit.Position.X,
@@ -120,16 +118,13 @@ func (g *Game) Draw(screen *e.Image) {
 	}
 	world.Mx.Unlock()
 
-	sort.Slice(sprites[:i], func(i, j int) bool {
-		// if sprites[i] == nil || sprites[j] == nil {
-		// 	return true
-		// }
+	sort.Slice(sprites, func(i, j int) bool {
 		depth1 := sprites[i].Y + float64(sprites[i].Config.Height)
 		depth2 := sprites[j].Y + float64(sprites[j].Config.Height)
 		return depth1 < depth2
 	})
 
-	for _, sprite := range sprites[:i] {
+	for _, sprite := range sprites {
 		op := &e.DrawImageOptions{}
 
 		if sprite.Side == protos.Direction_left {
@@ -174,8 +169,7 @@ func init() {
 func main() {
 	world = game.New(true, map[string]*protos.Unit{})
 
-	url := js.Global().Get("document").Get("location").Get("origin").String()
-	url = "ws" + url[4:] + "/ws"
+	url := getEnv("HOST", "ws://localhost:3000/ws")
 
 	ws, _, err := websocket.Dial(context.TODO(), url, nil)
 	if err != nil {
@@ -212,7 +206,6 @@ func main() {
 
 	e.SetRunnableOnUnfocused(true)
 	e.SetWindowSize(config.width, config.height)
-	e.SetWindowResizingMode(e.WindowResizingModeEnabled)
 	e.SetWindowTitle(config.title)
 	game := &Game{Conn: ws}
 	if err := e.RunGame(game); err != nil {
