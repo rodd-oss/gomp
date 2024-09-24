@@ -67,11 +67,6 @@ var maxDt float64 = 0.0
 var avgDt float64 = 0.0
 
 func (g *Game) Update() error {
-	err := handleInput(g.Conn)
-	if err != nil {
-		return err
-	}
-
 	dt = time.Now().Sub(lastUpdateTime).Seconds()
 	if dt > maxDt {
 		maxDt = dt
@@ -85,6 +80,11 @@ func (g *Game) Update() error {
 	// Write your game's logical update.
 	if world.Units[world.MyID] == nil {
 		return nil
+	}
+
+	err := handleInput(g.Conn)
+	if err != nil {
+		return err
 	}
 
 	return nil
