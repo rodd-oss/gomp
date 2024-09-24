@@ -88,18 +88,11 @@ func (c *Client) writePump(wg *sync.WaitGroup) {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.BinaryMessage)
-			if err != nil {
-				return
-			}
-			_, err = w.Write(message)
+			err := c.conn.WriteMessage(websocket.BinaryMessage, message)
 			if err != nil {
 				return
 			}
 
-			if err := w.Close(); err != nil {
-				return
-			}
 		case <-pingTicker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {

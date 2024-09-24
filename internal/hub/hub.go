@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -57,9 +58,11 @@ func (h *Hub) run() {
 				messages = append(messages, message...)
 			}
 
+			fmt.Println("ss")
 			for client := range h.clients {
 				client.send <- messages
 			}
+			fmt.Println("se")
 		case client := <-h.register:
 			h.clients[client] = true
 		case client := <-h.unregister:
