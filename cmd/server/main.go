@@ -28,9 +28,10 @@ func main() {
 
 	// e.Use(middleware.Logger())
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
-		StackSize:       1 << 10, // 1 KB
-		LogLevel:        log.ERROR,
-		DisableStackAll: true,
+		StackSize:         1 << 10, // 1 KB
+		LogLevel:          log.ERROR,
+		DisableStackAll:   true,
+		DisablePrintStack: true,
 	}))
 
 	e.Use(middleware.BodyLimit("2M"))
