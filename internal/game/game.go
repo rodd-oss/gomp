@@ -71,6 +71,10 @@ func (world *Game) RegisterEvent(event *protos.Event) {
 }
 
 func (world *Game) HandleEvent(event *protos.Event) {
+	if event == nil {
+		return
+	}
+
 	etype := event.GetType()
 	switch etype {
 	case protos.EventType_connect:

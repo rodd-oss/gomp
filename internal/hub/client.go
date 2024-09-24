@@ -27,10 +27,11 @@ const (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	id   string
-	hub  *Hub
-	conn *websocket.Conn
-	send chan []byte
+	id    string
+	token string
+	hub   *Hub
+	conn  *websocket.Conn
+	send  chan []byte
 }
 
 // readPump pumps messages from the websocket connection to the hub.
