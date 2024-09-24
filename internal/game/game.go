@@ -138,13 +138,14 @@ func (world *Game) HandlePhysics(dt float64) {
 		}
 	}
 
-	world.UnitsCached = make(map[string]*protos.Unit)
-
 	// Cache units map
+	world.Mx.Lock()
+	world.UnitsCached = make(map[string]*protos.Unit, len(world.Units))
 	for key, value := range world.Units {
 		v := *value
 		world.UnitsCached[key] = &v
 	}
+	world.Mx.Unlock()
 
 	stateEvent := &protos.Event{
 		Type: protos.EventType_state,
