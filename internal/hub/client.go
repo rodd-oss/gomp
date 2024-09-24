@@ -2,7 +2,6 @@ package hub
 
 import (
 	"log"
-	"net/http"
 	"sync"
 	"time"
 	"tomb_mates/internal/game"
@@ -25,14 +24,6 @@ const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
@@ -104,15 +95,6 @@ func (c *Client) writePump(wg *sync.WaitGroup) {
 			_, err = w.Write(message)
 			if err != nil {
 				return
-			}
-
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				_, err := w.Write(<-c.send)
-				if err != nil {
-					return
-				}
 			}
 
 			if err := w.Close(); err != nil {

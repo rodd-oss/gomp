@@ -18,6 +18,14 @@ func (h *Hub) WsHandler(world *game.Game) echo.HandlerFunc {
 	}
 }
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 // serveWs handles websocket requests from the peer.
 func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *http.Request) error {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -28,7 +36,7 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	unit := world.AddPlayer()
 	defer world.RemovePlayer(unit)
 
-	client := &Client{id: unit.Id, hub: h, conn: conn, send: make(chan []byte, 1024)}
+	client := &Client{id: unit.Id, hub: h, conn: conn, send: make(chan []byte, 512)}
 
 	client.hub.register <- client
 	defer func() { client.hub.unregister <- client }()
