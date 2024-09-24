@@ -46,7 +46,7 @@ var world *game.Game
 var camera *Camera
 var frames map[string]resources.Frames
 var frame int
-var lastKey e.Key
+var currentKey e.Key
 var prevKey e.Key
 var levelImage *e.Image
 
@@ -57,13 +57,22 @@ type Game struct {
 
 // Update proceeds the game state.
 // Update is called every tick (1/60 [s] by default).
+var lastUpdateTime = time.Now()
+
 func (g *Game) Update() error {
+	dt := time.Now().Sub(lastUpdateTime).Seconds()
+	world.HandlePhysics(dt)
+	lastUpdateTime = time.Now()
+
 	// Write your game's logical update.
 	if world.Units[world.MyID] == nil {
 		return nil
 	}
 
-	handleKeyboard(g.Conn)
+	err := handleInput(g.Conn)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -88,8 +97,8 @@ func (g *Game) Draw(screen *e.Image) {
 		sprites = append(sprites, Sprite{
 			Frames: frames[unit.Skin+"_"+unit.Action].Frames,
 			Frame:  int(unit.Frame),
-			X:      unit.X,
-			Y:      unit.Y,
+			X:      unit.Position.X,
+			Y:      unit.Position.Y,
 			Side:   unit.Side,
 			Config: frames[unit.Skin+"_"+unit.Action].Config,
 		})
@@ -140,12 +149,11 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
 
-const tickRate = time.Second / 60
-
 func main() {
-	world = game.New(true, map[string]*protos.Unit{}, tickRate)
+	world = game.New(true, map[string]*protos.Unit{})
 
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"
@@ -165,20 +173,18 @@ func main() {
 			}
 
 			event := &protos.Event{}
-			world.Mx.Lock()
 			err = proto.Unmarshal(message, event)
-			world.Mx.Unlock()
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			world.HandleEvent(event)
 
-			if event.Type == protos.Event_type_connect {
+			if event.Type == protos.EventType_connect {
 				me := world.Units[world.MyID]
 				camera = &Camera{
-					X:       me.X,
-					Y:       me.Y,
+					X:       me.Position.X,
+					Y:       me.Position.Y,
 					Padding: 30,
 				}
 			}
@@ -221,21 +227,22 @@ func handleCamera(screen *e.Image) {
 
 	player := world.Units[world.MyID]
 	frame := frames[player.Skin+"_"+player.Action]
-	camera.X = player.X - float64(config.width-frame.Config.Width)/2
-	camera.Y = player.Y - float64(config.height-frame.Config.Height)/2
+	camera.X = player.Position.X - float64(config.width-frame.Config.Width)/2
+	camera.Y = player.Position.Y - float64(config.height-frame.Config.Height)/2
 
 	op := &e.DrawImageOptions{}
 	op.GeoM.Translate(-camera.X, -camera.Y)
 	op.GeoM.Scale(1, 1)
+
 	screen.DrawImage(levelImage, op)
 }
 
-func handleKeyboard(c *websocket.Conn) {
+func handleInput(c *websocket.Conn) error {
 	event := &protos.Event{}
 
 	if e.IsKeyPressed(e.KeyA) || e.IsKeyPressed(e.KeyLeft) {
 		event = &protos.Event{
-			Type: protos.Event_type_move,
+			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
@@ -243,14 +250,14 @@ func handleKeyboard(c *websocket.Conn) {
 				},
 			},
 		}
-		if lastKey != e.KeyA {
-			lastKey = e.KeyA
+		if currentKey != e.KeyA {
+			currentKey = e.KeyA
 		}
 	}
 
 	if e.IsKeyPressed(e.KeyD) || e.IsKeyPressed(e.KeyRight) {
 		event = &protos.Event{
-			Type: protos.Event_type_move,
+			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
@@ -258,14 +265,14 @@ func handleKeyboard(c *websocket.Conn) {
 				},
 			},
 		}
-		if lastKey != e.KeyD {
-			lastKey = e.KeyD
+		if currentKey != e.KeyD {
+			currentKey = e.KeyD
 		}
 	}
 
 	if e.IsKeyPressed(e.KeyW) || e.IsKeyPressed(e.KeyUp) {
 		event = &protos.Event{
-			Type: protos.Event_type_move,
+			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
@@ -273,14 +280,14 @@ func handleKeyboard(c *websocket.Conn) {
 				},
 			},
 		}
-		if lastKey != e.KeyW {
-			lastKey = e.KeyW
+		if currentKey != e.KeyW {
+			currentKey = e.KeyW
 		}
 	}
 
 	if e.IsKeyPressed(e.KeyS) || e.IsKeyPressed(e.KeyDown) {
 		event = &protos.Event{
-			Type: protos.Event_type_move,
+			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
 					PlayerId:  world.MyID,
@@ -288,53 +295,50 @@ func handleKeyboard(c *websocket.Conn) {
 				},
 			},
 		}
-		if lastKey != e.KeyS {
-			lastKey = e.KeyS
+		if currentKey != e.KeyS {
+			currentKey = e.KeyS
 		}
 	}
 
 	unit := world.Units[world.MyID]
 
-	if event.Type == protos.Event_type_move {
-		if prevKey != lastKey {
-			world.Mx.Lock()
+	if event.Type == protos.EventType_move {
+		if prevKey != currentKey {
 			message, err := proto.Marshal(event)
-			world.Mx.Unlock()
 			if err != nil {
-				log.Println(err)
-				return
+				return err
 			}
+
 			err = c.Write(context.Background(), websocket.MessageBinary, message)
 			if err != nil {
-				// ...
-				log.Fatal(err)
+				return err
 			}
 		}
 	} else {
 		if unit.Action != game.UnitActionIdle {
 			event = &protos.Event{
-				Type: protos.Event_type_idle,
+				Type: protos.EventType_idle,
 				Data: &protos.Event_Idle{
 					Idle: &protos.EventIdle{PlayerId: world.MyID},
 				},
 			}
-			world.Mx.Lock()
+
 			message, err := proto.Marshal(event)
-			world.Mx.Unlock()
 			if err != nil {
-				log.Println(err)
-				return
+				return err
 			}
 			err = c.Write(context.Background(), websocket.MessageBinary, message)
 			if err != nil {
 				// ...
-				log.Fatal(err)
+				return err
 			}
-			lastKey = -1
+			currentKey = -1
 		}
 	}
 
-	prevKey = lastKey
+	prevKey = currentKey
+
+	return nil
 }
 
 func getEnv(key, fallback string) string {

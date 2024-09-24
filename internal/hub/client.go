@@ -3,6 +3,7 @@ package hub
 import (
 	"log"
 	"net/http"
+	"sync"
 	"time"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
@@ -46,46 +47,47 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump(world *game.Game) {
+func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 	defer func() {
 		event := &protos.Event{
-			Type: protos.Event_type_exit,
+			Type: protos.EventType_exit,
 			Data: &protos.Event_Exit{
 				Exit: &protos.EventExit{PlayerId: c.id},
 			},
 		}
-		world.Mx.Lock()
+
 		message, err := proto.Marshal(event)
-		world.Mx.Unlock()
 		if err != nil {
-			log.Println(err)
+			panic(err)
 		}
+
 		world.HandleEvent(event)
 		c.hub.broadcast <- message
 
-		c.hub.unregister <- c
-		c.conn.Close()
+		wg.Done()
 	}()
+
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
-			break
+			return
 		}
+
 		event := &protos.Event{}
-		world.Mx.Lock()
 		err = proto.Unmarshal(message, event)
-		world.Mx.Unlock()
 		if err != nil {
 			return
 		}
-		c.hub.broadcast <- message
+
 		world.HandleEvent(event)
+		c.hub.broadcast <- message
 	}
 }
 
@@ -94,12 +96,12 @@ func (c *Client) readPump(world *game.Game) {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Client) writePump() {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
+func (c *Client) writePump(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	pingTicker := time.NewTicker(pingPeriod)
+	defer pingTicker.Stop()
+
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -114,18 +116,24 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
-			w.Write(message)
+			_, err = w.Write(message)
+			if err != nil {
+				return
+			}
 
 			// Add queued chat messages to the current websocket message.
-			// n := len(c.send)
-			// for i := 0; i < n; i++ {
-			// 	w.Write(<-c.send)
-			// }
+			n := len(c.send)
+			for i := 0; i < n; i++ {
+				_, err := w.Write(<-c.send)
+				if err != nil {
+					return
+				}
+			}
 
 			if err := w.Close(); err != nil {
 				return
 			}
-		case <-ticker.C:
+		case <-pingTicker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return

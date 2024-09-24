@@ -26,15 +26,39 @@ func New() *Hub {
 	return h
 }
 
+const patchRate = time.Second / 20
+
 func (h *Hub) run() {
-	ticket := time.NewTicker(time.Second * 1)
 	playersCount := -1
+
+	playerCounterTicker := time.NewTicker(time.Second * 1)
+	defer playerCounterTicker.Stop()
+
+	patchTicker := time.NewTicker(patchRate)
+	defer patchTicker.Stop()
+
 	for {
 		select {
-		case <-ticket.C:
+		case <-playerCounterTicker.C:
 			if playersCount != len(h.clients) {
 				playersCount = len(h.clients)
 				println("Players: ", playersCount)
+			}
+		case <-patchTicker.C:
+			messages := make([]byte, 0)
+
+			n := len(h.broadcast)
+			if n == 0 {
+				continue
+			}
+
+			for i := 0; i < n; i++ {
+				message := <-h.broadcast
+				messages = append(messages, message...)
+			}
+
+			for client := range h.clients {
+				client.send <- messages
 			}
 		case client := <-h.register:
 			h.clients[client] = true
@@ -42,15 +66,6 @@ func (h *Hub) run() {
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
-			}
-		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
 			}
 		}
 	}

@@ -10,40 +10,60 @@ enum Direction {
     down = 3;
 }
 
+message Position {
+    double x = 1;
+    double y = 2;
+}
+
+message Velocity {
+    double speed = 1;
+    Direction direction = 2;
+}
+
 message Unit {
     string id = 1;
-    double x = 2;
-    double y = 3;
-    int32 frame = 4;
-    string skin = 5;
-    string action = 6;
-    double speed = 7;
-    Direction direction = 8;
-    Direction side = 9;
+    Position position = 2;
+    int32 frame = 3;
+    string skin = 4;
+    string action = 5;
+    Velocity velocity = 6;
+    Direction side = 7;
+}
+
+message PatchUnit {
+    string id = 1;
+    optional Position position = 2;
+    optional int32 frame = 3;
+    optional string skin = 4;
+    optional string action = 5;
+    optional Velocity velocity = 6;
+    optional Direction side = 7;
 }
 
 message Event {
-    enum Type {
-        type_init = 0;
-        type_connect = 1;
-        type_exit = 2;
-        type_idle = 3;
-        type_move = 4;
-        type_empty = 5;
-    }
-    Type type = 1;
+    EventType type = 1;
     oneof data {
         EventInit init = 2;
         EventConnect connect = 3;
         EventExit exit = 4;
         EventIdle idle = 5;
         EventMove move = 6;
+        GameState state = 7;
     }
+}
+
+enum EventType {
+   init = 0;
+   connect = 1;
+   exit = 2;
+   idle = 3;
+   move = 4;
+   empty = 5;
+   state = 6;
 }
 
 message EventInit {
     string player_id = 1;
-    map<string, Unit> units = 2;
 }
 
 message EventConnect {
@@ -61,4 +81,12 @@ message EventIdle {
 message EventMove {
     string player_id = 1;
     Direction direction = 2;
+}
+
+message GameState {
+    map<string, Unit> units = 1;
+}
+  
+message GameStatePatches {
+    map<string, PatchUnit> units = 1;
 }

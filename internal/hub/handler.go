@@ -1,8 +1,8 @@
 package hub
 
 import (
-	"log"
 	"net/http"
+	"sync"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 
@@ -13,62 +13,66 @@ import (
 
 func (h *Hub) WsHandler(world *game.Game) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		h.handleWsConnection(world, c.Response().Writer, c.Request())
-		return nil
+		return h.handleWsConnection(world, c.Response().Writer, c.Request())
 	}
 }
 
 // serveWs handles websocket requests from the peer.
-func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *http.Request) {
+func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *http.Request) error {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
-	id := world.AddPlayer()
-	client := &Client{id: id, hub: h, conn: conn, send: make(chan []byte, 256)}
+	unit := world.AddPlayer()
+	client := &Client{id: unit.Id, hub: h, conn: conn, send: make(chan []byte, 1024)}
+
 	client.hub.register <- client
+	defer func() { client.hub.unregister <- client }()
 
 	event := &protos.Event{
-		Type: protos.Event_type_init,
+		Type: protos.EventType_init,
 		Data: &protos.Event_Init{
 			Init: &protos.EventInit{
-				PlayerId: id,
-				Units:    world.Units,
+				PlayerId: unit.Id,
 			},
 		},
 	}
-	world.Mx.Lock()
 	message, err := proto.Marshal(event)
-	world.Mx.Unlock()
 	if err != nil {
-		//todo: remove unit
-		log.Println(err)
-		return
+		return err
 	}
-	conn.WriteMessage(websocket.BinaryMessage, message)
 
-	unit := world.Units[id]
+	err = conn.WriteMessage(websocket.BinaryMessage, message)
+	if err != nil {
+		return err
+	}
+
+	err = conn.WriteMessage(websocket.BinaryMessage, *world.UnitsSerialized)
+	if err != nil {
+		return err
+	}
+
 	event = &protos.Event{
-		Type: protos.Event_type_connect,
+		Type: protos.EventType_connect,
 		Data: &protos.Event_Connect{
 			Connect: &protos.EventConnect{Unit: unit},
 		},
 	}
-	world.Mx.Lock()
 	message, err = proto.Marshal(event)
-	world.Mx.Unlock()
 	if err != nil {
-		//todo: remove unit
-		log.Println(err)
-		return
+		return err
 	}
 
 	h.broadcast <- message
 
-	// Allow collection of memory referenced by the caller by doing all work
-	// in new goroutines.
-	go client.writePump()
-	go client.readPump(world)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go client.writePump(&wg)
+	go client.readPump(&wg, world)
+
+	wg.Wait()
+
+	return conn.Close()
 }

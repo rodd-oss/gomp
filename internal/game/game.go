@@ -8,75 +8,83 @@ import (
 	"tomb_mates/internal/protos"
 
 	uuid "github.com/satori/go.uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 // Game represents game state
 type Game struct {
-	Mx      sync.Mutex
-	Replica bool
-	Units   map[string]*protos.Unit
-	MyID    string
+	Mx              sync.Mutex
+	Replica         bool
+	Units           map[string]*protos.Unit
+	UnitsCached     map[string]*protos.Unit
+	UnitsSerialized *[]byte
+	MyID            string
 }
 
-func New(isReplica bool, units map[string]*protos.Unit, tickRate time.Duration) *Game {
+func New(isReplica bool, units map[string]*protos.Unit) *Game {
 	world := &Game{
 		Replica: isReplica,
 		Units:   units,
 	}
 
-	go world.evolve(tickRate)
-
 	return world
 }
 
-func (world *Game) AddPlayer() string {
+func (world *Game) AddPlayer() *protos.Unit {
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := uuid.NewV4().String()
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	unit := &protos.Unit{
-		Id:     id,
-		X:      rnd.Float64()*300 + 10,
-		Y:      rnd.Float64()*220 + 10,
+		Id: id,
+		Position: &protos.Position{
+			X: rnd.Float64()*300 + 10,
+			Y: rnd.Float64()*220 + 10,
+		},
 		Frame:  int32(rnd.Intn(4)),
 		Skin:   skins[rnd.Intn(len(skins))],
 		Action: "idle",
-		Speed:  200,
+		Velocity: &protos.Velocity{
+			Direction: protos.Direction_left,
+			Speed:     100,
+		},
 	}
 	world.Units[id] = unit
 
-	return id
+	return unit
 }
 
 func (world *Game) HandleEvent(event *protos.Event) {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
 
-	switch event.GetType() {
-	case protos.Event_type_connect:
+	etype := event.GetType()
+
+	switch etype {
+	case protos.EventType_connect:
 		data := event.GetConnect()
 		world.Units[data.Unit.Id] = data.Unit
 
-	case protos.Event_type_init:
+	case protos.EventType_init:
 		data := event.GetInit()
+
 		if world.Replica {
 			world.MyID = data.PlayerId
-			world.Units = data.Units
 		}
 
-	case protos.Event_type_exit:
+	case protos.EventType_exit:
 		data := event.GetExit()
 		delete(world.Units, data.PlayerId)
 
-	case protos.Event_type_move:
+	case protos.EventType_move:
 		data := event.GetMove()
 		unit := world.Units[data.PlayerId]
 		if unit == nil {
 			return
 		}
 		unit.Action = UnitActionMove
-		unit.Direction = data.Direction
+		unit.Velocity.Direction = data.Direction
 
-	case protos.Event_type_idle:
+	case protos.EventType_idle:
 		data := event.GetIdle()
 		unit := world.Units[data.PlayerId]
 		if unit == nil {
@@ -84,12 +92,19 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 		unit.Action = UnitActionIdle
 
+	case protos.EventType_state:
+		data := event.GetState()
+		units := data.GetUnits()
+		if units != nil {
+			world.Units = units
+		}
+
 	default:
 		log.Println("UNKNOWN EVENT: ", event)
 	}
 }
 
-func (world *Game) evolve(tickRate time.Duration) {
+func (world *Game) Run(tickRate time.Duration) {
 	ticker := time.NewTicker(tickRate)
 	lastEvolveTime := time.Now()
 
@@ -97,27 +112,54 @@ func (world *Game) evolve(tickRate time.Duration) {
 		select {
 		case <-ticker.C:
 			dt := time.Now().Sub(lastEvolveTime).Seconds()
-			for i := range world.Units {
-				if world.Units[i].Action == UnitActionMove {
-					switch world.Units[i].Direction {
-					case protos.Direction_left:
-						world.Units[i].X -= world.Units[i].Speed * dt
-						world.Units[i].Side = protos.Direction_left
-					case protos.Direction_right:
-						world.Units[i].X += world.Units[i].Speed * dt
-						world.Units[i].Side = protos.Direction_right
-					case protos.Direction_up:
-						world.Units[i].Y -= world.Units[i].Speed * dt
-					case protos.Direction_down:
-						world.Units[i].Y += world.Units[i].Speed * dt
-					default:
-						log.Println("UNKNOWN DIRECTION: ", world.Units[i].Direction)
-					}
-				}
-			}
+			world.HandlePhysics(dt)
 			lastEvolveTime = time.Now()
 		}
 	}
+}
+
+func (world *Game) HandlePhysics(dt float64) {
+	for i := range world.Units {
+		if world.Units[i].Action == UnitActionMove {
+			switch world.Units[i].Velocity.Direction {
+			case protos.Direction_left:
+				world.Units[i].Position.X -= world.Units[i].Velocity.Speed * dt
+				world.Units[i].Side = protos.Direction_left
+			case protos.Direction_right:
+				world.Units[i].Position.X += world.Units[i].Velocity.Speed * dt
+				world.Units[i].Side = protos.Direction_right
+			case protos.Direction_up:
+				world.Units[i].Position.Y -= world.Units[i].Velocity.Speed * dt
+			case protos.Direction_down:
+				world.Units[i].Position.Y += world.Units[i].Velocity.Speed * dt
+			default:
+				log.Println("UNKNOWN DIRECTION: ", world.Units[i].Velocity.Direction)
+			}
+		}
+	}
+
+	world.UnitsCached = make(map[string]*protos.Unit)
+
+	// Cache units map
+	for key, value := range world.Units {
+		v := *value
+		world.UnitsCached[key] = &v
+	}
+
+	stateEvent := &protos.Event{
+		Type: protos.EventType_state,
+		Data: &protos.Event_State{
+			State: &protos.GameState{
+				Units: world.UnitsCached,
+			},
+		},
+	}
+	s, err := proto.Marshal(stateEvent)
+	if err != nil {
+		panic(err)
+	}
+
+	world.UnitsSerialized = &s
 }
 
 const UnitActionMove = "run"
