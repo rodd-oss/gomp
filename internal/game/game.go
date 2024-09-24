@@ -18,6 +18,7 @@ type Game struct {
 	Units           map[string]*protos.Unit
 	UnitsSerialized *[]byte
 	MyID            string
+	UnhandledEvents []*protos.Event
 }
 
 func New(isReplica bool, units map[string]*protos.Unit) *Game {
@@ -52,12 +53,16 @@ func (world *Game) AddPlayer() *protos.Unit {
 	return unit
 }
 
+func (world *Game) RemovePlayer(unit *protos.Unit) {
+	delete(world.Units, unit.Id)
+}
+
+func (world *Game) RegisterEvent(event *protos.Event) {
+	world.UnhandledEvents = append(world.UnhandledEvents, event)
+}
+
 func (world *Game) HandleEvent(event *protos.Event) {
-	world.Mx.Lock()
-	defer world.Mx.Unlock()
-
 	etype := event.GetType()
-
 	switch etype {
 	case protos.EventType_connect:
 		data := event.GetConnect()
@@ -103,6 +108,19 @@ func (world *Game) HandleEvent(event *protos.Event) {
 	}
 }
 
+func (world *Game) ProccessEvents() error {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
+	for _, event := range world.UnhandledEvents {
+		world.HandleEvent(event)
+	}
+
+	world.UnhandledEvents = make([]*protos.Event, 0)
+
+	return nil
+}
+
 func (world *Game) Run(tickRate time.Duration) {
 	ticker := time.NewTicker(tickRate)
 	lastEvolveTime := time.Now()
@@ -110,9 +128,36 @@ func (world *Game) Run(tickRate time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
+			world.ProccessEvents()
+
 			dt := time.Now().Sub(lastEvolveTime).Seconds()
 			world.HandlePhysics(dt)
 			lastEvolveTime = time.Now()
+
+			if world.Replica == false {
+				world.Mx.Lock()
+				cachedUnits := make(map[string]*protos.Unit, len(world.Units))
+				for key, value := range world.Units {
+					v := *value
+					cachedUnits[key] = &v
+				}
+				world.Mx.Unlock()
+
+				stateEvent := &protos.Event{
+					Type: protos.EventType_state,
+					Data: &protos.Event_State{
+						State: &protos.GameState{
+							Units: cachedUnits,
+						},
+					},
+				}
+				s, err := proto.Marshal(stateEvent)
+				if err != nil {
+					panic(err)
+				}
+
+				world.UnitsSerialized = &s
+			}
 		}
 	}
 }
@@ -135,31 +180,6 @@ func (world *Game) HandlePhysics(dt float64) {
 				log.Println("UNKNOWN DIRECTION: ", world.Units[i].Velocity.Direction)
 			}
 		}
-	}
-
-	if world.Replica == false {
-		world.Mx.Lock()
-		cachedUnits := make(map[string]*protos.Unit, len(world.Units))
-		for key, value := range world.Units {
-			v := *value
-			cachedUnits[key] = &v
-		}
-		world.Mx.Unlock()
-
-		stateEvent := &protos.Event{
-			Type: protos.EventType_state,
-			Data: &protos.Event_State{
-				State: &protos.GameState{
-					Units: cachedUnits,
-				},
-			},
-		}
-		s, err := proto.Marshal(stateEvent)
-		if err != nil {
-			panic(err)
-		}
-
-		world.UnitsSerialized = &s
 	}
 }
 

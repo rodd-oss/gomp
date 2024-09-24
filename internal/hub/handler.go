@@ -25,6 +25,8 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	}
 
 	unit := world.AddPlayer()
+	defer world.RemovePlayer(unit)
+
 	client := &Client{id: unit.Id, hub: h, conn: conn, send: make(chan []byte, 1024)}
 
 	client.hub.register <- client
@@ -63,8 +65,20 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	if err != nil {
 		return err
 	}
-
 	h.broadcast <- message
+	defer func() {
+		event := &protos.Event{
+			Type: protos.EventType_exit,
+			Data: &protos.Event_Exit{
+				Exit: &protos.EventExit{PlayerId: client.id},
+			},
+		}
+		message, err := proto.Marshal(event)
+		if err != nil {
+			panic(err)
+		}
+		h.broadcast <- message
+	}()
 
 	var wg sync.WaitGroup
 	wg.Add(2)

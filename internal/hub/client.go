@@ -49,21 +49,6 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 	defer func() {
-		event := &protos.Event{
-			Type: protos.EventType_exit,
-			Data: &protos.Event_Exit{
-				Exit: &protos.EventExit{PlayerId: c.id},
-			},
-		}
-
-		message, err := proto.Marshal(event)
-		if err != nil {
-			panic(err)
-		}
-
-		world.HandleEvent(event)
-		c.hub.broadcast <- message
-
 		wg.Done()
 	}()
 
@@ -86,7 +71,7 @@ func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 			return
 		}
 
-		world.HandleEvent(event)
+		world.RegisterEvent(event)
 		c.hub.broadcast <- message
 	}
 }
