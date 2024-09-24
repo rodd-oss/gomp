@@ -133,25 +133,24 @@ func (world *Game) Run(tickRate time.Duration) {
 
 			if world.Replica == false {
 				world.Mx.Lock()
-				// cachedUnits := make(map[string]*protos.Unit, len(world.Units))
-				// for key, value := range world.Units {
-				// 	v := *value
-				// 	cachedUnits[key] = &v
-				// }
+				cachedUnits := make(map[string]*protos.Unit, len(world.Units))
+				for key, value := range world.Units {
+					cachedUnits[key] = value
+				}
+				world.Mx.Unlock()
 
 				stateEvent := &protos.Event{
 					Type: protos.EventType_state,
 					Data: &protos.Event_State{
 						State: &protos.GameState{
-							Units: world.Units,
+							Units: cachedUnits,
 						},
 					},
 				}
 				s, err := proto.Marshal(stateEvent)
 				if err != nil {
-					panic(err)
+					continue
 				}
-				world.Mx.Unlock()
 
 				world.UnitsSerialized = &s
 			}
