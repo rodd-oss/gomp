@@ -109,9 +109,6 @@ func (world *Game) HandleEvent(event *protos.Event) {
 }
 
 func (world *Game) ProccessEvents() error {
-	world.Mx.Lock()
-	defer world.Mx.Unlock()
-
 	for _, event := range world.UnhandledEvents {
 		world.HandleEvent(event)
 	}
@@ -136,18 +133,17 @@ func (world *Game) Run(tickRate time.Duration) {
 
 			if world.Replica == false {
 				world.Mx.Lock()
-				cachedUnits := make(map[string]*protos.Unit, len(world.Units))
-				for key, value := range world.Units {
-					v := *value
-					cachedUnits[key] = &v
-				}
-				world.Mx.Unlock()
+				// cachedUnits := make(map[string]*protos.Unit, len(world.Units))
+				// for key, value := range world.Units {
+				// 	v := *value
+				// 	cachedUnits[key] = &v
+				// }
 
 				stateEvent := &protos.Event{
 					Type: protos.EventType_state,
 					Data: &protos.Event_State{
 						State: &protos.GameState{
-							Units: cachedUnits,
+							Units: world.Units,
 						},
 					},
 				}
@@ -155,6 +151,7 @@ func (world *Game) Run(tickRate time.Duration) {
 				if err != nil {
 					panic(err)
 				}
+				world.Mx.Unlock()
 
 				world.UnitsSerialized = &s
 			}
