@@ -18,7 +18,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const tickRate = time.Second / 20
+const tickRate = time.Second / 60
 
 func main() {
 	e := echo.New()

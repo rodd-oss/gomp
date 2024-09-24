@@ -26,7 +26,7 @@ func New() *Hub {
 	return h
 }
 
-const patchRate = time.Second / 20
+const patchRate = time.Second / 10
 
 func (h *Hub) run() {
 	playersCount := -1
