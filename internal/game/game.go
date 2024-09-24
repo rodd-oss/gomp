@@ -31,6 +31,9 @@ func New(isReplica bool, units map[string]*protos.Unit) *Game {
 }
 
 func (world *Game) AddPlayer() *protos.Unit {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := uuid.NewV4().String()
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -54,6 +57,9 @@ func (world *Game) AddPlayer() *protos.Unit {
 }
 
 func (world *Game) RemovePlayer(unit *protos.Unit) {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
 	delete(world.Units, unit.Id)
 }
 
@@ -159,6 +165,9 @@ func (world *Game) Run(tickRate time.Duration) {
 }
 
 func (world *Game) HandlePhysics(dt float64) {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
 	for i := range world.Units {
 		if world.Units[i].Action == UnitActionMove {
 			switch world.Units[i].Velocity.Direction {
