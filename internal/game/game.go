@@ -138,29 +138,30 @@ func (world *Game) HandlePhysics(dt float64) {
 		}
 	}
 
-	// Cache units map
-	world.Mx.Lock()
-	world.UnitsCached = make(map[string]*protos.Unit, len(world.Units))
-	for key, value := range world.Units {
-		v := *value
-		world.UnitsCached[key] = &v
-	}
-	world.Mx.Unlock()
+	if world.Replica == false {
+		world.Mx.Lock()
+		cachedUnits := make(map[string]*protos.Unit, len(world.Units))
+		for key, value := range world.Units {
+			v := *value
+			world.UnitsCached[key] = &v
+		}
+		world.Mx.Unlock()
 
-	stateEvent := &protos.Event{
-		Type: protos.EventType_state,
-		Data: &protos.Event_State{
-			State: &protos.GameState{
-				Units: world.UnitsCached,
+		stateEvent := &protos.Event{
+			Type: protos.EventType_state,
+			Data: &protos.Event_State{
+				State: &protos.GameState{
+					Units: cachedUnits,
+				},
 			},
-		},
-	}
-	s, err := proto.Marshal(stateEvent)
-	if err != nil {
-		panic(err)
-	}
+		}
+		s, err := proto.Marshal(stateEvent)
+		if err != nil {
+			panic(err)
+		}
 
-	world.UnitsSerialized = &s
+		world.UnitsSerialized = &s
+	}
 }
 
 const UnitActionMove = "run"
