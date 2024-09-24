@@ -16,7 +16,6 @@ type Game struct {
 	Mx              sync.Mutex
 	Replica         bool
 	Units           map[string]*protos.Unit
-	UnitsCached     map[string]*protos.Unit
 	UnitsSerialized *[]byte
 	MyID            string
 }
@@ -143,7 +142,7 @@ func (world *Game) HandlePhysics(dt float64) {
 		cachedUnits := make(map[string]*protos.Unit, len(world.Units))
 		for key, value := range world.Units {
 			v := *value
-			world.UnitsCached[key] = &v
+			cachedUnits[key] = &v
 		}
 		world.Mx.Unlock()
 
