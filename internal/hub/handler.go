@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"log"
 	"net/http"
 	"sync"
 	"tomb_mates/internal/game"
@@ -75,7 +76,7 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 		}
 		message, err := proto.Marshal(event)
 		if err != nil {
-			panic(err)
+			log.Fatalln(err)
 		}
 		h.broadcast <- message
 	}()
