@@ -243,6 +243,10 @@ func handleCamera(screen *e.Image) {
 	}
 
 	player := world.Units[world.MyID]
+	if player == nil {
+		return
+	}
+
 	frame := frames[player.Skin+"_"+player.Action]
 	camera.X = player.Position.X - float64(config.width-frame.Config.Width)/2
 	camera.Y = player.Position.Y - float64(config.height-frame.Config.Height)/2
