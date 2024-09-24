@@ -43,7 +43,11 @@ type Camera struct {
 
 var config *Config
 var world *game.Game
-var camera *Camera
+var camera *Camera = &Camera{
+	X:       0,
+	Y:       0,
+	Padding: 30,
+}
 var frames map[string]resources.Frames
 var frame int
 var currentKey e.Key
@@ -188,25 +192,18 @@ func main() {
 		for {
 			var _, message, err = c.Read(context.TODO())
 			if err != nil {
-				log.Fatal("Error reading message:", err)
+				log.Println("Error reading message:", err)
+				return
 			}
 
 			event := &protos.Event{}
 			err = proto.Unmarshal(message, event)
 			if err != nil {
-				log.Fatal(err)
+				log.Println("Error parsing message:", err)
+				continue
 			}
 
 			world.HandleEvent(event)
-
-			if event.Type == protos.EventType_connect {
-				me := world.Units[world.MyID]
-				camera = &Camera{
-					X:       me.Position.X,
-					Y:       me.Position.Y,
-					Padding: 30,
-				}
-			}
 		}
 	}(ws)
 
