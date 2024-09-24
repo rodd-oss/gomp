@@ -64,6 +64,9 @@ func (world *Game) RemovePlayer(unit *protos.Unit) {
 }
 
 func (world *Game) RegisterEvent(event *protos.Event) {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
 	world.UnhandledEvents = append(world.UnhandledEvents, event)
 }
 
@@ -115,6 +118,9 @@ func (world *Game) HandleEvent(event *protos.Event) {
 }
 
 func (world *Game) ProccessEvents() error {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
 	for _, event := range world.UnhandledEvents {
 		world.HandleEvent(event)
 	}

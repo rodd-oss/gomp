@@ -67,6 +67,11 @@ var maxDt float64 = 0.0
 var avgDt float64 = 0.0
 
 func (g *Game) Update() error {
+	err := handleInput(g.Conn)
+	if err != nil {
+		return err
+	}
+
 	dt = time.Now().Sub(lastUpdateTime).Seconds()
 	if dt > maxDt {
 		maxDt = dt
@@ -80,11 +85,6 @@ func (g *Game) Update() error {
 	// Write your game's logical update.
 	if world.Units[world.MyID] == nil {
 		return nil
-	}
-
-	err := handleInput(g.Conn)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -231,8 +231,7 @@ func prepareLevelImage() (*e.Image, error) {
 			op := &e.DrawImageOptions{}
 			op.GeoM.Translate(float64(i*tileSize), float64(j*tileSize))
 
-			img := e.NewImageFromImage(frames[level[j][i]].Frames[0])
-			levelImage.DrawImage(img, op)
+			levelImage.DrawImage(frames[level[j][i]].Frames[0], op)
 		}
 	}
 
@@ -332,6 +331,8 @@ func handleInput(c *websocket.Conn) error {
 				return err
 			}
 
+			world.HandleEvent(event)
+
 			err = c.Write(context.Background(), websocket.MessageBinary, message)
 			if err != nil {
 				return err
@@ -345,6 +346,8 @@ func handleInput(c *websocket.Conn) error {
 					Idle: &protos.EventIdle{PlayerId: world.MyID},
 				},
 			}
+
+			world.HandleEvent(event)
 
 			message, err := proto.Marshal(event)
 			if err != nil {
