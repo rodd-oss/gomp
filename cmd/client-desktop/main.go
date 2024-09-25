@@ -107,12 +107,12 @@ func (g *Game) Draw(screen *e.Image) {
 	world.Mx.Lock()
 	for _, unit := range world.Units {
 		sprites[i] = Sprite{
-			Frames: frames[unit.Skin+"_"+unit.Action].Frames,
+			Frames: frames[unit.Skin+"_"+unit.Action.String()].Frames,
 			Frame:  int(unit.Frame),
 			X:      unit.Position.X,
 			Y:      unit.Position.Y,
 			Side:   unit.Side,
-			Config: frames[unit.Skin+"_"+unit.Action].Config,
+			Config: frames[unit.Skin+"_"+unit.Action.String()].Config,
 		}
 		i++
 	}
@@ -239,7 +239,7 @@ func handleCamera(screen *e.Image) {
 	}
 
 	player := world.Units[world.MyID]
-	frame := frames[player.Skin+"_"+player.Action]
+	frame := frames[player.Skin+"_"+player.Action.String()]
 	camera.X = player.Position.X - float64(config.width-frame.Config.Width)/2
 	camera.Y = player.Position.Y - float64(config.height-frame.Config.Height)/2
 
@@ -328,11 +328,11 @@ func handleInput(c *websocket.Conn) error {
 			}
 		}
 	} else {
-		if unit.Action != game.UnitActionIdle {
+		if unit.Action != protos.Action_idle {
 			event = &protos.Event{
-				Type: protos.EventType_idle,
-				Data: &protos.Event_Idle{
-					Idle: &protos.EventIdle{PlayerId: world.MyID},
+				Type: protos.EventType_stop,
+				Data: &protos.Event_Stop{
+					Stop: &protos.EventStop{PlayerId: world.MyID},
 				},
 			}
 

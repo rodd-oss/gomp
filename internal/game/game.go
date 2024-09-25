@@ -51,7 +51,7 @@ func (world *Game) AddPlayer() *protos.Unit {
 		},
 		Frame:  int32(rnd.Intn(4)),
 		Skin:   skins[rnd.Intn(len(skins))],
-		Action: "idle",
+		Action: protos.Action_idle,
 		Velocity: &protos.Velocity{
 			Direction: protos.Direction_left,
 			Speed:     100,
@@ -104,7 +104,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		if unit == nil {
 			return
 		}
-		unit.Action = UnitActionMove
+		unit.Action = protos.Action_run
 		unit.Velocity.Direction = data.Direction
 
 		if !world.Replica {
@@ -122,13 +122,13 @@ func (world *Game) HandleEvent(event *protos.Event) {
 			}
 		}
 
-	case protos.EventType_idle:
-		data := event.GetIdle()
+	case protos.EventType_stop:
+		data := event.GetStop()
 		unit := world.Units[data.PlayerId]
 		if unit == nil {
 			return
 		}
-		unit.Action = UnitActionIdle
+		unit.Action = protos.Action_idle
 
 		if !world.Replica {
 			world.PatchedUnits[data.PlayerId] = &protos.PatchUnit{
@@ -267,7 +267,7 @@ func (world *Game) HandlePhysics(dt float64) {
 	defer world.Mx.Unlock()
 
 	for i := range world.Units {
-		if world.Units[i].Action == UnitActionMove {
+		if world.Units[i].Action == protos.Action_run {
 			switch world.Units[i].Velocity.Direction {
 			case protos.Direction_left:
 				world.Units[i].Position.X -= world.Units[i].Velocity.Speed * dt
@@ -285,6 +285,3 @@ func (world *Game) HandlePhysics(dt float64) {
 		}
 	}
 }
-
-const UnitActionMove = "run"
-const UnitActionIdle = "idle"

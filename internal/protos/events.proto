@@ -10,6 +10,11 @@ enum Direction {
     down = 3;
 }
 
+enum Action {
+    idle = 0;
+    run = 1;
+}
+
 message Position {
     double x = 1;
     double y = 2;
@@ -25,7 +30,7 @@ message Unit {
     Position position = 2;
     int32 frame = 3;
     string skin = 4;
-    string action = 5;
+    Action action = 5;
     Velocity velocity = 6;
     Direction side = 7;
 }
@@ -33,7 +38,7 @@ message Unit {
 message PatchUnit {
     uint32 id = 1;
     optional Position position = 2;
-    optional string action = 5;
+    optional Action action = 5;
     optional Velocity velocity = 6;
     optional Direction side = 7;
 }
@@ -44,7 +49,7 @@ message Event {
         EventInit init = 2;
         EventConnect connect = 3;
         EventExit exit = 4;
-        EventIdle idle = 5;
+        EventStop stop = 5;
         EventMove move = 6;
         GameState state = 7;
         GameStatePatche state_patch = 8;
@@ -55,7 +60,7 @@ enum EventType {
    init = 0;
    connect = 1;
    exit = 2;
-   idle = 3;
+   stop = 3;
    move = 4;
    empty = 5;
    state = 6;
@@ -74,7 +79,7 @@ message EventExit {
     uint32 player_id = 1;
 }
 
-message EventIdle {
+message EventStop {
     uint32 player_id = 1;
 }
 
