@@ -92,7 +92,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-var sprites = make([]*Sprite, 1000)
+var sprites = make([]*Sprite, 1024)
 
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
