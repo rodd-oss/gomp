@@ -156,20 +156,25 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		units := data.GetUnits()
 		if units != nil {
 			for _, unit := range units {
+				wu := world.Units[unit.Id]
+				if wu == nil {
+					continue
+				}
+
 				if unit.Action != nil {
-					world.Units[unit.Id].Action = *unit.Action
+					wu.Action = *unit.Action
 				}
 
 				if unit.Velocity != nil {
-					world.Units[unit.Id].Velocity = unit.Velocity
+					wu.Velocity = unit.Velocity
 				}
 
 				if unit.Position != nil {
-					world.Units[unit.Id].Position = unit.Position
+					wu.Position = unit.Position
 				}
 
 				if unit.Side != nil {
-					world.Units[unit.Id].Side = *unit.Side
+					wu.Side = *unit.Side
 				}
 			}
 		}
