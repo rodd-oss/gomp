@@ -39,7 +39,6 @@ func (world *Game) AddPlayer() *protos.Unit {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
 
-	skins := []string{"big_demon", "big_zombie", "elf_f"}
 	id := world.lastPlayerID
 	world.lastPlayerID++
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -50,7 +49,7 @@ func (world *Game) AddPlayer() *protos.Unit {
 			Y: rnd.Float64()*220 + 10,
 		},
 		Frame:  int32(rnd.Intn(4)),
-		Skin:   skins[rnd.Intn(len(skins))],
+		Skin:   protos.Skin(rnd.Intn(len(protos.Skin_name))),
 		Action: protos.Action_idle,
 		Velocity: &protos.Velocity{
 			Direction: protos.Direction_left,
