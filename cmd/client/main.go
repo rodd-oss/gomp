@@ -148,7 +148,7 @@ func (g *Game) Draw(screen *e.Image) {
 		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%4], op)
 	}
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f ; FPS: %0.2f ; dt: %0.3f ; maxdt: %0.3f ; avgdt: %0.3f ; players: %d", e.ActualTPS(), e.ActualFPS(), dt, maxDt, avgDt, len(world.Units)))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f ; FPS: %0.2f ; dt: %0.3f ; maxdt: %0.3f ; avgdt: %0.3f ; players: %d ; posX: %0.3f ; posY: %0.3f", e.ActualTPS(), e.ActualFPS(), dt, maxDt, avgDt, len(world.Units), world.Units[world.MyID].Position.X, world.Units[world.MyID].Position.Y))
 }
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
