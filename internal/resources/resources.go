@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"math/rand"
 	"os"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -184,30 +186,17 @@ func Load() (frames map[string]Frames, err error) {
 	return sprites, nil
 }
 
-func LoadLevel() [][]string {
-	a := "floor_1"
-	b := "floor_2"
-	c := "floor_3"
-	d := "floor_4"
+func LoadLevel(width int, height int) [][]string {
+	level := make([][]string, height)
 
-	level := [][]string{
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, b, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, c, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, c, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, d, a, a, a, a, a, a, a},
-		{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a},
+	// generate random level
+	for i := 0; i < height; i++ {
+		row := make([]string, width)
+
+		for j := 0; j < width; j++ {
+			row[j] = "floor_" + strconv.Itoa(rand.Intn(8)+1)
+		}
+		level[i] = row
 	}
 
 	return level

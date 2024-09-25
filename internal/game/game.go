@@ -159,6 +159,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		units := data.GetUnits()
 		if units != nil {
 			for _, unit := range units {
+				if unit == nil {
+					continue
+				}
+
 				wu := world.Units[unit.Id]
 				if wu == nil {
 					continue
@@ -199,7 +203,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 
 const (
 	patchRate     = time.Second / 20
-	lazyPatchRate = time.Second * 30
+	lazyPatchRate = time.Minute * 5
 )
 
 func (world *Game) Run(tickRate time.Duration) {
