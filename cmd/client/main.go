@@ -179,7 +179,7 @@ func init() {
 
 func main() {
 	world = game.New(true, map[uint32]*protos.Unit{})
-	sprites = make([]*Sprite, world.MaxPlayers)
+	sprites = make([]*Sprite, world.MaxPlayers+1)
 
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"
