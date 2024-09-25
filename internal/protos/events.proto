@@ -82,7 +82,11 @@ message EventMove {
 message GameState {
     map<uint32, Unit> units = 1;
 }
+
+message Empty{}
   
 message GameStatePatche {
     map<uint32, PatchUnit> units = 1;
+    map<uint32, Unit> created_units = 2;
+    map<uint32, Empty> deleted_units_ids = 3;
 }

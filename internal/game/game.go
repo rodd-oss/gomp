@@ -13,9 +13,11 @@ import (
 // Game represents game state
 type Game struct {
 	Mx              sync.Mutex
-	IsServer        bool
+	IsClient        bool
 	Units           map[uint32]*protos.Unit
 	PatchedUnits    map[uint32]*protos.PatchUnit
+	DeletedUnitsIds map[uint32]*protos.Empty
+	CreatedUnits    map[uint32]*protos.Unit
 	UnitsSerialized *[]byte
 	MyID            uint32
 	UnhandledEvents []*protos.Event
@@ -23,13 +25,15 @@ type Game struct {
 	lastPlayerID    uint32
 }
 
-func New(isServer bool, units map[uint32]*protos.Unit) *Game {
+func New(isClient bool, units map[uint32]*protos.Unit) *Game {
 	world := &Game{
-		IsServer:     isServer,
-		Units:        units,
-		PatchedUnits: make(map[uint32]*protos.PatchUnit),
-		Broadcast:    make(chan []byte, 1),
-		lastPlayerID: 0,
+		IsClient:        isClient,
+		Units:           units,
+		PatchedUnits:    make(map[uint32]*protos.PatchUnit),
+		CreatedUnits:    make(map[uint32]*protos.Unit),
+		DeletedUnitsIds: make(map[uint32]*protos.Empty),
+		Broadcast:       make(chan []byte, 1),
+		lastPlayerID:    0,
 	}
 
 	return world
@@ -56,6 +60,8 @@ func (world *Game) AddPlayer() *protos.Unit {
 			Speed:     100,
 		},
 	}
+	delete(world.DeletedUnitsIds, unit.Id)
+	world.CreatedUnits[id] = unit
 	world.Units[id] = unit
 
 	return unit
@@ -65,6 +71,8 @@ func (world *Game) RemovePlayer(unit *protos.Unit) {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
 
+	world.DeletedUnitsIds[unit.Id] = &protos.Empty{}
+	delete(world.CreatedUnits, unit.Id)
 	delete(world.Units, unit.Id)
 }
 
@@ -82,17 +90,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 
 	etype := event.GetType()
 	switch etype {
-	case protos.EventType_connect:
-		data := event.GetConnect()
-		world.Units[data.Unit.Id] = data.Unit
-
 	case protos.EventType_init:
-		if world.IsServer {
+		if world.IsClient {
 			world.MyID = event.PlayerId
 		}
-
-	case protos.EventType_exit:
-		delete(world.Units, event.PlayerId)
 
 	case protos.EventType_move:
 		data := event.GetMove()
@@ -103,11 +104,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		unit.Action = protos.Action_run
 		unit.Velocity.Direction = data.Direction
 
-		if !world.IsServer {
-			if event.PlayerId == unit.Id {
-				return
-			}
-
+		if !world.IsClient {
 			world.PatchedUnits[event.PlayerId] = &protos.PatchUnit{
 				Id:     event.PlayerId,
 				Action: &unit.Action,
@@ -129,7 +126,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 		unit.Action = protos.Action_idle
 
-		if !world.IsServer {
+		if !world.IsClient {
 			world.PatchedUnits[event.PlayerId] = &protos.PatchUnit{
 				Id:     event.PlayerId,
 				Action: &unit.Action,
@@ -141,7 +138,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 
 	case protos.EventType_state:
-		if !world.IsServer {
+		if !world.IsClient {
 			return
 		}
 
@@ -152,7 +149,7 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 
 	case protos.EventType_state_patch:
-		if !world.IsServer {
+		if !world.IsClient {
 			return
 		}
 
@@ -181,6 +178,16 @@ func (world *Game) HandleEvent(event *protos.Event) {
 					wu.Side = *unit.Side
 				}
 			}
+		}
+		createdUnits := data.GetCreatedUnits()
+		if createdUnits != nil {
+			for _, unit := range createdUnits {
+				world.Units[unit.Id] = unit
+			}
+		}
+		deletedUnitsIds := data.GetDeletedUnitsIds()
+		for id := range deletedUnitsIds {
+			delete(world.Units, id)
 		}
 
 	default:
@@ -225,7 +232,7 @@ func (world *Game) Run(tickRate time.Duration) {
 			world.HandlePhysics(dt)
 			lastEvolveTime = time.Now()
 
-			if world.IsServer == false {
+			if world.IsClient == false {
 				world.Mx.Lock()
 				cachedUnits := make(map[uint32]*protos.Unit, len(world.Units))
 				for key, value := range world.Units {
@@ -249,14 +256,17 @@ func (world *Game) Run(tickRate time.Duration) {
 				world.UnitsSerialized = &s
 			}
 		case <-patchTicker.C:
-			if len(world.PatchedUnits) == 0 {
+			if len(world.PatchedUnits) == 0 && len(world.CreatedUnits) == 0 && len(world.DeletedUnitsIds) == 0 {
 				continue
 			}
+
 			statePatchEvent := &protos.Event{
 				Type: protos.EventType_state_patch,
 				Data: &protos.Event_StatePatch{
 					StatePatch: &protos.GameStatePatche{
-						Units: world.PatchedUnits,
+						Units:           world.PatchedUnits,
+						CreatedUnits:    world.CreatedUnits,
+						DeletedUnitsIds: world.DeletedUnitsIds,
 					},
 				},
 			}
@@ -267,6 +277,8 @@ func (world *Game) Run(tickRate time.Duration) {
 			}
 			world.Broadcast <- m
 			world.PatchedUnits = make(map[uint32]*protos.PatchUnit)
+			world.CreatedUnits = make(map[uint32]*protos.Unit)
+			world.DeletedUnitsIds = make(map[uint32]*protos.Empty)
 
 		case <-lazyPatchTicker.C:
 			world.Broadcast <- *world.UnitsSerialized

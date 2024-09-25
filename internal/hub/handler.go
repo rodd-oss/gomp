@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"log"
 	"net/http"
 	"sync"
 	"tomb_mates/internal/game"
@@ -62,29 +61,6 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	if err != nil {
 		return err
 	}
-
-	event = &protos.Event{
-		Type: protos.EventType_connect,
-		Data: &protos.Event_Connect{
-			Connect: &protos.EventConnect{Unit: unit},
-		},
-	}
-	message, err = proto.Marshal(event)
-	if err != nil {
-		return err
-	}
-	h.broadcast <- message
-	defer func() {
-		event := &protos.Event{
-			Type:     protos.EventType_exit,
-			PlayerId: client.id,
-		}
-		message, err := proto.Marshal(event)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		h.broadcast <- message
-	}()
 
 	var wg sync.WaitGroup
 	wg.Add(2)
