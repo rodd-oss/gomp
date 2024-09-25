@@ -19,12 +19,14 @@ type Game struct {
 	UnitsSerialized *[]byte
 	MyID            string
 	UnhandledEvents []*protos.Event
+	Broadcast       chan []byte
 }
 
 func New(isReplica bool, units map[string]*protos.Unit) *Game {
 	world := &Game{
-		Replica: isReplica,
-		Units:   units,
+		Replica:   isReplica,
+		Units:     units,
+		Broadcast: make(chan []byte, 1),
 	}
 
 	return world
@@ -134,9 +136,14 @@ func (world *Game) ProccessEvents() error {
 	return nil
 }
 
+const patchRate = time.Second / 2
+
 func (world *Game) Run(tickRate time.Duration) {
 	ticker := time.NewTicker(tickRate)
 	lastEvolveTime := time.Now()
+
+	patchTicker := time.NewTicker(patchRate)
+	defer patchTicker.Stop()
 
 	for {
 		select {
@@ -170,7 +177,10 @@ func (world *Game) Run(tickRate time.Duration) {
 
 				world.UnitsSerialized = &s
 			}
+		case <-patchTicker.C:
+			world.Broadcast <- *world.UnitsSerialized
 		}
+
 	}
 }
 

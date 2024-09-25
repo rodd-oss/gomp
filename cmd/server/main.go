@@ -22,8 +22,8 @@ const tickRate = time.Second / 60
 
 func main() {
 	e := echo.New()
-	h := hub.New()
 	w := game.New(false, make(map[string]*protos.Unit))
+	h := hub.New(w)
 	go w.Run(tickRate)
 
 	// e.Use(middleware.Logger())

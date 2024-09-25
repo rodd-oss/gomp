@@ -2,6 +2,7 @@ package hub
 
 import (
 	"time"
+	"tomb_mates/internal/game"
 )
 
 // Hub maintains the set of active clients and broadcasts messages
@@ -13,29 +14,24 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func New() *Hub {
+func New(world *game.Game) *Hub {
 	h := &Hub{
-		broadcast:  make(chan []byte, 256),
+		broadcast:  make(chan []byte, 1),
 		register:   make(chan *Client, 32),
 		unregister: make(chan *Client, 32),
 		clients:    make(map[*Client]bool),
 	}
 
-	go h.run()
+	go h.run(world)
 
 	return h
 }
 
-const patchRate = time.Second / 10
-
-func (h *Hub) run() {
+func (h *Hub) run(world *game.Game) {
 	playersCount := -1
 
 	playerCounterTicker := time.NewTicker(time.Second * 1)
 	defer playerCounterTicker.Stop()
-
-	patchTicker := time.NewTicker(patchRate)
-	defer patchTicker.Stop()
 
 	for {
 		select {
@@ -44,22 +40,16 @@ func (h *Hub) run() {
 				playersCount = len(h.clients)
 				println("Players: ", playersCount)
 			}
-		case <-patchTicker.C:
-			messages := make([]byte, 0)
-
-			n := len(h.broadcast)
-			if n == 0 {
-				continue
-			}
-
-			for i := 0; i < n; i++ {
-				message := <-h.broadcast
-				messages = append(messages, message...)
-			}
-
+		case message := <-world.Broadcast:
 			for client := range h.clients {
 				if len(client.send) != cap(client.send) {
-					client.send <- messages
+					client.send <- message
+				}
+			}
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				if len(client.send) != cap(client.send) {
+					client.send <- message
 				}
 			}
 		case client := <-h.register:

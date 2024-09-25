@@ -64,7 +64,7 @@ func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 		}
 
 		world.RegisterEvent(event)
-		c.hub.broadcast <- message
+		// c.hub.broadcast <- message
 	}
 }
 
