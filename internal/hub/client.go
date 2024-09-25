@@ -63,6 +63,8 @@ func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 			return
 		}
 
+		event.PlayerId = c.id
+
 		world.RegisterEvent(event)
 		// c.hub.broadcast <- message
 	}

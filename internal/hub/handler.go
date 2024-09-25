@@ -45,12 +45,8 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	defer func() { client.hub.unregister <- client }()
 
 	event := &protos.Event{
-		Type: protos.EventType_init,
-		Data: &protos.Event_Init{
-			Init: &protos.EventInit{
-				PlayerId: unit.Id,
-			},
-		},
+		Type:     protos.EventType_init,
+		PlayerId: unit.Id,
 	}
 	message, err := proto.Marshal(event)
 	if err != nil {
@@ -80,10 +76,8 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	h.broadcast <- message
 	defer func() {
 		event := &protos.Event{
-			Type: protos.EventType_exit,
-			Data: &protos.Event_Exit{
-				Exit: &protos.EventExit{PlayerId: client.id},
-			},
+			Type:     protos.EventType_exit,
+			PlayerId: client.id,
 		}
 		message, err := proto.Marshal(event)
 		if err != nil {

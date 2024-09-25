@@ -269,10 +269,10 @@ func handleInput(c *websocket.Conn) error {
 			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
-					PlayerId:  world.MyID,
 					Direction: protos.Direction_left,
 				},
 			},
+			PlayerId: world.MyID,
 		}
 		if currentKey != e.KeyA {
 			currentKey = e.KeyA
@@ -284,10 +284,10 @@ func handleInput(c *websocket.Conn) error {
 			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
-					PlayerId:  world.MyID,
 					Direction: protos.Direction_right,
 				},
 			},
+			PlayerId: world.MyID,
 		}
 		if currentKey != e.KeyD {
 			currentKey = e.KeyD
@@ -299,10 +299,10 @@ func handleInput(c *websocket.Conn) error {
 			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
-					PlayerId:  world.MyID,
 					Direction: protos.Direction_up,
 				},
 			},
+			PlayerId: world.MyID,
 		}
 		if currentKey != e.KeyW {
 			currentKey = e.KeyW
@@ -314,10 +314,10 @@ func handleInput(c *websocket.Conn) error {
 			Type: protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
-					PlayerId:  world.MyID,
 					Direction: protos.Direction_down,
 				},
 			},
+			PlayerId: world.MyID,
 		}
 		if currentKey != e.KeyS {
 			currentKey = e.KeyS
@@ -343,10 +343,8 @@ func handleInput(c *websocket.Conn) error {
 	} else {
 		if unit.Action != protos.Action_idle {
 			event = &protos.Event{
-				Type: protos.EventType_stop,
-				Data: &protos.Event_Stop{
-					Stop: &protos.EventStop{PlayerId: world.MyID},
-				},
+				Type:     protos.EventType_stop,
+				PlayerId: world.MyID,
 			}
 
 			world.HandleEvent(event)

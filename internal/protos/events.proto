@@ -52,14 +52,12 @@ message PatchUnit {
 message Event {
     EventType type = 1;
     oneof data {
-        EventInit init = 2;
         EventConnect connect = 3;
-        EventExit exit = 4;
-        EventStop stop = 5;
         EventMove move = 6;
         GameState state = 7;
         GameStatePatche state_patch = 8;
     }
+    uint32 player_id = 9;
 }
 
 enum EventType {
@@ -73,24 +71,11 @@ enum EventType {
    state_patch = 7;
 }
 
-message EventInit {
-    uint32 player_id = 1;
-}
-
 message EventConnect {
     Unit unit = 1;
 }
 
-message EventExit {
-    uint32 player_id = 1;
-}
-
-message EventStop {
-    uint32 player_id = 1;
-}
-
 message EventMove {
-    uint32 player_id = 1;
     Direction direction = 2;
 }
 

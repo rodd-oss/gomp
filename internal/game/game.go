@@ -13,7 +13,7 @@ import (
 // Game represents game state
 type Game struct {
 	Mx              sync.Mutex
-	Replica         bool
+	IsServer        bool
 	Units           map[uint32]*protos.Unit
 	PatchedUnits    map[uint32]*protos.PatchUnit
 	UnitsSerialized *[]byte
@@ -23,9 +23,9 @@ type Game struct {
 	lastPlayerID    uint32
 }
 
-func New(isReplica bool, units map[uint32]*protos.Unit) *Game {
+func New(isServer bool, units map[uint32]*protos.Unit) *Game {
 	world := &Game{
-		Replica:      isReplica,
+		IsServer:     isServer,
 		Units:        units,
 		PatchedUnits: make(map[uint32]*protos.PatchUnit),
 		Broadcast:    make(chan []byte, 1),
@@ -87,28 +87,25 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		world.Units[data.Unit.Id] = data.Unit
 
 	case protos.EventType_init:
-		data := event.GetInit()
-
-		if world.Replica {
-			world.MyID = data.PlayerId
+		if world.IsServer {
+			world.MyID = event.PlayerId
 		}
 
 	case protos.EventType_exit:
-		data := event.GetExit()
-		delete(world.Units, data.PlayerId)
+		delete(world.Units, event.PlayerId)
 
 	case protos.EventType_move:
 		data := event.GetMove()
-		unit := world.Units[data.PlayerId]
+		unit := world.Units[event.PlayerId]
 		if unit == nil {
 			return
 		}
 		unit.Action = protos.Action_run
 		unit.Velocity.Direction = data.Direction
 
-		if !world.Replica {
-			world.PatchedUnits[data.PlayerId] = &protos.PatchUnit{
-				Id:     data.PlayerId,
+		if !world.IsServer {
+			world.PatchedUnits[event.PlayerId] = &protos.PatchUnit{
+				Id:     event.PlayerId,
 				Action: &unit.Action,
 				Velocity: &protos.Velocity{
 					Direction: unit.Velocity.Direction,
@@ -122,16 +119,15 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 
 	case protos.EventType_stop:
-		data := event.GetStop()
-		unit := world.Units[data.PlayerId]
+		unit := world.Units[event.PlayerId]
 		if unit == nil {
 			return
 		}
 		unit.Action = protos.Action_idle
 
-		if !world.Replica {
-			world.PatchedUnits[data.PlayerId] = &protos.PatchUnit{
-				Id:     data.PlayerId,
+		if !world.IsServer {
+			world.PatchedUnits[event.PlayerId] = &protos.PatchUnit{
+				Id:     event.PlayerId,
 				Action: &unit.Action,
 				Position: &protos.Position{
 					X: unit.Position.X,
@@ -141,6 +137,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 
 	case protos.EventType_state:
+		if !world.IsServer {
+			return
+		}
+
 		data := event.GetState()
 		units := data.GetUnits()
 		if units != nil {
@@ -148,6 +148,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 
 	case protos.EventType_state_patch:
+		if !world.IsServer {
+			return
+		}
+
 		data := event.GetStatePatch()
 		units := data.GetUnits()
 		if units != nil {
@@ -212,7 +216,7 @@ func (world *Game) Run(tickRate time.Duration) {
 			world.HandlePhysics(dt)
 			lastEvolveTime = time.Now()
 
-			if world.Replica == false {
+			if world.IsServer == false {
 				world.Mx.Lock()
 				cachedUnits := make(map[uint32]*protos.Unit, len(world.Units))
 				for key, value := range world.Units {
