@@ -104,6 +104,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		unit.Velocity.Direction = data.Direction
 
 		if !world.IsServer {
+			if event.PlayerId == unit.Id {
+				return
+			}
+
 			world.PatchedUnits[event.PlayerId] = &protos.PatchUnit{
 				Id:     event.PlayerId,
 				Action: &unit.Action,
