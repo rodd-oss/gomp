@@ -167,7 +167,7 @@ func init() {
 }
 
 func main() {
-	world = game.New(true, map[string]*protos.Unit{})
+	world = game.New(true, map[uint32]*protos.Unit{})
 
 	url := getEnv("HOST", "ws://localhost:3000/ws")
 

@@ -176,7 +176,7 @@ func init() {
 }
 
 func main() {
-	world = game.New(true, map[string]*protos.Unit{})
+	world = game.New(true, map[uint32]*protos.Unit{})
 
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"

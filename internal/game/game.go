@@ -7,7 +7,6 @@ import (
 	"time"
 	"tomb_mates/internal/protos"
 
-	uuid "github.com/satori/go.uuid"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -15,18 +14,22 @@ import (
 type Game struct {
 	Mx              sync.Mutex
 	Replica         bool
-	Units           map[string]*protos.Unit
+	Units           map[uint32]*protos.Unit
+	PatchedUnits    map[uint32]*protos.PatchUnit
 	UnitsSerialized *[]byte
-	MyID            string
+	MyID            uint32
 	UnhandledEvents []*protos.Event
 	Broadcast       chan []byte
+	lastPlayerID    uint32
 }
 
-func New(isReplica bool, units map[string]*protos.Unit) *Game {
+func New(isReplica bool, units map[uint32]*protos.Unit) *Game {
 	world := &Game{
-		Replica:   isReplica,
-		Units:     units,
-		Broadcast: make(chan []byte, 1),
+		Replica:      isReplica,
+		Units:        units,
+		PatchedUnits: make(map[uint32]*protos.PatchUnit),
+		Broadcast:    make(chan []byte, 1),
+		lastPlayerID: 0,
 	}
 
 	return world
@@ -37,7 +40,8 @@ func (world *Game) AddPlayer() *protos.Unit {
 	defer world.Mx.Unlock()
 
 	skins := []string{"big_demon", "big_zombie", "elf_f"}
-	id := uuid.NewV4().String()
+	id := world.lastPlayerID
+	world.lastPlayerID++
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	unit := &protos.Unit{
 		Id: id,
@@ -103,6 +107,21 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		unit.Action = UnitActionMove
 		unit.Velocity.Direction = data.Direction
 
+		if !world.Replica {
+			world.PatchedUnits[data.PlayerId] = &protos.PatchUnit{
+				Id:     data.PlayerId,
+				Action: &unit.Action,
+				Velocity: &protos.Velocity{
+					Direction: unit.Velocity.Direction,
+					Speed:     unit.Velocity.Speed,
+				},
+				Position: &protos.Position{
+					X: unit.Position.X,
+					Y: unit.Position.Y,
+				},
+			}
+		}
+
 	case protos.EventType_idle:
 		data := event.GetIdle()
 		unit := world.Units[data.PlayerId]
@@ -111,11 +130,45 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		}
 		unit.Action = UnitActionIdle
 
+		if !world.Replica {
+			world.PatchedUnits[data.PlayerId] = &protos.PatchUnit{
+				Id:     data.PlayerId,
+				Action: &unit.Action,
+				Position: &protos.Position{
+					X: unit.Position.X,
+					Y: unit.Position.Y,
+				},
+			}
+		}
+
 	case protos.EventType_state:
 		data := event.GetState()
 		units := data.GetUnits()
 		if units != nil {
 			world.Units = units
+		}
+
+	case protos.EventType_state_patch:
+		data := event.GetStatePatch()
+		units := data.GetUnits()
+		if units != nil {
+			for _, unit := range units {
+				if unit.Action != nil {
+					world.Units[unit.Id].Action = *unit.Action
+				}
+
+				if unit.Velocity != nil {
+					world.Units[unit.Id].Velocity = unit.Velocity
+				}
+
+				if unit.Position != nil {
+					world.Units[unit.Id].Position = unit.Position
+				}
+
+				if unit.Side != nil {
+					world.Units[unit.Id].Side = *unit.Side
+				}
+			}
 		}
 
 	default:
@@ -136,13 +189,19 @@ func (world *Game) ProccessEvents() error {
 	return nil
 }
 
-const patchRate = time.Second
+const (
+	patchRate     = time.Second / 20
+	lazyPatchRate = time.Second * 30
+)
 
 func (world *Game) Run(tickRate time.Duration) {
 	ticker := time.NewTicker(tickRate)
 	lastEvolveTime := time.Now()
 
 	patchTicker := time.NewTicker(patchRate)
+	defer patchTicker.Stop()
+
+	lazyPatchTicker := time.NewTicker(lazyPatchRate)
 	defer patchTicker.Stop()
 
 	for {
@@ -156,7 +215,7 @@ func (world *Game) Run(tickRate time.Duration) {
 
 			if world.Replica == false {
 				world.Mx.Lock()
-				cachedUnits := make(map[string]*protos.Unit, len(world.Units))
+				cachedUnits := make(map[uint32]*protos.Unit, len(world.Units))
 				for key, value := range world.Units {
 					cachedUnits[key] = value
 				}
@@ -178,9 +237,28 @@ func (world *Game) Run(tickRate time.Duration) {
 				world.UnitsSerialized = &s
 			}
 		case <-patchTicker.C:
+			if len(world.PatchedUnits) == 0 {
+				continue
+			}
+			statePatchEvent := &protos.Event{
+				Type: protos.EventType_state_patch,
+				Data: &protos.Event_StatePatch{
+					StatePatch: &protos.GameStatePatche{
+						Units: world.PatchedUnits,
+					},
+				},
+			}
+
+			m, err := proto.Marshal(statePatchEvent)
+			if err != nil {
+				continue
+			}
+			world.Broadcast <- m
+			world.PatchedUnits = make(map[uint32]*protos.PatchUnit)
+
+		case <-lazyPatchTicker.C:
 			world.Broadcast <- *world.UnitsSerialized
 		}
-
 	}
 }
 

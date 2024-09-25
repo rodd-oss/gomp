@@ -21,7 +21,7 @@ message Velocity {
 }
 
 message Unit {
-    string id = 1;
+    uint32 id = 1;
     Position position = 2;
     int32 frame = 3;
     string skin = 4;
@@ -31,10 +31,8 @@ message Unit {
 }
 
 message PatchUnit {
-    string id = 1;
+    uint32 id = 1;
     optional Position position = 2;
-    optional int32 frame = 3;
-    optional string skin = 4;
     optional string action = 5;
     optional Velocity velocity = 6;
     optional Direction side = 7;
@@ -49,6 +47,7 @@ message Event {
         EventIdle idle = 5;
         EventMove move = 6;
         GameState state = 7;
+        GameStatePatche state_patch = 8;
     }
 }
 
@@ -60,10 +59,11 @@ enum EventType {
    move = 4;
    empty = 5;
    state = 6;
+   state_patch = 7;
 }
 
 message EventInit {
-    string player_id = 1;
+    uint32 player_id = 1;
 }
 
 message EventConnect {
@@ -71,22 +71,22 @@ message EventConnect {
 }
 
 message EventExit {
-    string player_id = 1;
+    uint32 player_id = 1;
 }
 
 message EventIdle {
-    string player_id = 1;
+    uint32 player_id = 1;
 }
 
 message EventMove {
-    string player_id = 1;
+    uint32 player_id = 1;
     Direction direction = 2;
 }
 
 message GameState {
-    map<string, Unit> units = 1;
+    map<uint32, Unit> units = 1;
 }
   
-message GameStatePatches {
-    map<string, PatchUnit> units = 1;
+message GameStatePatche {
+    map<uint32, PatchUnit> units = 1;
 }
