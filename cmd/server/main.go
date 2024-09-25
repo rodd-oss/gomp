@@ -49,7 +49,10 @@ func main() {
 	e.Static("/dist", "./.dist")
 
 	e.GET("/", func(c echo.Context) error {
-		return c.Render(http.StatusOK, "IndexPage", "HakaHata")
+		return c.Render(http.StatusOK, "IndexPage", "Index")
+	})
+	e.GET("/game", func(c echo.Context) error {
+		return c.Render(http.StatusOK, "GamePage", "Game")
 	})
 
 	e.GET("/ws", h.WsHandler(w))

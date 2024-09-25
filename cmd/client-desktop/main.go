@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"time"
@@ -188,7 +189,7 @@ func main() {
 			event := &protos.Event{}
 			err = proto.Unmarshal(message, event)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println("Error unmarshaling message: %w", err)
 			}
 
 			world.HandleEvent(event)
@@ -196,16 +197,16 @@ func main() {
 			if event.Type == protos.EventType_connect {
 				me := world.Units[world.MyID]
 				camera = &Camera{
-					X:       me.Position.X,
-					Y:       me.Position.Y,
-					Padding: 30,
+					X:       camera.X + (camera.X-me.Position.X)/100,
+					Y:       camera.Y + (camera.Y-me.Position.Y)/100,
+					Padding: 300,
 				}
 			}
 		}
 	}(ws)
 
 	e.SetRunnableOnUnfocused(true)
-	e.SetWindowSize(config.width, config.height)
+	// e.SetWindowSize(config.width, config.height)
 	e.SetWindowTitle(config.title)
 	game := &Game{Conn: ws}
 	if err := e.RunGame(game); err != nil {
@@ -215,7 +216,7 @@ func main() {
 
 func prepareLevelImage() (*e.Image, error) {
 	tileSize := 16
-	level := resources.LoadLevel()
+	level := resources.LoadLevel(100, 50)
 	width := len(level[0])
 	height := len(level)
 	levelImage := e.NewImage(width*tileSize, height*tileSize)
@@ -240,8 +241,11 @@ func handleCamera(screen *e.Image) {
 
 	player := world.Units[world.MyID]
 	frame := frames[player.Skin.String()+"_"+player.Action.String()]
-	camera.X = player.Position.X - float64(config.width-frame.Config.Width)/2
-	camera.Y = player.Position.Y - float64(config.height-frame.Config.Height)/2
+	absX := math.Abs(camera.X - player.Position.X)
+	absY := math.Abs(camera.Y - player.Position.Y)
+	fmt.Println(absX, absY)
+	camera.X = player.Position.X + absX - float64(config.width-frame.Config.Width)/2
+	camera.Y = player.Position.Y + absY - float64(config.height-frame.Config.Height)/2
 
 	op := &e.DrawImageOptions{}
 	op.GeoM.Translate(-camera.X, -camera.Y)

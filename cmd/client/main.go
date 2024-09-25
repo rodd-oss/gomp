@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"math"
 	"os"
 	"sort"
+	"strings"
 	"syscall/js"
 	"time"
 	"tomb_mates/internal/game"
@@ -148,7 +150,22 @@ func (g *Game) Draw(screen *e.Image) {
 		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%4], op)
 	}
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f ; FPS: %0.2f ; dt: %0.3f ; maxdt: %0.3f ; avgdt: %0.3f ; players: %d ; posX: %0.3f ; posY: %0.3f", e.ActualTPS(), e.ActualFPS(), dt, maxDt, avgDt, len(world.Units), world.Units[world.MyID].Position.X, world.Units[world.MyID].Position.Y))
+	var debugInfo = make([]string, 0)
+
+	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", e.ActualTPS()))
+	debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", e.ActualFPS()))
+	debugInfo = append(debugInfo, fmt.Sprintf("dt %0.3f", dt))
+	debugInfo = append(debugInfo, fmt.Sprintf("max dt %0.3f", maxDt))
+	debugInfo = append(debugInfo, fmt.Sprintf("avg dt %0.3f", avgDt))
+	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(world.Units)))
+
+	myUnit := world.Units[world.MyID]
+	if myUnit != nil {
+		debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", myUnit.Position.X))
+		debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", myUnit.Position.Y))
+	}
+
+	ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
 }
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
@@ -158,13 +175,18 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func init() {
+
+}
+
+func main() {
+	var err error
+
 	config = &Config{
 		title:  "Another Hero",
 		width:  640,
 		height: 480,
 	}
 
-	var err error
 	frames, err = resources.Load()
 	if err != nil {
 		log.Fatal(err)
@@ -175,9 +197,6 @@ func init() {
 		log.Fatal(err)
 	}
 
-}
-
-func main() {
 	world = game.New(true, map[uint32]*protos.Unit{})
 	sprites = make([]*Sprite, world.MaxPlayers+1)
 
@@ -224,17 +243,19 @@ func main() {
 
 func prepareLevelImage() (*e.Image, error) {
 	tileSize := 16
-	level := resources.LoadLevel()
+	level := resources.LoadLevel(25, 50)
 	width := len(level[0])
 	height := len(level)
 	levelImage := e.NewImage(width*tileSize, height*tileSize)
 
-	for i := 0; i < width; i++ {
-		for j := 0; j < height; j++ {
-			op := &e.DrawImageOptions{}
-			op.GeoM.Translate(float64(i*tileSize), float64(j*tileSize))
+	log.Println(width, height)
 
-			levelImage.DrawImage(frames[level[j][i]].Frames[0], op)
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			tile := level[i][j]
+			op := &e.DrawImageOptions{}
+			op.GeoM.Translate(float64(j*tileSize), float64(i*tileSize))
+			levelImage.DrawImage(frames[tile].Frames[0], op)
 		}
 	}
 
@@ -252,14 +273,31 @@ func handleCamera(screen *e.Image) {
 	}
 
 	frame := frames[player.Skin.String()+"_"+player.Action.String()]
-	camera.X = player.Position.X - float64(config.width-frame.Config.Width)/2
-	camera.Y = player.Position.Y - float64(config.height-frame.Config.Height)/2
+	absX := camera.X - player.Position.X + float64(config.width-frame.Config.Width)/2
+	absY := camera.Y - player.Position.Y + float64(config.height-frame.Config.Height)/2
+
+	cameraFollowSpeed := 100000.0
+	if math.Abs(absX) > 15 {
+		d := (absX * absX * absX / cameraFollowSpeed)
+		d = roundFloat(d, 1)
+		camera.X = camera.X - d
+	}
+	if math.Abs(absY) > 15 {
+		d := (absY * absY * absY / cameraFollowSpeed)
+		d = roundFloat(d, 1)
+		camera.Y = camera.Y - d
+	}
 
 	op := &e.DrawImageOptions{}
 	op.GeoM.Translate(-camera.X, -camera.Y)
 	op.GeoM.Scale(1, 1)
 
 	screen.DrawImage(levelImage, op)
+}
+
+func roundFloat(f float64, n int) float64 {
+	m := math.Pow(10, float64(n))
+	return math.Round(f*m) / m
 }
 
 func handleInput(c *websocket.Conn) error {
