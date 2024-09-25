@@ -35,7 +35,7 @@ func New(isClient bool, units map[uint32]*protos.Unit) *Game {
 		DeletedUnitsIds: make(map[uint32]*protos.Empty),
 		Broadcast:       make(chan []byte, 1),
 		lastPlayerID:    0,
-		MaxPlayers:      50000,
+		MaxPlayers:      1000,
 	}
 
 	return world
