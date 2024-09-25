@@ -14,7 +14,7 @@ import (
 
 func (h *Hub) WsHandler(world *game.Game) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if len(world.Units) > 10000 {
+		if len(world.Units) > 1000 {
 			return c.String(http.StatusBadRequest, "Too many players")
 		}
 		return h.handleWsConnection(world, c.Response().Writer, c.Request())
