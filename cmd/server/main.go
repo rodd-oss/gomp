@@ -15,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"golang.org/x/time/rate"
 )
 
 const tickRate = time.Second / 60
@@ -34,7 +35,7 @@ func main() {
 	}))
 
 	e.Use(middleware.BodyLimit("2M"))
-	// e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(60))))
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(60))))
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(getEnv("AUTH_SECRET", "jdkljskldjslk")))))
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
