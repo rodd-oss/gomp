@@ -92,7 +92,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-var sprites = make([]*Sprite, 1024)
+var sprites []*Sprite
 
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
@@ -179,6 +179,7 @@ func init() {
 
 func main() {
 	world = game.New(true, map[uint32]*protos.Unit{})
+	sprites = make([]*Sprite, world.MaxPlayers)
 
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"

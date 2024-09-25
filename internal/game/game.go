@@ -23,6 +23,7 @@ type Game struct {
 	UnhandledEvents []*protos.Event
 	Broadcast       chan []byte
 	lastPlayerID    uint32
+	MaxPlayers      int32
 }
 
 func New(isClient bool, units map[uint32]*protos.Unit) *Game {
@@ -34,6 +35,7 @@ func New(isClient bool, units map[uint32]*protos.Unit) *Game {
 		DeletedUnitsIds: make(map[uint32]*protos.Empty),
 		Broadcast:       make(chan []byte, 1),
 		lastPlayerID:    0,
+		MaxPlayers:      50000,
 	}
 
 	return world
@@ -195,19 +197,6 @@ func (world *Game) HandleEvent(event *protos.Event) {
 	}
 }
 
-func (world *Game) ProccessEvents() error {
-	world.Mx.Lock()
-	defer world.Mx.Unlock()
-
-	for _, event := range world.UnhandledEvents {
-		world.HandleEvent(event)
-	}
-
-	world.UnhandledEvents = make([]*protos.Event, 0)
-
-	return nil
-}
-
 const (
 	patchRate     = time.Second / 20
 	lazyPatchRate = time.Second * 30
@@ -226,59 +215,11 @@ func (world *Game) Run(tickRate time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
-			world.ProccessEvents()
-
-			dt := time.Now().Sub(lastEvolveTime).Seconds()
-			world.HandlePhysics(dt)
+			world.Update(lastEvolveTime)
 			lastEvolveTime = time.Now()
 
-			if world.IsClient == false {
-				world.Mx.Lock()
-				cachedUnits := make(map[uint32]*protos.Unit, len(world.Units))
-				for key, value := range world.Units {
-					cachedUnits[key] = value
-				}
-				world.Mx.Unlock()
-
-				stateEvent := &protos.Event{
-					Type: protos.EventType_state,
-					Data: &protos.Event_State{
-						State: &protos.GameState{
-							Units: cachedUnits,
-						},
-					},
-				}
-				s, err := proto.Marshal(stateEvent)
-				if err != nil {
-					continue
-				}
-
-				world.UnitsSerialized = &s
-			}
 		case <-patchTicker.C:
-			if len(world.PatchedUnits) == 0 && len(world.CreatedUnits) == 0 && len(world.DeletedUnitsIds) == 0 {
-				continue
-			}
-
-			statePatchEvent := &protos.Event{
-				Type: protos.EventType_state_patch,
-				Data: &protos.Event_StatePatch{
-					StatePatch: &protos.GameStatePatche{
-						Units:           world.PatchedUnits,
-						CreatedUnits:    world.CreatedUnits,
-						DeletedUnitsIds: world.DeletedUnitsIds,
-					},
-				},
-			}
-
-			m, err := proto.Marshal(statePatchEvent)
-			if err != nil {
-				continue
-			}
-			world.Broadcast <- m
-			world.PatchedUnits = make(map[uint32]*protos.PatchUnit)
-			world.CreatedUnits = make(map[uint32]*protos.Unit)
-			world.DeletedUnitsIds = make(map[uint32]*protos.Empty)
+			world.SendPatch()
 
 		case <-lazyPatchTicker.C:
 			world.Broadcast <- *world.UnitsSerialized
@@ -286,9 +227,78 @@ func (world *Game) Run(tickRate time.Duration) {
 	}
 }
 
-func (world *Game) HandlePhysics(dt float64) {
+func (world *Game) Update(lastUpdateAt time.Time) {
 	world.Mx.Lock()
 	defer world.Mx.Unlock()
+
+	for _, event := range world.UnhandledEvents {
+		world.HandleEvent(event)
+	}
+
+	world.UnhandledEvents = make([]*protos.Event, 0)
+
+	dt := time.Now().Sub(lastUpdateAt).Seconds()
+	world.HandlePhysics(dt)
+
+	if world.IsClient == false {
+		cachedUnits := make(map[uint32]*protos.Unit, len(world.Units))
+		for key, value := range world.Units {
+			cachedUnits[key] = value
+		}
+
+		stateEvent := &protos.Event{
+			Type: protos.EventType_state,
+			Data: &protos.Event_State{
+				State: &protos.GameState{
+					Units: cachedUnits,
+				},
+			},
+		}
+		s, err := proto.Marshal(stateEvent)
+		if err != nil {
+			return
+		}
+
+		world.UnitsSerialized = &s
+	}
+
+	return
+}
+
+func (world *Game) SendPatch() {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
+	if len(world.PatchedUnits) == 0 && len(world.CreatedUnits) == 0 && len(world.DeletedUnitsIds) == 0 {
+		return
+	}
+
+	statePatchEvent := &protos.Event{
+		Type: protos.EventType_state_patch,
+		Data: &protos.Event_StatePatch{
+			StatePatch: &protos.GameStatePatche{
+				Units:           world.PatchedUnits,
+				CreatedUnits:    world.CreatedUnits,
+				DeletedUnitsIds: world.DeletedUnitsIds,
+			},
+		},
+	}
+
+	m, err := proto.Marshal(statePatchEvent)
+	if err != nil {
+		return
+	}
+	world.Broadcast <- m
+	world.PatchedUnits = make(map[uint32]*protos.PatchUnit)
+	world.CreatedUnits = make(map[uint32]*protos.Unit)
+	world.DeletedUnitsIds = make(map[uint32]*protos.Empty)
+}
+
+func (world *Game) HandlePhysics(dt float64) {
+	if world.IsClient {
+		world.Mx.Lock()
+		defer world.Mx.Unlock()
+	}
 
 	for i := range world.Units {
 		if world.Units[i].Action == protos.Action_run {
