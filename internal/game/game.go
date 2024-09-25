@@ -136,7 +136,7 @@ func (world *Game) ProccessEvents() error {
 	return nil
 }
 
-const patchRate = time.Second / 2
+const patchRate = time.Second / 20
 
 func (world *Game) Run(tickRate time.Duration) {
 	ticker := time.NewTicker(tickRate)
