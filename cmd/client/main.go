@@ -243,7 +243,7 @@ func main() {
 
 func prepareLevelImage() (*e.Image, error) {
 	tileSize := 16
-	level := resources.LoadLevel(25, 50)
+	level := resources.LoadLevel(25, 25)
 	width := len(level[0])
 	height := len(level)
 	levelImage := e.NewImage(width*tileSize, height*tileSize)
