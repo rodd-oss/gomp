@@ -144,7 +144,6 @@ func (g *Game) Draw(screen *e.Image) {
 			hpOp.GeoM.Scale(float64(sprite.Hp)/100.0, 1)
 			hpOp.GeoM.Translate(sprite.X-camera.X+float64(sprite.Config.Width)/2-16, sprite.Y-camera.Y-15)
 			hpFrameIndex := 4 - int(math.Ceil(float64(sprite.Hp)/25))
-			fmt.Println(hpFrameIndex)
 			screen.DrawImage(hpBar[hpFrameIndex], hpOp)
 		}
 
