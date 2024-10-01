@@ -10,7 +10,9 @@
   }
 
   const go = new Go();
-  WebAssembly.instantiateStreaming(fetch("dist/web-client.wasm"), go.importObject).then((result) => {
+
+  const now = Date.now();
+  WebAssembly.instantiateStreaming(fetch(`dist/web-client.wasm?t=${now}`), go.importObject).then((result) => {
     go.run(result.instance);
   });
 </script>
