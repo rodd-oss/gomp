@@ -39,6 +39,7 @@ message Unit {
     Action action = 5;
     Velocity velocity = 6;
     Direction side = 7;
+    uint32 hp = 8;
 }
 
 message PatchUnit {
@@ -47,6 +48,7 @@ message PatchUnit {
     optional Action action = 5;
     optional Velocity velocity = 6;
     optional Direction side = 7;
+    optional uint32 hp = 8;
 }
 
 message Event {

@@ -182,6 +182,15 @@ func Load() (frames map[string]Frames, err error) {
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_8.png"])},
 		Config: cfgs["floor_8.png"],
 	}
+	sprites["hp"] = Frames{
+		Frames: []*ebiten.Image{
+			ebiten.NewImageFromImage(images["hp1.png"]),
+			ebiten.NewImageFromImage(images["hp2.png"]),
+			ebiten.NewImageFromImage(images["hp3.png"]),
+			ebiten.NewImageFromImage(images["hp4.png"]),
+		},
+		Config: cfgs["hp1.png"],
+	}
 
 	return sprites, nil
 }

@@ -8,28 +8,24 @@ require (
 	github.com/coder/websocket v1.8.12
 	github.com/hajimehoshi/ebiten/v2 v2.7.10
 	github.com/labstack/echo-contrib v0.17.1
-	github.com/satori/go.uuid v1.2.0
+	github.com/labstack/gommon v0.4.2
 	golang.org/x/time v0.5.0
 )
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
-	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895 // indirect
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
-	github.com/ebitengine/purego v0.7.0 // indirect
+	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/gorilla/sessions v1.4.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/jezek/xgb v1.1.1 // indirect

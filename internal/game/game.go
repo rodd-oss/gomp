@@ -61,6 +61,7 @@ func (world *Game) AddPlayer() *protos.Unit {
 			Direction: protos.Direction_left,
 			Speed:     100,
 		},
+		Hp: 100,
 	}
 	delete(world.DeletedUnitsIds, unit.Id)
 	world.CreatedUnits[id] = unit

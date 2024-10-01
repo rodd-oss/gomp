@@ -35,6 +35,7 @@ type Sprite struct {
 	Y      float64
 	Side   protos.Direction
 	Config image.Config
+	Hp     uint32
 }
 
 type Camera struct {
@@ -123,21 +124,30 @@ func (g *Game) Draw(screen *e.Image) {
 			Y:      unit.Position.Y,
 			Side:   unit.Side,
 			Config: frames[unit.Skin.String()+"_"+unit.Action.String()].Config,
+			Hp:     unit.Hp,
 		}
 		i++
 	}
 	world.Mx.Unlock()
+	hpBar := frames["hp"].Frames
 
 	sort.Slice(sprites[:i], func(i, j int) bool {
-		// if sprites[i] == nil || sprites[j] == nil {
-		// 	return true
-		// }
 		depth1 := sprites[i].Y + float64(sprites[i].Config.Height)
 		depth2 := sprites[j].Y + float64(sprites[j].Config.Height)
 		return depth1 < depth2
 	})
+	hpOp := &e.DrawImageOptions{}
 
 	for _, sprite := range sprites[:i] {
+		if sprite.Hp > 0 {
+			hpOp.GeoM.Reset()
+			hpOp.GeoM.Scale(float64(sprite.Hp)/100.0, 1)
+			hpOp.GeoM.Translate(sprite.X-camera.X+float64(sprite.Config.Width)/2-16, sprite.Y-camera.Y-15)
+			hpFrameIndex := 4 - int(math.Ceil(float64(sprite.Hp)/25))
+			fmt.Println(hpFrameIndex)
+			screen.DrawImage(hpBar[hpFrameIndex], hpOp)
+		}
+
 		op := &e.DrawImageOptions{}
 
 		if sprite.Side == protos.Direction_left {
@@ -149,7 +159,6 @@ func (g *Game) Draw(screen *e.Image) {
 
 		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%4], op)
 	}
-
 	var debugInfo = make([]string, 0)
 
 	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", e.ActualTPS()))
