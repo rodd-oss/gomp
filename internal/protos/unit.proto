@@ -1,0 +1,36 @@
+syntax="proto3";
+
+package protos;
+option go_package = "internal/protos";
+import "internal/protos/utils.proto";
+
+enum Action {
+    idle = 0;
+    run = 1;
+}
+
+enum Skin {
+    big_demon = 0;
+    big_zombie = 1;
+    elf_f = 2;
+}
+
+message Unit {
+    uint32 id = 1;
+    Position position = 2;
+    int32 frame = 3;
+    Skin skin = 4;
+    Action action = 5;
+    Velocity velocity = 6;
+    Direction side = 7;
+    uint32 hp = 8;
+}
+
+message PatchUnit {
+    uint32 id = 1;
+    optional Position position = 2;
+    optional Action action = 5;
+    optional Velocity velocity = 6;
+    optional Direction side = 7;
+    optional uint32 hp = 8;
+}

@@ -57,7 +57,7 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 		return err
 	}
 
-	err = conn.WriteMessage(websocket.BinaryMessage, *world.UnitsSerialized)
+	err = conn.WriteMessage(websocket.BinaryMessage, *world.StateSerialized)
 	if err != nil {
 		return err
 	}

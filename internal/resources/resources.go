@@ -12,7 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Frames struct {
+type Sprite struct {
 	Frames []*ebiten.Image
 	image.Config
 }
@@ -41,10 +41,10 @@ func walkDir(prefix string, fn func(path string, info os.FileInfo, err error) er
 	return nil
 }
 
-func Load() (frames map[string]Frames, err error) {
+func Load() (frames map[string]Sprite, err error) {
 	images := map[string]image.Image{}
 	cfgs := map[string]image.Config{}
-	sprites := map[string]Frames{}
+	sprites := map[string]Sprite{}
 
 	prefix := "sprites"
 
@@ -94,7 +94,7 @@ func Load() (frames map[string]Frames, err error) {
 		return nil, err
 	}
 
-	sprites["big_demon_idle"] = Frames{
+	sprites["big_demon_idle"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["big_demon_idle_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["big_demon_idle_anim_f1.png"]),
@@ -103,7 +103,7 @@ func Load() (frames map[string]Frames, err error) {
 		},
 		Config: cfgs["big_demon_idle_anim_f0.png"],
 	}
-	sprites["big_demon_run"] = Frames{
+	sprites["big_demon_run"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["big_demon_run_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["big_demon_run_anim_f1.png"]),
@@ -113,7 +113,7 @@ func Load() (frames map[string]Frames, err error) {
 		Config: cfgs["big_demon_run_anim_f0.png"],
 	}
 
-	sprites["big_zombie_idle"] = Frames{
+	sprites["big_zombie_idle"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["big_zombie_idle_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["big_zombie_idle_anim_f1.png"]),
@@ -122,7 +122,7 @@ func Load() (frames map[string]Frames, err error) {
 		},
 		Config: cfgs["big_zombie_idle_anim_f0.png"],
 	}
-	sprites["big_zombie_run"] = Frames{
+	sprites["big_zombie_run"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["big_zombie_run_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["big_zombie_run_anim_f1.png"]),
@@ -132,7 +132,7 @@ func Load() (frames map[string]Frames, err error) {
 		Config: cfgs["big_zombie_run_anim_f0.png"],
 	}
 
-	sprites["elf_f_idle"] = Frames{
+	sprites["elf_f_idle"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["elf_f_idle_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["elf_f_idle_anim_f1.png"]),
@@ -141,7 +141,7 @@ func Load() (frames map[string]Frames, err error) {
 		},
 		Config: cfgs["elf_f_idle_anim_f0.png"],
 	}
-	sprites["elf_f_run"] = Frames{
+	sprites["elf_f_run"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["elf_f_run_anim_f0.png"]),
 			ebiten.NewImageFromImage(images["elf_f_run_anim_f1.png"]),
@@ -150,39 +150,39 @@ func Load() (frames map[string]Frames, err error) {
 		},
 		Config: cfgs["elf_f_run_anim_f0.png"],
 	}
-	sprites["floor_1"] = Frames{
+	sprites["floor_1"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_1.png"])},
 		Config: cfgs["floor_1.png"],
 	}
-	sprites["floor_2"] = Frames{
+	sprites["floor_2"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_2.png"])},
 		Config: cfgs["floor_2.png"],
 	}
-	sprites["floor_3"] = Frames{
+	sprites["floor_3"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_3.png"])},
 		Config: cfgs["floor_3.png"],
 	}
-	sprites["floor_4"] = Frames{
+	sprites["floor_4"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_4.png"])},
 		Config: cfgs["floor_4.png"],
 	}
-	sprites["floor_5"] = Frames{
+	sprites["floor_5"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_5.png"])},
 		Config: cfgs["floor_5.png"],
 	}
-	sprites["floor_6"] = Frames{
+	sprites["floor_6"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_6.png"])},
 		Config: cfgs["floor_6.png"],
 	}
-	sprites["floor_7"] = Frames{
+	sprites["floor_7"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_7.png"])},
 		Config: cfgs["floor_7.png"],
 	}
-	sprites["floor_8"] = Frames{
+	sprites["floor_8"] = Sprite{
 		Frames: []*ebiten.Image{ebiten.NewImageFromImage(images["floor_8.png"])},
 		Config: cfgs["floor_8.png"],
 	}
-	sprites["hp"] = Frames{
+	sprites["hp"] = Sprite{
 		Frames: []*ebiten.Image{
 			ebiten.NewImageFromImage(images["hp1.png"]),
 			ebiten.NewImageFromImage(images["hp2.png"]),
@@ -190,6 +190,20 @@ func Load() (frames map[string]Frames, err error) {
 			ebiten.NewImageFromImage(images["hp4.png"]),
 		},
 		Config: cfgs["hp1.png"],
+	}
+
+	sprites["ability_firepizza"] = Sprite{
+		Frames: []*ebiten.Image{
+			ebiten.NewImageFromImage(images["fire-pizza.png"]),
+		},
+		Config: cfgs["fire-pizza.png"],
+	}
+
+	sprites["area"] = Sprite{
+		Frames: []*ebiten.Image{
+			ebiten.NewImageFromImage(images["area.png"]),
+		},
+		Config: cfgs["area.png"],
 	}
 
 	return sprites, nil

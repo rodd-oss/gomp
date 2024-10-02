@@ -33,7 +33,7 @@ type Sprite struct {
 	Frame  int
 	X      float64
 	Y      float64
-	Side   protos.Direction
+	op     *e.DrawImageOptions
 	Config image.Config
 	Hp     uint32
 }
@@ -51,7 +51,7 @@ var camera *Camera = &Camera{
 	Y:       0,
 	Padding: 30,
 }
-var frames map[string]resources.Frames
+var frames map[string]resources.Sprite
 var frame int
 var currentKey e.Key
 var prevKey e.Key
@@ -92,6 +92,8 @@ func (g *Game) Update() error {
 		return err
 	}
 
+	frame++
+
 	return nil
 }
 
@@ -112,9 +114,26 @@ func (g *Game) Draw(screen *e.Image) {
 		return
 	}
 
-	frame++
-
 	i := 0
+
+	world.Mx.Lock()
+	for _, area := range world.Areas {
+		sprites[i] = &Sprite{
+			Frames: frames[area.Skin].Frames,
+			Frame:  int(area.Frame),
+			X:      area.Position.X,
+			Y:      area.Position.Y,
+			Config: frames[area.Skin].Config,
+		}
+		op := &e.DrawImageOptions{}
+		op.GeoM.Scale(area.Size.X/float64(sprites[i].Config.Width), area.Size.Y/float64(sprites[i].Config.Height))
+		sprites[i].op = op
+
+		i++
+	}
+	world.Mx.Unlock()
+
+	firstUnitIndex := i
 	world.Mx.Lock()
 	for _, unit := range world.Units {
 		sprites[i] = &Sprite{
@@ -122,22 +141,31 @@ func (g *Game) Draw(screen *e.Image) {
 			Frame:  int(unit.Frame),
 			X:      unit.Position.X,
 			Y:      unit.Position.Y,
-			Side:   unit.Side,
 			Config: frames[unit.Skin.String()+"_"+unit.Action.String()].Config,
 			Hp:     unit.Hp,
 		}
+
+		op := &e.DrawImageOptions{}
+
+		if unit.Side == protos.Direction_left {
+			op.GeoM.Scale(-1, 1)
+			op.GeoM.Translate(float64(sprites[i].Config.Width), 0)
+		}
+
+		sprites[i].op = op
+
 		i++
 	}
 	world.Mx.Unlock()
 	hpBar := frames["hp"].Frames
 
-	sort.Slice(sprites[:i], func(i, j int) bool {
+	sort.Slice(sprites[firstUnitIndex:i], func(i, j int) bool {
 		depth1 := sprites[i].Y + float64(sprites[i].Config.Height)
 		depth2 := sprites[j].Y + float64(sprites[j].Config.Height)
 		return depth1 < depth2
 	})
-	hpOp := &e.DrawImageOptions{}
 
+	hpOp := &e.DrawImageOptions{}
 	for _, sprite := range sprites[:i] {
 		if sprite.Hp > 0 {
 			hpOp.GeoM.Reset()
@@ -147,16 +175,9 @@ func (g *Game) Draw(screen *e.Image) {
 			screen.DrawImage(hpBar[hpFrameIndex], hpOp)
 		}
 
-		op := &e.DrawImageOptions{}
+		sprite.op.GeoM.Translate(sprite.X-camera.X, sprite.Y-camera.Y)
 
-		if sprite.Side == protos.Direction_left {
-			op.GeoM.Scale(-1, 1)
-			op.GeoM.Translate(float64(sprite.Config.Width), 0)
-		}
-
-		op.GeoM.Translate(sprite.X-camera.X, sprite.Y-camera.Y)
-
-		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%4], op)
+		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%len(sprite.Frames)], sprite.op)
 	}
 	var debugInfo = make([]string, 0)
 
@@ -368,6 +389,21 @@ func handleInput(c *websocket.Conn) error {
 		}
 		if currentKey != e.KeyS {
 			currentKey = e.KeyS
+		}
+	}
+
+	if e.IsKeyPressed(e.KeyR) {
+		event = &protos.Event{
+			Type: protos.EventType_cast,
+			Data: &protos.Event_Cast{
+				Cast: &protos.EventCast{
+					AbilityId: 1,
+				},
+			},
+			PlayerId: world.MyID,
+		}
+		if currentKey != e.KeyR {
+			currentKey = e.KeyR
 		}
 	}
 

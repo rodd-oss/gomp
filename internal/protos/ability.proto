@@ -1,0 +1,81 @@
+syntax="proto3";
+
+package abilities;
+option go_package = "internal/protos";
+
+message Effect {
+  uint32 id = 1;
+}
+
+enum AbilityCostType {
+  none = 0;
+  mana = 1;
+  hp = 2;
+}
+
+message AbilityCost{
+  AbilityCostType type = 1;
+  uint32 value = 2;
+}
+
+
+enum AbilityTargetType {
+  no_target = 0;
+  unit = 1;
+  aoe = 2;
+  point = 3;
+  skillshot = 4;
+  global = 5;
+}
+
+message AbilityTargetUnitData {
+
+}
+
+message AbilityTargetAoeData {
+  uint32 range = 1;
+  uint32 radius = 2;
+}
+
+message AbilityTargetPointData {
+
+}
+
+message AbilityTargetSkillshotData {
+
+}
+
+message AbilityTargetGlobalData {
+
+}
+
+message AbilityTarget{
+  AbilityTargetType type = 1;
+  oneof data {
+    AbilityTargetUnitData unit = 2;
+    AbilityTargetAoeData aoe = 3;
+    AbilityTargetPointData point = 4;
+    AbilityTargetSkillshotData skillshot = 5;
+    AbilityTargetGlobalData global = 6;
+  }
+}
+
+
+enum AbilityType {
+  passive = 0;
+  active = 1;
+  toggle = 2;
+}
+
+message AbilityMsg {
+  uint32 id = 1;
+  optional uint32 caster_id = 2;
+  AbilityType type = 3;
+  uint32 cooldown_ms = 4;
+  AbilityCost cost = 5;
+  AbilityTarget target = 6;
+  repeated Effect effects = 7;
+  repeated Effect side_effects = 8;
+  string name = 9;
+  string description = 10;
+}

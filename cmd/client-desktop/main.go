@@ -44,7 +44,7 @@ type Camera struct {
 var config *Config
 var world *game.Game
 var camera *Camera
-var frames map[string]resources.Frames
+var frames map[string]resources.Sprite
 var frame int
 var currentKey e.Key
 var prevKey e.Key

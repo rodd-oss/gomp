@@ -1,0 +1,28 @@
+syntax="proto3";
+
+package protos;
+option go_package = "internal/protos";
+
+message Empty{}
+
+enum Direction {
+    left = 0;
+    right = 1;
+    up = 2;
+    down = 3;
+}
+
+message Position {
+  double x = 1;
+  double y = 2;
+}
+
+message Velocity {
+  double speed = 1;
+  Direction direction = 2;
+}
+
+message Vector2 {
+  double x = 1;
+  double y = 2;
+}

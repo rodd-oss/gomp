@@ -12,30 +12,45 @@ import (
 
 // Game represents game state
 type Game struct {
-	Mx              sync.Mutex
-	IsClient        bool
+	Mx       sync.Mutex
+	IsClient bool
+
+	Areas           map[uint32]*protos.Area
+	PatchedAreas    map[uint32]*protos.PatchArea
+	DeletedAreasIds map[uint32]*protos.Empty
+	CreatedAreas    map[uint32]*protos.Area
+
 	Units           map[uint32]*protos.Unit
 	PatchedUnits    map[uint32]*protos.PatchUnit
 	DeletedUnitsIds map[uint32]*protos.Empty
 	CreatedUnits    map[uint32]*protos.Unit
-	UnitsSerialized *[]byte
+
+	StateSerialized *[]byte
+
 	MyID            uint32
 	UnhandledEvents []*protos.Event
 	Broadcast       chan []byte
 	lastPlayerID    uint32
+	lastAreaID      uint32
 	MaxPlayers      int32
 }
 
 func New(isClient bool, units map[uint32]*protos.Unit) *Game {
 	world := &Game{
 		IsClient:        isClient,
+		Areas:           make(map[uint32]*protos.Area),
 		Units:           units,
 		PatchedUnits:    make(map[uint32]*protos.PatchUnit),
 		CreatedUnits:    make(map[uint32]*protos.Unit),
 		DeletedUnitsIds: make(map[uint32]*protos.Empty),
 		Broadcast:       make(chan []byte, 1),
 		lastPlayerID:    0,
+		lastAreaID:      0,
 		MaxPlayers:      1000,
+	}
+
+	if !world.IsClient {
+		world.AddArea()
 	}
 
 	return world
@@ -77,6 +92,42 @@ func (world *Game) RemovePlayer(unit *protos.Unit) {
 	world.DeletedUnitsIds[unit.Id] = &protos.Empty{}
 	delete(world.CreatedUnits, unit.Id)
 	delete(world.Units, unit.Id)
+}
+
+func (world *Game) AddArea() *protos.Area {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
+	id := world.lastAreaID
+	world.lastAreaID++
+
+	aoe := &protos.Area{
+		Id: id,
+		Position: &protos.Position{
+			X: 0,
+			Y: 0,
+		},
+		Size: &protos.Vector2{
+			X: 100,
+			Y: 100,
+		},
+		Skin:            "area",
+		Frame:           0,
+		AffectedUnitIds: make(map[uint32]*protos.Empty),
+	}
+
+	world.Areas[id] = aoe
+
+	return aoe
+}
+
+func (world *Game) RemoveArea(area *protos.Area) {
+	world.Mx.Lock()
+	defer world.Mx.Unlock()
+
+	world.DeletedUnitsIds[area.Id] = &protos.Empty{}
+	delete(world.CreatedUnits, area.Id)
+	delete(world.Units, area.Id)
 }
 
 func (world *Game) RegisterEvent(event *protos.Event) {
@@ -149,6 +200,10 @@ func (world *Game) HandleEvent(event *protos.Event) {
 		units := data.GetUnits()
 		if units != nil {
 			world.Units = units
+		}
+		areas := data.GetAreas()
+		if areas != nil {
+			world.Areas = areas
 		}
 
 	case protos.EventType_state_patch:
@@ -227,7 +282,7 @@ func (world *Game) Run(tickRate time.Duration) {
 			world.SendPatch()
 
 		case <-lazyPatchTicker.C:
-			world.Broadcast <- *world.UnitsSerialized
+			world.Broadcast <- *world.StateSerialized
 		}
 	}
 }
@@ -251,11 +306,17 @@ func (world *Game) Update(lastUpdateAt time.Time) {
 			cachedUnits[key] = value
 		}
 
+		cachedAreas := make(map[uint32]*protos.Area, len(world.Areas))
+		for key, value := range world.Areas {
+			cachedAreas[key] = value
+		}
+
 		stateEvent := &protos.Event{
 			Type: protos.EventType_state,
 			Data: &protos.Event_State{
 				State: &protos.GameState{
 					Units: cachedUnits,
+					Areas: cachedAreas,
 				},
 			},
 		}
@@ -264,7 +325,7 @@ func (world *Game) Update(lastUpdateAt time.Time) {
 			return
 		}
 
-		world.UnitsSerialized = &s
+		world.StateSerialized = &s
 	}
 
 	return
@@ -323,4 +384,7 @@ func (world *Game) HandlePhysics(dt float64) {
 			}
 		}
 	}
+	// for  := range world.Areas {
+
+	// }
 }

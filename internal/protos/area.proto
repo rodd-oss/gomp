@@ -1,0 +1,22 @@
+syntax="proto3";
+
+package protos;
+option go_package = "internal/protos";
+import "internal/protos/utils.proto";
+
+message Area {
+    uint32 id = 1;
+    Position position = 2;
+    Vector2 size = 3;
+    string skin = 4;
+    int32 frame = 5;
+    map<uint32, Empty> affected_unit_ids = 6;
+}
+
+message PatchArea {
+    uint32 id = 1;
+    optional Position position = 2;
+    optional Vector2 size = 3;
+    map<uint32, Empty> new_affected_unit_ids = 4;
+    map<uint32, Empty> deleted_affected_unit_ids = 5;
+}
