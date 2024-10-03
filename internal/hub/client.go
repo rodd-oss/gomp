@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -64,7 +63,6 @@ func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 			return
 		}
 
-		fmt.Println(c.id)
 		event.PlayerId = c.id
 
 		world.RegisterEvent(event)
