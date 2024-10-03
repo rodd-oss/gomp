@@ -10,7 +10,6 @@ require (
 	github.com/jakecoffman/cp/v2 v2.0.2
 	github.com/labstack/echo-contrib v0.17.1
 	github.com/labstack/gommon v0.4.2
-	github.com/setanarut/anim v1.0.1
 	github.com/yohamta/donburi v1.15.4
 	golang.org/x/time v0.5.0
 )

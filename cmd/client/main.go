@@ -273,6 +273,8 @@ func main() {
 	}
 }
 
+var Sprites = make(map[string]resources.Sprite)
+
 func createState() (s *GameState) {
 	var err error
 	s = &GameState{}
@@ -284,9 +286,8 @@ func createState() (s *GameState) {
 	}
 
 	s.Game = game.New(true)
-	s.Game.Sprites = make(map[string]resources.Sprite)
 
-	s.Game.Sprites, err = resources.Load()
+	Sprites, err = resources.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -348,7 +349,7 @@ func (s *GameState) prepareLevelImage() (*e.Image, error) {
 			tile := level[i][j]
 			op := &e.DrawImageOptions{}
 			op.GeoM.Translate(float64(j*tileSize), float64(i*tileSize))
-			levelImage.DrawImage(s.Game.Sprites[tile].Frames[0], op)
+			levelImage.DrawImage(Sprites[tile].Frames[0], op)
 		}
 	}
 
@@ -367,7 +368,7 @@ func (s *GameState) handleCamera(screen *e.Image) {
 		return
 	}
 
-	frame := s.Game.Sprites[player.Skin.String()+"_"+player.Action.String()]
+	frame := Sprites[player.Skin.String()+"_"+player.Action.String()]
 	absX := camera.X - player.Position.X + float64(s.config.width-frame.Config.Width)/2
 	absY := camera.Y - player.Position.Y + float64(s.config.height-frame.Config.Height)/2
 

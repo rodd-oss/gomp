@@ -8,7 +8,6 @@ import (
 	"time"
 	"tomb_mates/internal/components"
 	"tomb_mates/internal/protos"
-	"tomb_mates/internal/resources"
 
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
@@ -32,7 +31,6 @@ type Game struct {
 	NetworkManager *components.NetworkManagerData
 
 	// Client
-	Sprites  map[string]resources.Sprite
 	IsClient bool
 
 	// Server
