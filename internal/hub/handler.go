@@ -13,7 +13,7 @@ import (
 
 func (h *Hub) WsHandler(world *game.Game) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if len(world.Units) >= int(world.MaxPlayers) {
+		if len(world.NetworkManager.Units) >= int(world.MaxPlayers) {
 			return c.String(http.StatusBadRequest, "Too many players")
 		}
 		return h.handleWsConnection(world, c.Response().Writer, c.Request())
@@ -35,8 +35,8 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 		return err
 	}
 
-	unit := world.AddPlayer()
-	defer world.RemovePlayer(unit)
+	unit := world.CreatePlayer()
+	defer world.RemovePlayer(unit.Id)
 
 	client := &Client{id: unit.Id, hub: h, conn: conn, send: make(chan []byte, 512)}
 

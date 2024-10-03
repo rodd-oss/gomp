@@ -41,10 +41,10 @@ func walkDir(prefix string, fn func(path string, info os.FileInfo, err error) er
 	return nil
 }
 
-func Load() (frames map[string]Sprite, err error) {
+func Load() (sprites map[string]Sprite, err error) {
 	images := map[string]image.Image{}
 	cfgs := map[string]image.Config{}
-	sprites := map[string]Sprite{}
+	sprites = make(map[string]Sprite)
 
 	prefix := "sprites"
 

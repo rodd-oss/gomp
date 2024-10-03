@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 	"math"
 	"os"
-	"sort"
 	"strings"
 	"syscall/js"
 	"time"
+	"tomb_mates/internal/components"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 	"tomb_mates/internal/resources"
@@ -18,6 +19,8 @@ import (
 	"github.com/coder/websocket"
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/jakecoffman/cp/v2"
+	ecs "github.com/yohamta/donburi"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -44,22 +47,22 @@ type Camera struct {
 	Padding float64
 }
 
-var config *Config
-var world *game.Game
 var camera *Camera = &Camera{
 	X:       0,
 	Y:       0,
 	Padding: 30,
 }
-var frames map[string]resources.Sprite
+
 var frame int
 var currentKey e.Key
 var prevKey e.Key
 var levelImage *e.Image
 
-// Game implements ebiten.Game interface.
-type Game struct {
-	Conn *websocket.Conn
+// GameState implements ebiten.GameState interface.
+type GameState struct {
+	Conn   *websocket.Conn
+	Game   *game.Game
+	config *Config
 }
 
 // Update proceeds the game state.
@@ -69,9 +72,22 @@ var dt float64 = 0.0
 var maxDt float64 = 0.0
 var avgDt float64 = 0.0
 
-var traficIn = 0.0
+func (s *GameState) Update() error {
+	g := s.Game
 
-func (g *Game) Update() error {
+	if s.Conn == nil {
+		return nil
+	}
+
+	if g.NetworkManager.MyID == nil {
+		return nil
+	}
+
+	if g.NetworkManager.Units[*g.NetworkManager.MyID] == nil {
+		println("No network unit")
+		return nil
+	}
+
 	dt = time.Now().Sub(lastUpdateTime).Seconds()
 	if dt > maxDt {
 		maxDt = dt
@@ -79,16 +95,13 @@ func (g *Game) Update() error {
 
 	avgDt = (dt + avgDt) / 2
 
-	world.HandlePhysics(dt)
+	g.HandlePhysics(dt)
 	lastUpdateTime = time.Now()
 
 	// Write your game's logical update.
-	if world.Units[world.MyID] == nil {
-		return nil
-	}
-
-	err := handleInput(g.Conn)
+	err := s.handleInput(s.Conn)
 	if err != nil {
+		println(err)
 		return err
 	}
 
@@ -101,84 +114,125 @@ var sprites []*Sprite
 
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
-func (g *Game) Draw(screen *e.Image) {
-	l := len(world.Units)
-	if l == 0 {
-		log.Println("No units")
+func (s *GameState) Draw(screen *e.Image) {
+	if s.Conn == nil {
 		return
 	}
 
-	// Write your game's rendering.
-	handleCamera(screen)
-	if camera == nil {
-		return
-	}
+	g := s.Game
 
-	i := 0
-
-	world.Mx.Lock()
-	for _, area := range world.Areas {
-		sprites[i] = &Sprite{
-			Frames: frames[area.Skin].Frames,
-			Frame:  int(area.Frame),
-			X:      area.Position.X,
-			Y:      area.Position.Y,
-			Config: frames[area.Skin].Config,
-		}
-		op := &e.DrawImageOptions{}
-		op.GeoM.Scale(area.Size.X/float64(sprites[i].Config.Width), area.Size.Y/float64(sprites[i].Config.Height))
-		sprites[i].op = op
-
-		i++
-	}
-	world.Mx.Unlock()
-
-	firstUnitIndex := i
-	world.Mx.Lock()
-	for _, unit := range world.Units {
-		sprites[i] = &Sprite{
-			Frames: frames[unit.Skin.String()+"_"+unit.Action.String()].Frames,
-			Frame:  int(unit.Frame),
-			X:      unit.Position.X,
-			Y:      unit.Position.Y,
-			Config: frames[unit.Skin.String()+"_"+unit.Action.String()].Config,
-			Hp:     unit.Hp,
-		}
-
-		op := &e.DrawImageOptions{}
-
-		if unit.Side == protos.Direction_left {
-			op.GeoM.Scale(-1, 1)
-			op.GeoM.Translate(float64(sprites[i].Config.Width), 0)
-		}
-
-		sprites[i].op = op
-
-		i++
-	}
-	world.Mx.Unlock()
-	hpBar := frames["hp"].Frames
-
-	sort.Slice(sprites[firstUnitIndex:i], func(i, j int) bool {
-		depth1 := sprites[i].Y + float64(sprites[i].Config.Height)
-		depth2 := sprites[j].Y + float64(sprites[j].Config.Height)
-		return depth1 < depth2
+	dotGreen := e.NewImage(8, 8)
+	dotGreen.Fill(color.RGBA{
+		R: 0,
+		G: 255,
+		B: 0,
+		A: 255,
 	})
 
-	hpOp := &e.DrawImageOptions{}
-	for _, sprite := range sprites[:i] {
-		if sprite.Hp > 0 {
-			hpOp.GeoM.Reset()
-			hpOp.GeoM.Scale(float64(sprite.Hp)/100.0, 1)
-			hpOp.GeoM.Translate(sprite.X-camera.X+float64(sprite.Config.Width)/2-16, sprite.Y-camera.Y-15)
-			hpFrameIndex := 4 - int(math.Ceil(float64(sprite.Hp)/25))
-			screen.DrawImage(hpBar[hpFrameIndex], hpOp)
-		}
+	dotBlue := e.NewImage(32, 32)
+	dotBlue.Fill(color.RGBA{
+		R: 0,
+		G: 0,
+		B: 255,
+		A: 255,
+	})
 
-		sprite.op.GeoM.Translate(sprite.X-camera.X, sprite.Y-camera.Y)
+	op := &e.DrawImageOptions{}
 
-		screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%len(sprite.Frames)], sprite.op)
-	}
+	// Write your game's rendering.
+	// s.handleCamera(screen)
+	// if camera == nil {
+	// 	return
+	// }
+
+	g.Mx.Lock()
+	components.Render.Each(g.World, func(e *ecs.Entry) {
+		// rd := components.Render.GetValue(e)
+		body := components.Transform.GetValue(e)
+
+		op.GeoM.Reset()
+		op.GeoM.Translate(body.LocalPosition.X, body.LocalPosition.Y)
+		screen.DrawImage(dotBlue, op)
+	})
+
+	g.Space.EachBody(func(body *cp.Body) {
+		op.GeoM.Reset()
+		op.GeoM.Translate(body.Position().X, body.Position().Y)
+		screen.DrawImage(dotGreen, op)
+	})
+	g.Mx.Unlock()
+
+	// i := 0
+	// g.Mx.Lock()
+	// for _, areaEntity := range g.Entities.Areas {
+	// 	println("area", areaEntity)
+	// 	areaComponent := components.NetworkArea.GetValue(areaEntity)
+	// 	area := areaComponent.Area
+
+	// 	sprites[i] = &Sprite{
+	// 		Frames: s.Game.Sprites[area.Skin].Frames,
+	// 		Frame:  int(area.Frame),
+	// 		X:      area.Position.X,
+	// 		Y:      area.Position.Y,
+	// 		Config: s.Game.Sprites[area.Skin].Config,
+	// 	}
+	// 	op.GeoM.Reset()
+	// 	op.GeoM.Scale(area.Size.X/float64(sprites[i].Config.Width), area.Size.Y/float64(sprites[i].Config.Height))
+	// 	sprites[i].op = op
+
+	// 	i++
+	// }
+	// g.Mx.Unlock()
+
+	// firstUnitIndex := i
+	// g.Mx.Lock()
+	// for _, unitEntity := range g.Entities.Units {
+	// 	unitComponent := components.NetworkUnit.GetValue(unitEntity)
+	// 	unit := unitComponent.Unit
+
+	// 	sprites[i] = &Sprite{
+	// 		Frames: s.Game.Sprites[unit.Skin.String()+"_"+unit.Action.String()].Frames,
+	// 		Frame:  int(unit.Frame),
+	// 		X:      unit.Position.X,
+	// 		Y:      unit.Position.Y,
+	// 		Config: s.Game.Sprites[unit.Skin.String()+"_"+unit.Action.String()].Config,
+	// 		Hp:     unit.Hp,
+	// 	}
+
+	// 	op := &e.DrawImageOptions{}
+
+	// 	if unit.Side == protos.Direction_left {
+	// 		op.GeoM.Scale(-1, 1)
+	// 		op.GeoM.Translate(float64(sprites[i].Config.Width), 0)
+	// 	}
+
+	// 	sprites[i].op = op
+
+	// 	i++
+	// }
+	// g.Mx.Unlock()
+	// hpBar := s.Game.Sprites["hp"].Frames
+
+	// sort.Slice(sprites[firstUnitIndex:i], func(i, j int) bool {
+	// 	depth1 := sprites[i].Y + float64(sprites[i].Config.Height)
+	// 	depth2 := sprites[j].Y + float64(sprites[j].Config.Height)
+	// 	return depth1 < depth2
+	// })
+
+	// hpOp := &e.DrawImageOptions{}
+	// for _, sprite := range sprites[:i] {
+	// 	if sprite.Hp > 0 {
+	// 		hpOp.GeoM.Reset()
+	// 		hpOp.GeoM.Scale(float64(sprite.Hp)/100.0, 1)
+	// 		hpOp.GeoM.Translate(sprite.X-camera.X+float64(sprite.Config.Width)/2-16, sprite.Y-camera.Y-15)
+	// 		hpFrameIndex := 4 - int(math.Ceil(float64(sprite.Hp)/25))
+	// 		screen.DrawImage(hpBar[hpFrameIndex], hpOp)
+	// 	}
+
+	// 	sprite.op.GeoM.Translate(sprite.X-camera.X, sprite.Y-camera.Y)
+
+	// 	screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%len(sprite.Frames)], sprite.op)
+	// }
 	var debugInfo = make([]string, 0)
 
 	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", e.ActualTPS()))
@@ -186,12 +240,16 @@ func (g *Game) Draw(screen *e.Image) {
 	debugInfo = append(debugInfo, fmt.Sprintf("dt %0.3f", dt))
 	debugInfo = append(debugInfo, fmt.Sprintf("max dt %0.3f", maxDt))
 	debugInfo = append(debugInfo, fmt.Sprintf("avg dt %0.3f", avgDt))
-	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(world.Units)))
+	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(g.NetworkManager.Units)))
 
-	myUnit := world.Units[world.MyID]
-	if myUnit != nil {
-		debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", myUnit.Position.X))
-		debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", myUnit.Position.Y))
+	if g.NetworkManager.MyID != nil {
+		debugInfo = append(debugInfo, fmt.Sprintf("ID %d", *g.NetworkManager.MyID))
+
+		myUnit := g.NetworkManager.Units[*g.NetworkManager.MyID]
+		if myUnit != nil {
+			debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", myUnit.Position.X))
+			debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", myUnit.Position.Y))
+		}
 	}
 
 	ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
@@ -199,35 +257,46 @@ func (g *Game) Draw(screen *e.Image) {
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
 // If you don't have to adjust the screen size with the outside size, just return a fixed size.
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *GameState) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
 
-func init() {
+func main() {
+	gameState := createState()
 
+	e.SetRunnableOnUnfocused(true)
+	e.SetWindowSize(gameState.config.width, gameState.config.height)
+	e.SetWindowResizingMode(e.WindowResizingModeEnabled)
+	e.SetWindowTitle(gameState.config.title)
+	if err := e.RunGame(gameState); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func main() {
+func createState() (s *GameState) {
 	var err error
+	s = &GameState{}
 
-	config = &Config{
+	s.config = &Config{
 		title:  "Another Hero",
 		width:  640,
 		height: 480,
 	}
 
-	frames, err = resources.Load()
+	s.Game = game.New(true)
+	s.Game.Sprites = make(map[string]resources.Sprite)
+
+	s.Game.Sprites, err = resources.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	levelImage, err = prepareLevelImage()
+	levelImage, err = s.prepareLevelImage()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	world = game.New(true, map[uint32]*protos.Unit{})
-	sprites = make([]*Sprite, world.MaxPlayers+1)
+	sprites = make([]*Sprite, s.Game.MaxPlayers+1)
 
 	url := js.Global().Get("document").Get("location").Get("origin").String()
 	url = "ws" + url[4:] + "/ws"
@@ -253,24 +322,19 @@ func main() {
 			err = proto.Unmarshal(message, event)
 			if err != nil {
 				log.Println("Error parsing message:", err)
-				continue
+				// 	continue
 			}
 
-			world.HandleEvent(event)
+			s.Game.HandleEvent(event)
 		}
 	}(ws)
 
-	e.SetRunnableOnUnfocused(true)
-	e.SetWindowSize(config.width, config.height)
-	e.SetWindowResizingMode(e.WindowResizingModeEnabled)
-	e.SetWindowTitle(config.title)
-	game := &Game{Conn: ws}
-	if err := e.RunGame(game); err != nil {
-		log.Fatal(err)
-	}
+	s.Conn = ws
+
+	return s
 }
 
-func prepareLevelImage() (*e.Image, error) {
+func (s *GameState) prepareLevelImage() (*e.Image, error) {
 	tileSize := 16
 	level := resources.LoadLevel(25, 25)
 	width := len(level[0])
@@ -284,26 +348,28 @@ func prepareLevelImage() (*e.Image, error) {
 			tile := level[i][j]
 			op := &e.DrawImageOptions{}
 			op.GeoM.Translate(float64(j*tileSize), float64(i*tileSize))
-			levelImage.DrawImage(frames[tile].Frames[0], op)
+			levelImage.DrawImage(s.Game.Sprites[tile].Frames[0], op)
 		}
 	}
 
 	return levelImage, nil
 }
 
-func handleCamera(screen *e.Image) {
+func (s *GameState) handleCamera(screen *e.Image) {
 	if camera == nil {
 		return
 	}
 
-	player := world.Units[world.MyID]
+	g := s.Game
+
+	player := g.NetworkManager.Units[*g.NetworkManager.MyID]
 	if player == nil {
 		return
 	}
 
-	frame := frames[player.Skin.String()+"_"+player.Action.String()]
-	absX := camera.X - player.Position.X + float64(config.width-frame.Config.Width)/2
-	absY := camera.Y - player.Position.Y + float64(config.height-frame.Config.Height)/2
+	frame := s.Game.Sprites[player.Skin.String()+"_"+player.Action.String()]
+	absX := camera.X - player.Position.X + float64(s.config.width-frame.Config.Width)/2
+	absY := camera.Y - player.Position.Y + float64(s.config.height-frame.Config.Height)/2
 
 	cameraFollowSpeed := 100000.0
 	if math.Abs(absX) > 15 {
@@ -329,7 +395,9 @@ func roundFloat(f float64, n int) float64 {
 	return math.Round(f*m) / m
 }
 
-func handleInput(c *websocket.Conn) error {
+func (s *GameState) handleInput(c *websocket.Conn) error {
+	g := s.Game
+
 	event := &protos.Event{}
 
 	if e.IsKeyPressed(e.KeyA) || e.IsKeyPressed(e.KeyLeft) {
@@ -340,7 +408,7 @@ func handleInput(c *websocket.Conn) error {
 					Direction: protos.Direction_left,
 				},
 			},
-			PlayerId: world.MyID,
+			PlayerId: *g.NetworkManager.MyID,
 		}
 		if currentKey != e.KeyA {
 			currentKey = e.KeyA
@@ -355,7 +423,7 @@ func handleInput(c *websocket.Conn) error {
 					Direction: protos.Direction_right,
 				},
 			},
-			PlayerId: world.MyID,
+			PlayerId: *g.NetworkManager.MyID,
 		}
 		if currentKey != e.KeyD {
 			currentKey = e.KeyD
@@ -370,7 +438,7 @@ func handleInput(c *websocket.Conn) error {
 					Direction: protos.Direction_up,
 				},
 			},
-			PlayerId: world.MyID,
+			PlayerId: *g.NetworkManager.MyID,
 		}
 		if currentKey != e.KeyW {
 			currentKey = e.KeyW
@@ -385,7 +453,7 @@ func handleInput(c *websocket.Conn) error {
 					Direction: protos.Direction_down,
 				},
 			},
-			PlayerId: world.MyID,
+			PlayerId: *g.NetworkManager.MyID,
 		}
 		if currentKey != e.KeyS {
 			currentKey = e.KeyS
@@ -400,14 +468,14 @@ func handleInput(c *websocket.Conn) error {
 					AbilityId: 1,
 				},
 			},
-			PlayerId: world.MyID,
+			PlayerId: *g.NetworkManager.MyID,
 		}
 		if currentKey != e.KeyR {
 			currentKey = e.KeyR
 		}
 	}
 
-	unit := world.Units[world.MyID]
+	unit := g.NetworkManager.Units[*g.NetworkManager.MyID]
 
 	if event.Type == protos.EventType_move {
 		if prevKey != currentKey {
@@ -416,7 +484,7 @@ func handleInput(c *websocket.Conn) error {
 				return err
 			}
 
-			world.HandleEvent(event)
+			g.HandleEvent(event)
 
 			err = c.Write(context.Background(), websocket.MessageBinary, message)
 			if err != nil {
@@ -427,10 +495,10 @@ func handleInput(c *websocket.Conn) error {
 		if unit.Action != protos.Action_idle {
 			event = &protos.Event{
 				Type:     protos.EventType_stop,
-				PlayerId: world.MyID,
+				PlayerId: *g.NetworkManager.MyID,
 			}
 
-			world.HandleEvent(event)
+			g.HandleEvent(event)
 
 			message, err := proto.Marshal(event)
 			if err != nil {

@@ -7,7 +7,6 @@ import (
 	"time"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/hub"
-	"tomb_mates/internal/protos"
 	"tomb_mates/web"
 
 	"github.com/gorilla/sessions"
@@ -22,7 +21,7 @@ const tickRate = time.Second / 60
 
 func main() {
 	e := echo.New()
-	w := game.New(false, make(map[uint32]*protos.Unit))
+	w := game.New(false)
 	h := hub.New(w)
 	go w.Run(tickRate)
 

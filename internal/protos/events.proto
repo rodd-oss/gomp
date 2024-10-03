@@ -9,13 +9,13 @@ import "internal/protos/utils.proto";
 message Event {
     EventType type = 1;
     oneof data {
-        EventConnect connect = 3;
-        EventMove move = 6;
-        GameState state = 7;
-        GameStatePatche state_patch = 8;
-        EventCast cast = 9;
+        EventConnect connect = 2;
+        EventMove move = 3;
+        GameState state = 4;
+        GameStatePatche state_patch = 5;
+        EventCast cast = 6;
     }
-    uint32 player_id = 10;
+    uint32 player_id = 7;
 }
 
 enum EventType {
