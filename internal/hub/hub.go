@@ -14,7 +14,7 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func New(world *game.Game) *Hub {
+func New(game *game.Game) *Hub {
 	h := &Hub{
 		broadcast:  make(chan []byte, 1),
 		register:   make(chan *Client, 32),
@@ -22,12 +22,12 @@ func New(world *game.Game) *Hub {
 		clients:    make(map[*Client]bool),
 	}
 
-	go h.run(world)
+	go h.run(game)
 
 	return h
 }
 
-func (h *Hub) run(world *game.Game) {
+func (h *Hub) run(game *game.Game) {
 	playersCount := -1
 
 	playerCounterTicker := time.NewTicker(time.Second * 1)
@@ -40,7 +40,7 @@ func (h *Hub) run(world *game.Game) {
 				playersCount = len(h.clients)
 				println("Players: ", playersCount)
 			}
-		case message := <-world.Broadcast:
+		case message := <-game.NetworkManager.Broadcast:
 			for client := range h.clients {
 				if len(client.send) != cap(client.send) {
 					client.send <- message

@@ -4,6 +4,7 @@ import (
 	"tomb_mates/internal/protos"
 
 	ecs "github.com/yohamta/donburi"
+	"google.golang.org/protobuf/proto"
 )
 
 type NetworkUnitData struct {
@@ -34,4 +35,32 @@ type NetworkManagerData struct {
 	PatchedUnits    map[uint32]*protos.PatchUnit
 	DeletedUnitsIds map[uint32]*protos.Empty
 	CreatedUnits    map[uint32]*protos.Unit
+
+	Broadcast chan []byte
+}
+
+func (n *NetworkManagerData) SendPatch() {
+	if len(n.PatchedUnits) == 0 && len(n.CreatedUnits) == 0 && len(n.DeletedUnitsIds) == 0 {
+		return
+	}
+
+	statePatchEvent := &protos.Event{
+		Type: protos.EventType_state_patch,
+		Data: &protos.Event_StatePatch{
+			StatePatch: &protos.GameStatePatche{
+				Units:           n.PatchedUnits,
+				CreatedUnits:    n.CreatedUnits,
+				DeletedUnitsIds: n.DeletedUnitsIds,
+			},
+		},
+	}
+
+	message, err := proto.Marshal(statePatchEvent)
+	if err != nil {
+		return
+	}
+	n.Broadcast <- message
+	n.PatchedUnits = make(map[uint32]*protos.PatchUnit)
+	n.CreatedUnits = make(map[uint32]*protos.Unit)
+	n.DeletedUnitsIds = make(map[uint32]*protos.Empty)
 }

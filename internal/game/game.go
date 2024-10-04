@@ -37,7 +37,6 @@ type Game struct {
 	StateSerialized *[]byte
 	lastPlayerID    uint32
 	lastAreaID      uint32
-	Broadcast       chan []byte
 
 	// Config
 	MaxPlayers int32
@@ -67,9 +66,9 @@ func New(isClient bool) *Game {
 			PatchedAreas:    make(map[uint32]*protos.PatchArea),
 			CreatedAreas:    make(map[uint32]*protos.Area),
 			DeletedAreasIds: make(map[uint32]*protos.Empty),
-		},
 
-		Broadcast:    make(chan []byte, 1),
+			Broadcast: make(chan []byte, 1),
+		},
 		lastPlayerID: 0,
 		lastAreaID:   0,
 		MaxPlayers:   1000,
@@ -586,10 +585,12 @@ func (g *Game) Run(tickRate time.Duration) {
 			lastEvolveTime = time.Now()
 
 		case <-patchTicker.C:
-			g.SendPatch()
+			g.Mx.Lock()
+			g.NetworkManager.SendPatch()
+			g.Mx.Unlock()
 
 		case <-lazyPatchTicker.C:
-			g.Broadcast <- *g.StateSerialized
+			// g.Broadcast <- *g.StateSerialized
 		}
 	}
 }
@@ -642,35 +643,6 @@ func (g *Game) Update(lastUpdateAt time.Time) {
 	}
 
 	return
-}
-
-func (g *Game) SendPatch() {
-	g.Mx.Lock()
-	defer g.Mx.Unlock()
-
-	if len(g.NetworkManager.PatchedUnits) == 0 && len(g.NetworkManager.CreatedUnits) == 0 && len(g.NetworkManager.DeletedUnitsIds) == 0 {
-		return
-	}
-
-	statePatchEvent := &protos.Event{
-		Type: protos.EventType_state_patch,
-		Data: &protos.Event_StatePatch{
-			StatePatch: &protos.GameStatePatche{
-				Units:           g.NetworkManager.PatchedUnits,
-				CreatedUnits:    g.NetworkManager.CreatedUnits,
-				DeletedUnitsIds: g.NetworkManager.DeletedUnitsIds,
-			},
-		},
-	}
-
-	m, err := proto.Marshal(statePatchEvent)
-	if err != nil {
-		return
-	}
-	g.Broadcast <- m
-	g.NetworkManager.PatchedUnits = make(map[uint32]*protos.PatchUnit)
-	g.NetworkManager.CreatedUnits = make(map[uint32]*protos.Unit)
-	g.NetworkManager.DeletedUnitsIds = make(map[uint32]*protos.Empty)
 }
 
 func (g *Game) HandlePhysics(dt float64) {
