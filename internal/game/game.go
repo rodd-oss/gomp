@@ -553,6 +553,17 @@ func (g *Game) HandleEvent(event *protos.Event) {
 	}
 }
 
+func (g *Game) HandleEvents() {
+	g.Mx.Lock()
+	defer g.Mx.Unlock()
+
+	for _, event := range g.NetworkManager.UnhandledEvents {
+		g.HandleEvent(event)
+	}
+
+	g.NetworkManager.UnhandledEvents = make([]*protos.Event, 0)
+}
+
 const (
 	patchRate     = time.Second / 20
 	lazyPatchRate = time.Minute * 5
@@ -583,18 +594,9 @@ func (g *Game) Run(tickRate time.Duration) {
 	}
 }
 
-func (g *Game) Update(lastUpdateAt time.Time) {
+func (g *Game) CacheGameState() error {
 	g.Mx.Lock()
 	defer g.Mx.Unlock()
-
-	for _, event := range g.NetworkManager.UnhandledEvents {
-		g.HandleEvent(event)
-	}
-
-	g.NetworkManager.UnhandledEvents = make([]*protos.Event, 0)
-
-	dt := time.Now().Sub(lastUpdateAt).Seconds()
-	g.HandlePhysics(dt)
 
 	if !g.IsClient {
 		cachedUnits := make(map[uint32]*protos.Unit, len(g.NetworkManager.Units))
@@ -618,10 +620,25 @@ func (g *Game) Update(lastUpdateAt time.Time) {
 		}
 		s, err := proto.Marshal(stateEvent)
 		if err != nil {
-			return
+			return err
 		}
 
 		g.StateSerialized = &s
+	}
+
+	return nil
+}
+
+func (g *Game) Update(lastUpdateAt time.Time) {
+	dt := time.Now().Sub(lastUpdateAt).Seconds()
+
+	g.HandlePhysics(dt)
+
+	g.HandleEvents()
+
+	err := g.CacheGameState()
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	return
@@ -657,47 +674,15 @@ func (g *Game) SendPatch() {
 }
 
 func (g *Game) HandlePhysics(dt float64) {
-	if g.IsClient {
-		g.Mx.Lock()
-		defer g.Mx.Unlock()
-	}
+	g.Mx.Lock()
+	defer g.Mx.Unlock()
 
 	g.Space.Step(dt)
+
 	components.Physics.Each(g.World, func(e *ecs.Entry) {
-		physics := components.Physics.GetValue(e)
-		if physics.Body.IsSleeping() {
-			return
-		}
-		components.Transform.SetValue(e, components.TransformData{
-			LocalPosition: math.NewVec2(physics.Body.Position().X, physics.Body.Position().Y),
-		})
-		unit := components.NetworkUnit.GetValue(e).Unit
-		if unit != nil {
-			unit.Position = &protos.Position{
-				X: physics.Body.Position().X,
-				Y: physics.Body.Position().Y,
-			}
+		err := components.Physics.GetValue(e).Update(dt, e)
+		if err != nil {
+			fmt.Println(err)
 		}
 	})
-
-	// for i := range g.Units {
-	// 	if g.Units[i].Action == protos.Action_run {
-	// 		switch g.Units[i].Velocity.Direction {
-	// 		case protos.Direction_left:
-	// 			g.Units[i].Position.X -= g.Units[i].Velocity.Speed * dt
-	// 			g.Units[i].Side = protos.Direction_left
-	// 		case protos.Direction_right:
-	// 			g.Units[i].Position.X += g.Units[i].Velocity.Speed * dt
-	// 			g.Units[i].Side = protos.Direction_right
-	// 		case protos.Direction_up:
-	// 			g.Units[i].Position.Y -= g.Units[i].Velocity.Speed * dt
-	// 		case protos.Direction_down:
-	// 			g.Units[i].Position.Y += g.Units[i].Velocity.Speed * dt
-	// 		default:
-	// 			log.Println("UNKNOWN DIRECTION: ", g.Units[i].Velocity.Direction)
-	// 		}
-	// 	}
-	// }
-	// for  := range world.Areas {
-	// }
 }
