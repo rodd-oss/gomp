@@ -20,6 +20,7 @@ import (
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp/v2"
+	input "github.com/quasilyte/ebitengine-input"
 	ecs "github.com/yohamta/donburi"
 	"google.golang.org/protobuf/proto"
 )
@@ -54,15 +55,20 @@ var camera *Camera = &Camera{
 }
 
 var frame int
-var currentKey e.Key
 var prevKey e.Key
 var levelImage *e.Image
 
 // GameState implements ebiten.GameState interface.
 type GameState struct {
-	Conn   *websocket.Conn
-	Game   *game.Game
-	config *Config
+	Conn        *websocket.Conn
+	Game        *game.Game
+	config      *Config
+	inputSystem input.System
+	input       *input.Handler
+	playerInput struct {
+		X float64
+		Y float64
+	}
 }
 
 // Update proceeds the game state.
@@ -99,6 +105,7 @@ func (s *GameState) Update() error {
 	lastUpdateTime = time.Now()
 
 	// Write your game's logical update.
+	s.inputSystem.Update()
 	err := s.handleInput(s.Conn)
 	if err != nil {
 		println(err)
@@ -256,7 +263,7 @@ func (s *GameState) Draw(screen *e.Image) {
 }
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
-// If you don't have to adjust the screen size with the outside size, just return a fixed size.
+// If you don't have to ad the screen size with the outside size,  return a fixed size.
 func (g *GameState) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
@@ -275,15 +282,37 @@ func main() {
 
 var Sprites = make(map[string]resources.Sprite)
 
+const (
+	ActionMoveLeft input.Action = iota
+	ActionMoveRight
+	ActionMoveUp
+	ActionMoveDown
+)
+
 func createState() (s *GameState) {
 	var err error
 	s = &GameState{}
+	s.inputSystem.Init(input.SystemConfig{
+		DevicesEnabled: input.AnyDevice,
+	})
+	keymap := input.Keymap{
+		ActionMoveLeft:  {input.KeyGamepadLeft, input.KeyLeft, input.KeyA},
+		ActionMoveRight: {input.KeyGamepadRight, input.KeyRight, input.KeyD},
+		ActionMoveUp:    {input.KeyGamepadRight, input.KeyUp, input.KeyW},
+		ActionMoveDown:  {input.KeyGamepadDown, input.KeyDown, input.KeyS},
+	}
+	s.input = s.inputSystem.NewHandler(0, keymap)
 
 	s.config = &Config{
 		title:  "Another Hero",
 		width:  640,
 		height: 480,
 	}
+
+	s.playerInput = struct {
+		X float64
+		Y float64
+	}{0, 0}
 
 	s.Game = game.New(true)
 
@@ -399,122 +428,89 @@ func roundFloat(f float64, n int) float64 {
 func (s *GameState) handleInput(c *websocket.Conn) error {
 	g := s.Game
 
-	event := &protos.Event{}
+	var event *protos.Event
+	pInput := s.playerInput
 
-	if e.IsKeyPressed(e.KeyA) || e.IsKeyPressed(e.KeyLeft) {
-		event = &protos.Event{
-			Type: protos.EventType_move,
-			Data: &protos.Event_Move{
-				Move: &protos.EventMove{
-					Direction: protos.Direction_left,
-				},
-			},
-			PlayerId: *g.NetworkManager.MyID,
-		}
-		if currentKey != e.KeyA {
-			currentKey = e.KeyA
-		}
-	}
-
-	if e.IsKeyPressed(e.KeyD) || e.IsKeyPressed(e.KeyRight) {
-		event = &protos.Event{
-			Type: protos.EventType_move,
-			Data: &protos.Event_Move{
-				Move: &protos.EventMove{
-					Direction: protos.Direction_right,
-				},
-			},
-			PlayerId: *g.NetworkManager.MyID,
-		}
-		if currentKey != e.KeyD {
-			currentKey = e.KeyD
-		}
-	}
-
-	if e.IsKeyPressed(e.KeyW) || e.IsKeyPressed(e.KeyUp) {
-		event = &protos.Event{
-			Type: protos.EventType_move,
-			Data: &protos.Event_Move{
-				Move: &protos.EventMove{
-					Direction: protos.Direction_up,
-				},
-			},
-			PlayerId: *g.NetworkManager.MyID,
-		}
-		if currentKey != e.KeyW {
-			currentKey = e.KeyW
-		}
-	}
-
-	if e.IsKeyPressed(e.KeyS) || e.IsKeyPressed(e.KeyDown) {
-		event = &protos.Event{
-			Type: protos.EventType_move,
-			Data: &protos.Event_Move{
-				Move: &protos.EventMove{
-					Direction: protos.Direction_down,
-				},
-			},
-			PlayerId: *g.NetworkManager.MyID,
-		}
-		if currentKey != e.KeyS {
-			currentKey = e.KeyS
-		}
-	}
-
-	if e.IsKeyPressed(e.KeyR) {
-		event = &protos.Event{
-			Type: protos.EventType_cast,
-			Data: &protos.Event_Cast{
-				Cast: &protos.EventCast{
-					AbilityId: 1,
-				},
-			},
-			PlayerId: *g.NetworkManager.MyID,
-		}
-		if currentKey != e.KeyR {
-			currentKey = e.KeyR
-		}
-	}
-
-	unit := g.NetworkManager.Units[*g.NetworkManager.MyID]
-
-	if event.Type == protos.EventType_move {
-		if prevKey != currentKey {
-			message, err := proto.Marshal(event)
-			if err != nil {
-				return err
-			}
-
-			g.HandleEvent(event)
-
-			err = c.Write(context.Background(), websocket.MessageBinary, message)
-			if err != nil {
-				return err
-			}
-		}
+	if s.input.ActionIsPressed(ActionMoveLeft) {
+		pInput.X = -1
+	} else if s.input.ActionIsPressed(ActionMoveRight) {
+		pInput.X = 1
 	} else {
-		if unit.Action != protos.Action_idle {
+		pInput.X = 0
+	}
+
+	if s.input.ActionIsPressed(ActionMoveUp) {
+		pInput.Y = 1
+	} else if s.input.ActionIsPressed(ActionMoveDown) {
+		pInput.Y = -1
+	} else {
+		pInput.Y = 0
+	}
+
+	if pInput != s.playerInput {
+		if pInput.X < 0 {
+			event = &protos.Event{
+				Type: protos.EventType_move,
+				Data: &protos.Event_Move{
+					Move: &protos.EventMove{
+						Direction: protos.Direction_left,
+					},
+				},
+				PlayerId: *g.NetworkManager.MyID,
+			}
+		} else if pInput.X > 0 {
+			event = &protos.Event{
+				Type: protos.EventType_move,
+				Data: &protos.Event_Move{
+					Move: &protos.EventMove{
+						Direction: protos.Direction_right,
+					},
+				},
+				PlayerId: *g.NetworkManager.MyID,
+			}
+		} else if pInput.Y < 0 {
+			event = &protos.Event{
+				Type: protos.EventType_move,
+				Data: &protos.Event_Move{
+					Move: &protos.EventMove{
+						Direction: protos.Direction_down,
+					},
+				},
+				PlayerId: *g.NetworkManager.MyID,
+			}
+		} else if pInput.Y > 0 {
+			event = &protos.Event{
+				Type: protos.EventType_move,
+				Data: &protos.Event_Move{
+					Move: &protos.EventMove{
+						Direction: protos.Direction_up,
+					},
+				},
+				PlayerId: *g.NetworkManager.MyID,
+			}
+		} else {
 			event = &protos.Event{
 				Type:     protos.EventType_stop,
 				PlayerId: *g.NetworkManager.MyID,
 			}
-
-			g.HandleEvent(event)
-
-			message, err := proto.Marshal(event)
-			if err != nil {
-				return err
-			}
-			err = c.Write(context.Background(), websocket.MessageBinary, message)
-			if err != nil {
-				// ...
-				return err
-			}
-			currentKey = -1
 		}
+
+		s.playerInput = pInput
 	}
 
-	prevKey = currentKey
+	if event != nil {
+		g.HandleEvent(event)
+
+		message, err := proto.Marshal(event)
+		if err != nil {
+			return err
+		}
+
+		err = c.Write(context.Background(), websocket.MessageBinary, message)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
