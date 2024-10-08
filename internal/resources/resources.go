@@ -2,9 +2,9 @@ package resources
 
 import (
 	"embed"
-	"fmt"
 	"image"
 	"image/png"
+	"log"
 	"math/rand"
 	"os"
 	"strconv"
@@ -60,27 +60,27 @@ func Load() (sprites map[string]Sprite, err error) {
 		filename := prefix + "/" + info.Name()
 		file, err := fs.Open(filename)
 		if err != nil {
-			fmt.Println("Error opening file")
+			log.Println("Error opening file")
 			return err
 		}
 		defer file.Close()
 
 		img, err := png.Decode(file)
 		if err != nil {
-			fmt.Println("Error decoding file")
+			log.Println("Error decoding file")
 			return err
 		}
 
 		fileCfg, err := fs.Open(filename)
 		if err != nil {
-			fmt.Println("Error decoding file")
+			log.Println("Error decoding file")
 			return err
 		}
 		defer fileCfg.Close()
 
 		cfg, err := png.DecodeConfig(fileCfg)
 		if err != nil {
-			fmt.Println("Error decoding cfg file")
+			log.Println("Error decoding cfg file")
 			return err
 		}
 

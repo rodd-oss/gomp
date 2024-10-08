@@ -1,0 +1,49 @@
+syntax="proto3";
+
+package protos;
+option go_package = "internal/protos";
+import "internal/protos/utils.proto";
+
+enum Skin {
+  big_demon = 0;
+  big_zombie = 1;
+  elf_f = 2;
+}
+
+message NetworkEntity {
+  uint32 Id = 1;
+  Transform transform = 2;
+  Physics physics = 3;
+  Skin skin = 4;
+}
+
+message Transform {
+  Vector2 position = 1;
+  double rotation = 2;
+  Vector2 Scale = 3;
+}
+
+message Physics {
+  Vector2 velocity = 1;
+}
+
+//
+// PATCH
+//
+
+message PatchNetworkEntity {
+  uint32 Id = 1;
+  optional PatchTransform transform = 2;
+  optional PatchPhysics physics = 3;
+  optional Skin skin = 4;
+}
+
+message PatchPhysics {
+  optional Vector2 velocity = 1;
+}
+
+message PatchTransform {
+  optional Vector2 position = 1;
+  optional double rotation = 2;
+  optional Vector2 Scale = 3;
+}

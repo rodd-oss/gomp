@@ -3,8 +3,8 @@ syntax="proto3";
 package protos;
 option go_package = "internal/protos";
 import "internal/protos/unit.proto";
-import "internal/protos/area.proto";
 import "internal/protos/utils.proto";
+import "internal/protos/network-entity.proto";
 
 message Event {
     EventType type = 1;
@@ -12,7 +12,7 @@ message Event {
         EventConnect connect = 2;
         EventMove move = 3;
         GameState state = 4;
-        GameStatePatche state_patch = 5;
+        GameStatePatch state_patch = 5;
         EventCast cast = 6;
     }
     uint32 player_id = 7;
@@ -43,16 +43,11 @@ message EventMove {
 }
 
 message GameState {
-    map<uint32, Unit> units = 1;
-    map<uint32, Area> areas = 2;
+    map<uint32, NetworkEntity> entities = 1;
 }
 
-message GameStatePatche {
-    map<uint32, PatchUnit> units = 1;
-    map<uint32, Unit> created_units = 2;
-    map<uint32, Empty> deleted_units_ids = 3;
-
-    map<uint32, PatchArea> areas = 4;
-    map<uint32, Area> created_areas = 5;
-    map<uint32, Empty> deleted_areas = 6;
+message GameStatePatch {
+    map<uint32, PatchNetworkEntity> entities = 7;
+    map<uint32, NetworkEntity> created_entities = 8;
+    map<uint32, Empty> deleted_entities = 9;
 }

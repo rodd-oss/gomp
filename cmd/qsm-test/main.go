@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 	"tomb_mates/internal/qsm"
 )
@@ -17,43 +17,44 @@ const (
 func main() {
 	playerStateMachine := qsm.Init[State]()
 
-	playerStateMachine.SetMutationRuleNto1([]State{idle, walk}, death, &qsm.MutationRule{
+	playerStateMachine.SetMutationRuleNtoN([]State{idle, walk}, []State{idle, walk}, &qsm.MutationRule{
 		Before: func() {
-			fmt.Println("before idle or walk->death")
+			log.Println("before idle or walk->death")
 		},
 		While: func(dt time.Duration) {
-			fmt.Println("while idle or walk->death")
+			log.Println("while idle or walk->death")
 		},
 		After: func() {
-			fmt.Println("after idle or walk->death")
+			log.Println("after idle or walk->death")
 		},
 		Cancel: func() {
-			fmt.Println("cancelling idle or walk->death")
+			log.Println("cancelling idle or walk->death")
 		},
 		Duration: time.Second,
 	})
+
 	playerStateMachine.SetMutationRule(idle, walk, &qsm.MutationRule{
 		Before: func() {
-			fmt.Println("before idle->walk")
+			log.Println("before idle->walk")
 		},
 		While: func(dt time.Duration) {
-			fmt.Println("while idle->walk")
+			log.Println("while idle->walk")
 		},
 		After: func() {
-			fmt.Println("after idle->walk")
+			log.Println("after idle->walk")
 		},
 		Duration: time.Second / 5,
 	})
 
 	playerStateMachine.SetMutationRule(walk, idle, &qsm.MutationRule{
 		Before: func() {
-			fmt.Println("before walk->idle")
+			log.Println("before walk->idle")
 		},
 		While: func(dt time.Duration) {
-			fmt.Println("while walk->idle")
+			log.Println("while walk->idle")
 		},
 		After: func() {
-			fmt.Println("after walk->idle")
+			log.Println("after walk->idle")
 		},
 		Duration: time.Second / 2,
 	})
@@ -75,27 +76,27 @@ func main() {
 
 	err = playerStateMachine.Mutate(walk)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	time.Sleep(2 * time.Second)
 
 	err = playerStateMachine.Mutate(idle)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	err = playerStateMachine.Mutate(death)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	err = playerStateMachine.Mutate(walk)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	err = playerStateMachine.Mutate(death)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	time.Sleep(10 * time.Second)

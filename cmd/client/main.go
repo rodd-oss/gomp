@@ -82,14 +82,18 @@ func (s *GameState) Update() error {
 	g := s.Game
 
 	if s.Conn == nil {
+		println("No connection")
+
 		return nil
 	}
 
 	if g.NetworkManager.MyID == nil {
+		println("No network id")
+
 		return nil
 	}
 
-	if g.NetworkManager.Units[*g.NetworkManager.MyID] == nil {
+	if g.Entities.Units[g.NetworkManager.NetworkIdToEntityId[*g.NetworkManager.MyID]] == nil {
 		println("No network unit")
 		return nil
 	}
@@ -101,7 +105,7 @@ func (s *GameState) Update() error {
 
 	avgDt = (dt + avgDt) / 2
 
-	g.HandlePhysics(dt)
+	g.Update(dt)
 	lastUpdateTime = time.Now()
 
 	// Write your game's logical update.
@@ -247,15 +251,16 @@ func (s *GameState) Draw(screen *e.Image) {
 	debugInfo = append(debugInfo, fmt.Sprintf("dt %0.3f", dt))
 	debugInfo = append(debugInfo, fmt.Sprintf("max dt %0.3f", maxDt))
 	debugInfo = append(debugInfo, fmt.Sprintf("avg dt %0.3f", avgDt))
-	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(g.NetworkManager.Units)))
+	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(g.Entities.Units)))
 
 	if g.NetworkManager.MyID != nil {
 		debugInfo = append(debugInfo, fmt.Sprintf("ID %d", *g.NetworkManager.MyID))
 
-		myUnit := g.NetworkManager.Units[*g.NetworkManager.MyID]
+		myUnit := g.Entities.Units[g.NetworkManager.NetworkIdToEntityId[*g.NetworkManager.MyID]]
 		if myUnit != nil {
-			debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", myUnit.Position.X))
-			debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", myUnit.Position.Y))
+			transform := components.Transform.GetValue(myUnit)
+			debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", transform.LocalPosition.X))
+			debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", transform.LocalPosition.Y))
 		}
 	}
 
@@ -371,8 +376,6 @@ func (s *GameState) prepareLevelImage() (*e.Image, error) {
 	height := len(level)
 	levelImage := e.NewImage(width*tileSize, height*tileSize)
 
-	log.Println(width, height)
-
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
 			tile := level[i][j]
@@ -392,14 +395,18 @@ func (s *GameState) handleCamera(screen *e.Image) {
 
 	g := s.Game
 
-	player := g.NetworkManager.Units[*g.NetworkManager.MyID]
+	player := g.Entities.Units[g.NetworkManager.NetworkIdToEntityId[*g.NetworkManager.MyID]]
+
+	transform := components.Transform.GetValue(player)
+	ne := components.NetworkEntity.GetValue(player)
+
 	if player == nil {
 		return
 	}
 
-	frame := Sprites[player.Skin.String()+"_"+player.Action.String()]
-	absX := camera.X - player.Position.X + float64(s.config.width-frame.Config.Width)/2
-	absY := camera.Y - player.Position.Y + float64(s.config.height-frame.Config.Height)/2
+	frame := Sprites[ne.Skin.String()+"_"+"idle"]
+	absX := camera.X - transform.LocalPosition.X + float64(s.config.width-frame.Config.Width)/2
+	absY := camera.Y - transform.LocalPosition.Y + float64(s.config.height-frame.Config.Height)/2
 
 	cameraFollowSpeed := 100000.0
 	if math.Abs(absX) > 15 {
@@ -520,6 +527,6 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 
-	fmt.Println("Env not found: ", key, " - Using fallback: ", fallback)
+	log.Println("Env not found: ", key, " - Using fallback: ", fallback)
 	return fallback
 }

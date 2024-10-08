@@ -1,7 +1,7 @@
 package hub
 
 import (
-	"log"
+	"fmt"
 	"sync"
 	"time"
 	"tomb_mates/internal/game"
@@ -52,7 +52,7 @@ func (c *Client) readPump(wg *sync.WaitGroup, world *game.Game) {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				fmt.Printf("error: %v", err)
 			}
 			return
 		}
