@@ -137,7 +137,15 @@ func (s *GameState) Draw(screen *e.Image) {
 		R: 0,
 		G: 255,
 		B: 0,
-		A: 255,
+		A: 150,
+	})
+
+	dotRed := e.NewImage(8, 8)
+	dotRed.Fill(color.RGBA{
+		R: 255,
+		G: 0,
+		B: 0,
+		A: 150,
 	})
 
 	dotBlue := e.NewImage(32, 32)
@@ -145,7 +153,7 @@ func (s *GameState) Draw(screen *e.Image) {
 		R: 0,
 		G: 0,
 		B: 255,
-		A: 255,
+		A: 150,
 	})
 
 	op := &e.DrawImageOptions{}
@@ -158,12 +166,19 @@ func (s *GameState) Draw(screen *e.Image) {
 
 	g.Mx.Lock()
 	components.Render.Each(g.World, func(e *ecs.Entry) {
-		// rd := components.Render.GetValue(e)
 		body := components.Transform.GetValue(e)
 
 		op.GeoM.Reset()
 		op.GeoM.Translate(body.LocalPosition.X, body.LocalPosition.Y)
 		screen.DrawImage(dotBlue, op)
+	})
+
+	components.NetworkEntity.Each(g.World, func(e *ecs.Entry) {
+		ne := components.NetworkEntity.GetValue(e)
+
+		op.GeoM.Reset()
+		op.GeoM.Translate(ne.Transform.Position.X, ne.Transform.Position.Y)
+		screen.DrawImage(dotRed, op)
 	})
 
 	g.Space.EachBody(func(body *cp.Body) {
@@ -455,51 +470,17 @@ func (s *GameState) handleInput(c *websocket.Conn) error {
 	}
 
 	if pInput != s.playerInput {
-		if pInput.X < 0 {
-			event = &protos.Event{
-				Type: protos.EventType_move,
-				Data: &protos.Event_Move{
-					Move: &protos.EventMove{
-						Direction: protos.Direction_left,
+		event = &protos.Event{
+			Type: protos.EventType_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
+					Direction: &protos.Vector2{
+						X: pInput.X,
+						Y: pInput.Y,
 					},
 				},
-				PlayerId: *g.NetworkManager.MyID,
-			}
-		} else if pInput.X > 0 {
-			event = &protos.Event{
-				Type: protos.EventType_move,
-				Data: &protos.Event_Move{
-					Move: &protos.EventMove{
-						Direction: protos.Direction_right,
-					},
-				},
-				PlayerId: *g.NetworkManager.MyID,
-			}
-		} else if pInput.Y < 0 {
-			event = &protos.Event{
-				Type: protos.EventType_move,
-				Data: &protos.Event_Move{
-					Move: &protos.EventMove{
-						Direction: protos.Direction_down,
-					},
-				},
-				PlayerId: *g.NetworkManager.MyID,
-			}
-		} else if pInput.Y > 0 {
-			event = &protos.Event{
-				Type: protos.EventType_move,
-				Data: &protos.Event_Move{
-					Move: &protos.EventMove{
-						Direction: protos.Direction_up,
-					},
-				},
-				PlayerId: *g.NetworkManager.MyID,
-			}
-		} else {
-			event = &protos.Event{
-				Type:     protos.EventType_stop,
-				PlayerId: *g.NetworkManager.MyID,
-			}
+			},
+			PlayerId: *g.NetworkManager.MyID,
 		}
 
 		s.playerInput = pInput

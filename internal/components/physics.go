@@ -1,8 +1,6 @@
 package components
 
 import (
-	"tomb_mates/internal/protos"
-
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/math"
@@ -12,7 +10,11 @@ type PhysicsData struct {
 	Body *cp.Body
 }
 
-func (p PhysicsData) Update(dt float64, e *ecs.Entry) error {
+const (
+	interpolationSpeed = 0.5
+)
+
+func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 	if p.Body.IsSleeping() {
 		return nil
 	}
@@ -23,12 +25,20 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry) error {
 		Y: 0,
 	}
 
-	networkEntityTransform := NetworkEntity.GetValue(e).Transform
-	if networkEntityTransform != nil {
-		networkPos := NetworkEntity.GetValue(e).Transform.Position
+	ne := NetworkEntity.GetValue(e)
+
+	if ne.Transform != nil {
+		networkPos := ne.Transform.Position
 		if networkPos != nil {
 			posDelta.X = pos.X - networkPos.X
 			posDelta.Y = pos.Y - networkPos.Y
+		}
+
+		if isClient {
+			p.Body.SetPosition(cp.Vector{
+				X: pos.X - posDelta.X*interpolationSpeed,
+				Y: pos.Y - posDelta.Y*interpolationSpeed,
+			})
 		}
 	}
 
@@ -36,13 +46,7 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry) error {
 		LocalPosition: math.NewVec2(pos.X-posDelta.X/2, pos.Y-posDelta.Y/2),
 	})
 
-	unit := NetworkUnit.GetValue(e).Unit
-	if unit != nil {
-		unit.Position = &protos.Position{
-			X: pos.X,
-			Y: pos.Y,
-		}
-	}
+	// p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
 
 	return nil
 }

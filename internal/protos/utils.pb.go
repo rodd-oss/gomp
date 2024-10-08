@@ -20,58 +20,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Direction int32
-
-const (
-	Direction_left  Direction = 0
-	Direction_right Direction = 1
-	Direction_up    Direction = 2
-	Direction_down  Direction = 3
-)
-
-// Enum value maps for Direction.
-var (
-	Direction_name = map[int32]string{
-		0: "left",
-		1: "right",
-		2: "up",
-		3: "down",
-	}
-	Direction_value = map[string]int32{
-		"left":  0,
-		"right": 1,
-		"up":    2,
-		"down":  3,
-	}
-)
-
-func (x Direction) Enum() *Direction {
-	p := new(Direction)
-	*p = x
-	return p
-}
-
-func (x Direction) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Direction) Descriptor() protoreflect.EnumDescriptor {
-	return file_internal_protos_utils_proto_enumTypes[0].Descriptor()
-}
-
-func (Direction) Type() protoreflect.EnumType {
-	return &file_internal_protos_utils_proto_enumTypes[0]
-}
-
-func (x Direction) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Direction.Descriptor instead.
-func (Direction) EnumDescriptor() ([]byte, []int) {
-	return file_internal_protos_utils_proto_rawDescGZIP(), []int{0}
-}
-
 type Empty struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -165,61 +113,6 @@ func (x *Position) GetY() float64 {
 	return 0
 }
 
-type Velocity struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Speed     float64   `protobuf:"fixed64,1,opt,name=speed,proto3" json:"speed,omitempty"`
-	Direction Direction `protobuf:"varint,2,opt,name=direction,proto3,enum=protos.Direction" json:"direction,omitempty"`
-}
-
-func (x *Velocity) Reset() {
-	*x = Velocity{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_protos_utils_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Velocity) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Velocity) ProtoMessage() {}
-
-func (x *Velocity) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_protos_utils_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Velocity.ProtoReflect.Descriptor instead.
-func (*Velocity) Descriptor() ([]byte, []int) {
-	return file_internal_protos_utils_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *Velocity) GetSpeed() float64 {
-	if x != nil {
-		return x.Speed
-	}
-	return 0
-}
-
-func (x *Velocity) GetDirection() Direction {
-	if x != nil {
-		return x.Direction
-	}
-	return Direction_left
-}
-
 type Vector2 struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -232,7 +125,7 @@ type Vector2 struct {
 func (x *Vector2) Reset() {
 	*x = Vector2{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_protos_utils_proto_msgTypes[3]
+		mi := &file_internal_protos_utils_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -245,7 +138,7 @@ func (x *Vector2) String() string {
 func (*Vector2) ProtoMessage() {}
 
 func (x *Vector2) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_protos_utils_proto_msgTypes[3]
+	mi := &file_internal_protos_utils_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -258,7 +151,7 @@ func (x *Vector2) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Vector2.ProtoReflect.Descriptor instead.
 func (*Vector2) Descriptor() ([]byte, []int) {
-	return file_internal_protos_utils_proto_rawDescGZIP(), []int{3}
+	return file_internal_protos_utils_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Vector2) GetX() float64 {
@@ -283,19 +176,11 @@ var file_internal_protos_utils_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x73, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x26,
 	0x0a, 0x08, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x01, 0x52, 0x01, 0x78, 0x12, 0x0c, 0x0a, 0x01, 0x79, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x01, 0x52, 0x01, 0x79, 0x22, 0x51, 0x0a, 0x08, 0x56, 0x65, 0x6c, 0x6f, 0x63, 0x69,
-	0x74, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x70, 0x65, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x01, 0x52, 0x05, 0x73, 0x70, 0x65, 0x65, 0x64, 0x12, 0x2f, 0x0a, 0x09, 0x64, 0x69, 0x72, 0x65,
-	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x73, 0x2e, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09,
-	0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x25, 0x0a, 0x07, 0x56, 0x65, 0x63,
-	0x74, 0x6f, 0x72, 0x32, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x01, 0x52,
-	0x01, 0x78, 0x12, 0x0c, 0x0a, 0x01, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x01, 0x79,
-	0x2a, 0x32, 0x0a, 0x09, 0x44, 0x69, 0x72, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x08, 0x0a,
-	0x04, 0x6c, 0x65, 0x66, 0x74, 0x10, 0x00, 0x12, 0x09, 0x0a, 0x05, 0x72, 0x69, 0x67, 0x68, 0x74,
-	0x10, 0x01, 0x12, 0x06, 0x0a, 0x02, 0x75, 0x70, 0x10, 0x02, 0x12, 0x08, 0x0a, 0x04, 0x64, 0x6f,
-	0x77, 0x6e, 0x10, 0x03, 0x42, 0x11, 0x5a, 0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
-	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x28, 0x01, 0x52, 0x01, 0x79, 0x22, 0x25, 0x0a, 0x07, 0x56, 0x65, 0x63, 0x74, 0x6f, 0x72,
+	0x32, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x01, 0x52, 0x01, 0x78, 0x12,
+	0x0c, 0x0a, 0x01, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x01, 0x79, 0x42, 0x11, 0x5a,
+	0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -310,22 +195,18 @@ func file_internal_protos_utils_proto_rawDescGZIP() []byte {
 	return file_internal_protos_utils_proto_rawDescData
 }
 
-var file_internal_protos_utils_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_internal_protos_utils_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_internal_protos_utils_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_internal_protos_utils_proto_goTypes = []any{
-	(Direction)(0),   // 0: protos.Direction
-	(*Empty)(nil),    // 1: protos.Empty
-	(*Position)(nil), // 2: protos.Position
-	(*Velocity)(nil), // 3: protos.Velocity
-	(*Vector2)(nil),  // 4: protos.Vector2
+	(*Empty)(nil),    // 0: protos.Empty
+	(*Position)(nil), // 1: protos.Position
+	(*Vector2)(nil),  // 2: protos.Vector2
 }
 var file_internal_protos_utils_proto_depIdxs = []int32{
-	0, // 0: protos.Velocity.direction:type_name -> protos.Direction
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_internal_protos_utils_proto_init() }
@@ -359,18 +240,6 @@ func file_internal_protos_utils_proto_init() {
 			}
 		}
 		file_internal_protos_utils_proto_msgTypes[2].Exporter = func(v any, i int) any {
-			switch v := v.(*Velocity); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_internal_protos_utils_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*Vector2); i {
 			case 0:
 				return &v.state
@@ -388,14 +257,13 @@ func file_internal_protos_utils_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_internal_protos_utils_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   4,
+			NumEnums:      0,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_internal_protos_utils_proto_goTypes,
 		DependencyIndexes: file_internal_protos_utils_proto_depIdxs,
-		EnumInfos:         file_internal_protos_utils_proto_enumTypes,
 		MessageInfos:      file_internal_protos_utils_proto_msgTypes,
 	}.Build()
 	File_internal_protos_utils_proto = out.File

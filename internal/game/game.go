@@ -86,6 +86,8 @@ func (g *Game) CreatePlayer(id uint32) *protos.Unit {
 	g.Mx.Lock()
 	defer g.Mx.Unlock()
 
+	log.Println("CreatePlayer", id)
+
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	unit := &protos.Unit{
 		Id: id,
@@ -95,19 +97,11 @@ func (g *Game) CreatePlayer(id uint32) *protos.Unit {
 		},
 		Frame:  int32(rnd.Intn(4)),
 		Action: protos.Action_idle,
-		Velocity: &protos.Velocity{
-			Direction: protos.Direction_left,
-			Speed:     100,
-		},
-		Hp: 100,
+		Hp:     100,
 	}
 
-	playerEntityId := g.World.Create(components.Transform, components.NetworkUnit, components.Physics, components.NetworkEntity)
+	playerEntityId := g.World.Create(components.Transform, components.Physics, components.NetworkEntity, components.Render)
 	playerEntity := g.World.Entry(playerEntityId)
-
-	components.NetworkUnit.SetValue(playerEntity, components.NetworkUnitData{
-		Unit: unit,
-	})
 
 	components.Transform.SetValue(playerEntity, components.TransformData{
 		LocalPosition: math.Vec2{X: unit.Position.X, Y: unit.Position.Y},
@@ -138,68 +132,6 @@ func (g *Game) CreatePlayer(id uint32) *protos.Unit {
 	g.NetworkManager.Register(playerEntityId, id)
 
 	return unit
-}
-
-func (g *Game) InsertPlayer(unit *protos.Unit) error {
-	g.Mx.Lock()
-	defer g.Mx.Unlock()
-
-	playerEntityId := g.World.Create(components.Transform, components.NetworkUnit, components.Physics, components.Render, components.NetworkEntity)
-	playerEntity := g.World.Entry(playerEntityId)
-
-	components.NetworkUnit.SetValue(playerEntity, components.NetworkUnitData{
-		Unit: unit,
-	})
-
-	components.NetworkEntity.SetValue(playerEntity, &components.NetworkEntityData{
-		Id: unit.Id,
-		Transform: &protos.Transform{
-			Position: &protos.Vector2{
-				X: unit.Position.X,
-				Y: unit.Position.Y,
-			},
-			Rotation: 0,
-			Scale: &protos.Vector2{
-				X: 1,
-				Y: 1,
-			},
-		},
-		Physics: &protos.Physics{
-			Velocity: &protos.Vector2{
-				X: 0,
-				Y: 0,
-			},
-		},
-	})
-
-	components.Transform.SetValue(playerEntity, components.TransformData{
-		LocalPosition: math.Vec2{X: unit.Position.X, Y: unit.Position.Y},
-		LocalRotation: 0,
-		LocalScale: math.Vec2{
-			X: 1,
-			Y: 1,
-		},
-	})
-
-	body := cp.NewKinematicBody()
-	body = g.Space.AddBody(body)
-	body.SetPosition(cp.Vector{
-		X: unit.Position.X,
-		Y: unit.Position.Y,
-	})
-
-	shape := g.Space.AddShape(cp.NewCircle(body, 8, cp.Vector{}))
-	shape.SetElasticity(0)
-	shape.SetFriction(0)
-
-	components.Physics.SetValue(playerEntity, components.PhysicsData{
-		Body: body,
-	})
-
-	g.Entities.Units[playerEntityId] = playerEntity
-	g.NetworkManager.Register(playerEntityId, unit.Id)
-
-	return nil
 }
 
 func (g *Game) RemovePlayer(id uint32) {
@@ -250,7 +182,7 @@ func (g *Game) HandleEvent(event *protos.Event) {
 	etype := event.GetType()
 	switch etype {
 	case protos.EventType_init:
-		log.Println("init event")
+		log.Println("init event. PlayerId: ", event.PlayerId)
 		if g.IsClient {
 			g.NetworkManager.MyID = &event.PlayerId
 		}
@@ -263,41 +195,10 @@ func (g *Game) HandleEvent(event *protos.Event) {
 			return
 		}
 
-		unitEntry := g.World.Entry(entityId)
-		unitComponent := components.NetworkUnit.GetValue(unitEntry)
-		unit := unitComponent.Unit
+		entityEntry := g.World.Entry(entityId)
+		physicsComponent := components.Physics.GetValue(entityEntry)
 
-		unit.Action = protos.Action_run
-		unit.Velocity.Direction = data.Direction
-
-		components.NetworkUnit.SetValue(unitEntry, unitComponent)
-		physicsComponent := components.Physics.GetValue(unitEntry)
-		switch unit.Velocity.Direction {
-		case protos.Direction_left:
-			physicsComponent.Body.SetVelocity(-unit.Velocity.Speed, 0)
-		case protos.Direction_right:
-			physicsComponent.Body.SetVelocity(unit.Velocity.Speed, 0)
-		case protos.Direction_up:
-			physicsComponent.Body.SetVelocity(0, -unit.Velocity.Speed)
-		case protos.Direction_down:
-			physicsComponent.Body.SetVelocity(0, unit.Velocity.Speed)
-		}
-
-	case protos.EventType_stop:
-		entityId := g.NetworkManager.NetworkIdToEntityId[event.PlayerId]
-		if g.World.Valid(entityId) == false {
-			return
-		}
-
-		unitEntry := g.World.Entry(entityId)
-		unitComponent := components.NetworkUnit.GetValue(unitEntry)
-		unit := unitComponent.Unit
-
-		unit.Action = protos.Action_idle
-
-		components.NetworkUnit.SetValue(unitEntry, unitComponent)
-		physicsComponent := components.Physics.GetValue(unitEntry)
-		physicsComponent.Body.SetVelocity(0, 0)
+		physicsComponent.Body.SetVelocity(data.Direction.X*100, -data.Direction.Y*100)
 
 	case protos.EventType_state:
 		if !g.IsClient {
@@ -329,9 +230,18 @@ func (g *Game) HandleEvent(event *protos.Event) {
 
 		g.NetworkManager.IncomingPatch = data
 
-		entities := data.GetCreatedEntities()
+		entities := g.NetworkManager.IncomingPatch.GetEntities()
 		if entities != nil {
-			for id := range entities {
+			for _, e := range entities {
+				if e.Physics != nil {
+					log.Println(e.Physics)
+				}
+			}
+		}
+
+		createdEntities := data.GetCreatedEntities()
+		if createdEntities != nil {
+			for id := range createdEntities {
 				err := g.CreatePlayer(id)
 				if err != nil {
 					log.Println(err)
@@ -339,9 +249,9 @@ func (g *Game) HandleEvent(event *protos.Event) {
 			}
 		}
 
-		delEentities := data.GetDeletedEntities()
-		if delEentities != nil {
-			for id := range delEentities {
+		deletedEentities := data.GetDeletedEntities()
+		if deletedEentities != nil {
+			for id := range deletedEentities {
 				g.RemovePlayer(id)
 			}
 		}
@@ -360,7 +270,7 @@ func (g *Game) HandleEvents() {
 }
 
 const (
-	patchRate     = time.Second / 20
+	patchRate     = time.Second / 2
 	lazyPatchRate = time.Minute * 5
 )
 
@@ -381,10 +291,10 @@ func (g *Game) Run(tickRate time.Duration) {
 			g.Update(dt)
 			lastEvolveTime = time.Now()
 
-		case <-patchTicker.C:
-			g.Mx.Lock()
-			g.NetworkManager.SendPatch()
-			g.Mx.Unlock()
+		// case <-patchTicker.C:
+		// 	g.Mx.Lock()
+		// 	g.NetworkManager.SendPatch()
+		// 	g.Mx.Unlock()
 
 		case <-lazyPatchTicker.C:
 			// g.Broadcast <- *g.StateSerialized
@@ -429,7 +339,7 @@ func (g *Game) Update(dt float64) {
 
 	g.Space.Step(dt)
 	components.Physics.Each(g.World, func(e *ecs.Entry) {
-		err := components.Physics.GetValue(e).Update(dt, e)
+		err := components.Physics.GetValue(e).Update(dt, e, g.IsClient)
 		if err != nil {
 			panic(err)
 		}
@@ -438,11 +348,13 @@ func (g *Game) Update(dt float64) {
 	if !g.IsClient {
 		g.HandleEvents()
 	}
+
+	g.NetworkManager.Update(dt, g.IsClient)
+
 	if !g.IsClient {
 		err := g.CacheGameState()
 		if err != nil {
 			panic(err)
 		}
 	}
-	g.NetworkManager.Update(dt, g.IsClient)
 }

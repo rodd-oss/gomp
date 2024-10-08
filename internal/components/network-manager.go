@@ -1,7 +1,6 @@
 package components
 
 import (
-	"log"
 	"math/rand"
 	"time"
 	"tomb_mates/internal/protos"
@@ -10,12 +9,6 @@ import (
 	ecs "github.com/yohamta/donburi"
 	"google.golang.org/protobuf/proto"
 )
-
-type NetworkUnitData struct {
-	Unit *protos.Unit
-}
-
-var NetworkUnit = ecs.NewComponentType[NetworkUnitData]()
 
 type NetworkAreaData struct {
 	Area *protos.Area
@@ -135,6 +128,9 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 
 			entId := nm.NetworkIdToEntityId[id]
 			ent := nm.World.Entry(entId)
+			if ent == nil {
+				continue
+			}
 
 			ne := NetworkEntity.GetValue(ent)
 			if ne == nil {
@@ -152,11 +148,6 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 			nm.OutgoingPatch = &protos.GameStatePatch{}
 		}
 
-		if nm.OutgoingPatch.Entities == nil {
-			nm.OutgoingPatch.Entities = make(map[uint32]*protos.PatchNetworkEntity)
-		}
-
-		patchCounter := 0
 		NetworkEntity.Each(nm.World, func(ent *ecs.Entry) {
 			ne := NetworkEntity.GetValue(ent)
 			if ne == nil {
@@ -168,15 +159,15 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 				return
 			}
 
+			if nm.OutgoingPatch.Entities == nil {
+				nm.OutgoingPatch.Entities = make(map[uint32]*protos.PatchNetworkEntity)
+			}
+
 			nm.OutgoingPatch.Entities[ne.Id] = patch
 			ne.ApplyPatch(patch)
-			patchCounter++
 		})
 
-		if patchCounter == 0 {
-			nm.OutgoingPatch.Entities = nil
-			nm.OutgoingPatch = nil
-		}
+		nm.SendPatch()
 	}
 
 	// // Create new entities -> TODO: move to global manager?
@@ -250,7 +241,11 @@ func (n *NetworkManagerData) SendPatch() {
 		return
 	}
 
-	log.Println("Out patch", n.OutgoingPatch)
+	if n.OutgoingPatch.Entities == nil &&
+		n.OutgoingPatch.CreatedEntities == nil &&
+		n.OutgoingPatch.DeletedEntities == nil {
+		return
+	}
 
 	statePatchEvent := &protos.Event{
 		Type: protos.EventType_state_patch,
@@ -266,5 +261,5 @@ func (n *NetworkManagerData) SendPatch() {
 
 	n.Broadcast <- message
 
-	n.OutgoingPatch = nil
+	n.OutgoingPatch = &protos.GameStatePatch{}
 }
