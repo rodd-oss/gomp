@@ -11,7 +11,7 @@ type PhysicsData struct {
 }
 
 const (
-	interpolationSpeed = 0.5
+	interpolationSpeed = 0.25
 )
 
 func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
@@ -43,7 +43,7 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 	}
 
 	Transform.SetValue(e, TransformData{
-		LocalPosition: math.NewVec2(pos.X-posDelta.X/2, pos.Y-posDelta.Y/2),
+		LocalPosition: math.NewVec2(pos.X-posDelta.X*(1-interpolationSpeed)/2, pos.Y-posDelta.Y*(1-interpolationSpeed)/2),
 	})
 
 	// p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)

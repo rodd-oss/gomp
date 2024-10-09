@@ -230,15 +230,6 @@ func (g *Game) HandleEvent(event *protos.Event) {
 
 		g.NetworkManager.IncomingPatch = data
 
-		entities := g.NetworkManager.IncomingPatch.GetEntities()
-		if entities != nil {
-			for _, e := range entities {
-				if e.Physics != nil {
-					log.Println(e.Physics)
-				}
-			}
-		}
-
 		createdEntities := data.GetCreatedEntities()
 		if createdEntities != nil {
 			for id := range createdEntities {
