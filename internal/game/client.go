@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"log"
@@ -8,11 +9,14 @@ import (
 	"time"
 	"tomb_mates/internal/client"
 	"tomb_mates/internal/components"
+	"tomb_mates/internal/protos"
 
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/features/math"
+	"google.golang.org/protobuf/proto"
 )
 
 type Client struct {
@@ -26,22 +30,50 @@ type Client struct {
 	maxDt          float64
 	avgDt          float64
 	frame          int
+
+	playerInput math.Vec2
 }
 
-func NewClient(inputs *client.Inputs, transport *client.Transport, config *client.Config) *Client {
-	return &Client{
+func NewClient(ctx context.Context, inputs *client.Inputs, transport *client.Transport, config *client.Config) *Client {
+	client := &Client{
 		inputs:    inputs,
 		transport: transport,
 		config:    config,
 		Game:      New(true),
 
-		// Game: *Game
 		lastUpdateTime: time.Now(),
 		dt:             0.0,
 		maxDt:          0.0,
 		avgDt:          0.0,
 		frame:          0,
+
+		// TODO: Move to player controller component
+		playerInput: math.Vec2{
+			X: 0,
+			Y: 0,
+		},
 	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-client.Game.NetworkManager.Broadcast:
+				transport.Send <- msg
+			case msg := <-transport.Received:
+				event := &protos.Event{}
+				err := proto.Unmarshal(msg, event)
+				if err != nil {
+					log.Println("Error parsing message:", err)
+				}
+
+				client.Game.HandleEvent(event)
+			}
+		}
+	}()
+
+	return client
 }
 
 func (c *Client) Run() (err error) {
@@ -91,18 +123,74 @@ func (c *Client) Update() error {
 	c.avgDt = (c.dt + c.avgDt) / 2
 
 	c.inputs.System.Update()
-	// err := c.handleInput(c.Conn)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return err
-	// }
+	err := c.handleInput()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	g.Update(c.dt)
 	c.lastUpdateTime = time.Now()
 
-	// Write your game's logical update.
-
 	c.frame++
+
+	return nil
+}
+
+// TODO: Move to player controller component.
+func (c *Client) handleInput() error {
+	var event *protos.Event
+	var pInput = c.playerInput
+
+	input := c.inputs.Handlers[0]
+
+	if input == nil {
+		log.Println("No input handler")
+		return nil
+	}
+
+	if input.ActionIsPressed(client.ActionMoveLeft) {
+		pInput.X = -1
+	} else if input.ActionIsPressed(client.ActionMoveRight) {
+		pInput.X = 1
+	} else {
+		pInput.X = 0
+	}
+
+	if input.ActionIsPressed(client.ActionMoveUp) {
+		pInput.Y = 1
+	} else if input.ActionIsPressed(client.ActionMoveDown) {
+		pInput.Y = -1
+	} else {
+		pInput.Y = 0
+	}
+
+	if pInput != c.playerInput {
+		event = &protos.Event{
+			Type: protos.EventType_move,
+			Data: &protos.Event_Move{
+				Move: &protos.EventMove{
+					Direction: &protos.Vector2{
+						X: pInput.X,
+						Y: pInput.Y,
+					},
+				},
+			},
+		}
+
+		c.playerInput = pInput
+	}
+
+	if event != nil {
+		c.Game.HandleEvent(event)
+
+		message, err := proto.Marshal(event)
+		if err != nil {
+			return err
+		}
+
+		c.transport.Send <- message
+	}
 
 	return nil
 }
