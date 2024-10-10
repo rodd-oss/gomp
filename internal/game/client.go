@@ -33,6 +33,7 @@ func NewClient(inputs *client.Inputs, transport *client.Transport, config *clien
 		inputs:    inputs,
 		transport: transport,
 		config:    config,
+		Game:      New(true),
 
 		// Game: *Game
 		lastUpdateTime: time.Now(),
