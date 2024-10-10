@@ -44,13 +44,19 @@ func NewClient(inputs *client.Inputs, transport *client.Transport, config *clien
 	}
 }
 
-func (c *Client) Run() error {
+func (c *Client) Run() (err error) {
 	e.SetRunnableOnUnfocused(true)
 	e.SetWindowSize(c.config.Width, c.config.Height)
 	e.SetWindowResizingMode(c.config.ResizingMode)
 	e.SetWindowTitle(c.config.Title)
 
-	if err := e.RunGame(c); err != nil {
+	// Connect to the server.
+	err = c.transport.Connect()
+	if err != nil {
+		return err
+	}
+
+	if err = e.RunGame(c); err != nil {
 		return err
 	}
 
