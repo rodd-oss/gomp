@@ -25,6 +25,15 @@ func NewInputs(availableDevices input.DeviceKind) *Inputs {
 		DevicesEnabled: input.AnyDevice,
 	})
 
+	defaultKeyMap := &input.Keymap{
+		ActionMoveLeft:  {input.KeyGamepadLeft, input.KeyLeft, input.KeyA},
+		ActionMoveRight: {input.KeyGamepadRight, input.KeyRight, input.KeyD},
+		ActionMoveUp:    {input.KeyGamepadUp, input.KeyUp, input.KeyW},
+		ActionMoveDown:  {input.KeyGamepadDown, input.KeyDown, input.KeyS},
+	}
+
+	inputs.Register(0, defaultKeyMap)
+
 	return inputs
 }
 
