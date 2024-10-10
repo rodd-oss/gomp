@@ -105,16 +105,17 @@ func (s *GameState) Update() error {
 
 	avgDt = (dt + avgDt) / 2
 
-	g.Update(dt)
-	lastUpdateTime = time.Now()
-
-	// Write your game's logical update.
 	s.inputSystem.Update()
 	err := s.handleInput(s.Conn)
 	if err != nil {
 		println(err)
 		return err
 	}
+
+	g.Update(dt)
+	lastUpdateTime = time.Now()
+
+	// Write your game's logical update.
 
 	frame++
 
@@ -318,7 +319,7 @@ func createState() (s *GameState) {
 	keymap := input.Keymap{
 		ActionMoveLeft:  {input.KeyGamepadLeft, input.KeyLeft, input.KeyA},
 		ActionMoveRight: {input.KeyGamepadRight, input.KeyRight, input.KeyD},
-		ActionMoveUp:    {input.KeyGamepadRight, input.KeyUp, input.KeyW},
+		ActionMoveUp:    {input.KeyGamepadUp, input.KeyUp, input.KeyW},
 		ActionMoveDown:  {input.KeyGamepadDown, input.KeyDown, input.KeyS},
 	}
 	s.input = s.inputSystem.NewHandler(0, keymap)

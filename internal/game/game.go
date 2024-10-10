@@ -29,14 +29,12 @@ type Game struct {
 	Entities       *GameEntities
 	NetworkManager *components.NetworkManagerData
 
-	// Client
-	IsClient bool
-
 	// Server
 	StateSerialized *[]byte
 	lastPlayerID    uint32
 
 	// Config
+	IsClient   bool
 	MaxPlayers int32
 }
 

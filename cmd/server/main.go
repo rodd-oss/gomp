@@ -17,14 +17,14 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const tickRate = time.Second / 60
+const gameTickRate = time.Second / 4
 
 func main() {
-	e := echo.New()
-	w := game.New(false)
-	h := hub.New(w)
-	go w.Run(tickRate)
+	g := game.New(false)
+	go g.Run(gameTickRate)
 
+	e := echo.New()
+	h := hub.New(g)
 	// e.Use(middleware.Logger())
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		StackSize:         1 << 10, // 1 KB
@@ -54,7 +54,7 @@ func main() {
 		return c.Render(http.StatusOK, "GamePage", "Game")
 	})
 
-	e.GET("/ws", h.WsHandler(w))
+	e.GET("/ws", h.WsHandler(g))
 
 	e.Logger.Fatal(e.Start(":3000"))
 }
