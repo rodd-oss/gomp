@@ -15,7 +15,7 @@ func main() {
 	url = "ws" + url[4:]
 
 	inputs := client.NewInputs(input.AnyDevice)
-	config := client.NewConfig(640, 480, "MMO 360 no scope", e.WindowResizingModeEnabled)
+	config := client.NewConfig(640, 480, "MMO 360 no scope", e.WindowResizingModeEnabled, true)
 	transport := client.NewWsTransport(context.Background(), url)
 
 	gameClient := game.NewClient(inputs, transport, config)

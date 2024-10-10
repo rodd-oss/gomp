@@ -249,25 +249,28 @@ func (c *Client) Draw(screen *e.Image) {
 
 	// 	screen.DrawImage(sprite.Frames[(frame/7+sprite.Frame)%len(sprite.Frames)], sprite.op)
 	// }
-	var debugInfo = make([]string, 0)
+	if c.config.EnableDebug {
 
-	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", e.ActualTPS()))
-	debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", e.ActualFPS()))
-	debugInfo = append(debugInfo, fmt.Sprintf("dt %0.3f", c.dt))
-	debugInfo = append(debugInfo, fmt.Sprintf("max dt %0.3f", c.maxDt))
-	debugInfo = append(debugInfo, fmt.Sprintf("avg dt %0.3f", c.avgDt))
-	debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(g.Entities.Units)))
+		var debugInfo = make([]string, 0)
 
-	if g.NetworkManager.MyID != nil {
-		debugInfo = append(debugInfo, fmt.Sprintf("ID %d", *g.NetworkManager.MyID))
+		debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", e.ActualTPS()))
+		debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", e.ActualFPS()))
+		debugInfo = append(debugInfo, fmt.Sprintf("dt %0.3f", c.dt))
+		debugInfo = append(debugInfo, fmt.Sprintf("max dt %0.3f", c.maxDt))
+		debugInfo = append(debugInfo, fmt.Sprintf("avg dt %0.3f", c.avgDt))
+		debugInfo = append(debugInfo, fmt.Sprintf("players %d", len(g.Entities.Units)))
 
-		myUnit := g.Entities.Units[g.NetworkManager.NetworkIdToEntityId[*g.NetworkManager.MyID]]
-		if myUnit != nil {
-			transform := components.Transform.GetValue(myUnit)
-			debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", transform.LocalPosition.X))
-			debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", transform.LocalPosition.Y))
+		if g.NetworkManager.MyID != nil {
+			debugInfo = append(debugInfo, fmt.Sprintf("ID %d", *g.NetworkManager.MyID))
+
+			myUnit := g.Entities.Units[g.NetworkManager.NetworkIdToEntityId[*g.NetworkManager.MyID]]
+			if myUnit != nil {
+				transform := components.Transform.GetValue(myUnit)
+				debugInfo = append(debugInfo, fmt.Sprintf("posX %0.0f", transform.LocalPosition.X))
+				debugInfo = append(debugInfo, fmt.Sprintf("posY %0.0f", transform.LocalPosition.Y))
+			}
 		}
-	}
 
-	ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
+		ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
+	}
 }

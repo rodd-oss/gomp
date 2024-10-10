@@ -9,13 +9,15 @@ type Config struct {
 	Height       int
 	Title        string
 	ResizingMode e.WindowResizingModeType
+	EnableDebug  bool
 }
 
-func NewConfig(width int, height int, title string, resizingMode e.WindowResizingModeType) *Config {
+func NewConfig(width int, height int, title string, resizingMode e.WindowResizingModeType, enableDebug bool) *Config {
 	return &Config{
 		Width:        width,
 		Height:       height,
 		Title:        title,
 		ResizingMode: resizingMode,
+		EnableDebug:  enableDebug,
 	}
 }
