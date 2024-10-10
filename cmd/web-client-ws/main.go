@@ -20,5 +20,8 @@ func main() {
 
 	gameClient := game.NewClient(inputs, transport, config)
 
-	gameClient.Run()
+	err := gameClient.Run()
+	if err != nil {
+		panic(err)
+	}
 }
