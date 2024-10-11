@@ -1,3 +1,5 @@
+//go:build !server
+
 package components
 
 import (

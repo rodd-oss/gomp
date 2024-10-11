@@ -4,7 +4,6 @@ import (
 	"context"
 	"syscall/js"
 	"tomb_mates/internal/client"
-	"tomb_mates/internal/game"
 
 	e "github.com/hajimehoshi/ebiten/v2"
 	input "github.com/quasilyte/ebitengine-input"
@@ -20,7 +19,7 @@ func main() {
 	config := client.NewConfig(640, 480, "MMO 360 no scope", e.WindowResizingModeEnabled, true)
 	transport := client.NewWsTransport(ctx, url)
 
-	gameClient := game.NewClient(ctx, inputs, transport, config)
+	gameClient := client.New(ctx, inputs, transport, config)
 
 	err := gameClient.Run()
 	if err != nil {

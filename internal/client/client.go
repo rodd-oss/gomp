@@ -1,4 +1,4 @@
-package game
+package client
 
 import (
 	"context"
@@ -7,8 +7,9 @@ import (
 	"log"
 	"strings"
 	"time"
-	"tomb_mates/internal/client"
+
 	"tomb_mates/internal/components"
+	"tomb_mates/internal/game"
 	"tomb_mates/internal/protos"
 
 	e "github.com/hajimehoshi/ebiten/v2"
@@ -20,10 +21,10 @@ import (
 )
 
 type Client struct {
-	inputs    *client.Inputs
-	transport *client.Transport
-	config    *client.Config
-	Game      *Game
+	inputs    *Inputs
+	transport *Transport
+	config    *Config
+	Game      *game.Game
 
 	lastUpdateTime time.Time
 	dt             float64
@@ -34,12 +35,12 @@ type Client struct {
 	playerInput math.Vec2
 }
 
-func NewClient(ctx context.Context, inputs *client.Inputs, transport *client.Transport, config *client.Config) *Client {
+func New(ctx context.Context, inputs *Inputs, transport *Transport, config *Config) *Client {
 	client := &Client{
 		inputs:    inputs,
 		transport: transport,
 		config:    config,
-		Game:      New(true),
+		Game:      game.New(true),
 
 		lastUpdateTime: time.Now(),
 		dt:             0.0,
@@ -149,17 +150,17 @@ func (c *Client) handleInput() error {
 		return nil
 	}
 
-	if input.ActionIsPressed(client.ActionMoveLeft) {
+	if input.ActionIsPressed(ActionMoveLeft) {
 		pInput.X = -1
-	} else if input.ActionIsPressed(client.ActionMoveRight) {
+	} else if input.ActionIsPressed(ActionMoveRight) {
 		pInput.X = 1
 	} else {
 		pInput.X = 0
 	}
 
-	if input.ActionIsPressed(client.ActionMoveUp) {
+	if input.ActionIsPressed(ActionMoveUp) {
 		pInput.Y = 1
-	} else if input.ActionIsPressed(client.ActionMoveDown) {
+	} else if input.ActionIsPressed(ActionMoveDown) {
 		pInput.Y = -1
 	} else {
 		pInput.Y = 0
