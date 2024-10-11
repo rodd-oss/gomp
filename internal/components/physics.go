@@ -42,11 +42,17 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 		}
 	}
 
-	Transform.SetValue(e, TransformData{
-		LocalPosition: math.NewVec2(pos.X-posDelta.X*(1-interpolationSpeed)/2, pos.Y-posDelta.Y*(1-interpolationSpeed)/2),
-	})
+	if isClient {
+		Transform.SetValue(e, TransformData{
+			LocalPosition: math.NewVec2(pos.X-posDelta.X*(1-interpolationSpeed)/2, pos.Y-posDelta.Y*(1-interpolationSpeed)/2),
+		})
+	} else {
+		Transform.SetValue(e, TransformData{
+			LocalPosition: math.NewVec2(pos.X, pos.Y),
+		})
+	}
 
-	// p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
+	p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
 
 	return nil
 }
