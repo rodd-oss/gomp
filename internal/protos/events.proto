@@ -46,7 +46,7 @@ message GameState {
 }
 
 message GameStatePatch {
-    map<uint32, PatchNetworkEntity> entities = 7;
-    map<uint32, NetworkEntity> created_entities = 8;
-    map<uint32, Empty> deleted_entities = 9;
+    map<uint32, PatchNetworkEntity> entities = 1;
+    map<uint32, NetworkEntity> created_entities = 2;
+    map<uint32, Empty> deleted_entities = 3;
 }

@@ -80,7 +80,7 @@ func (g *Game) GeneratePlayerId() uint32 {
 	return g.lastPlayerID
 }
 
-func (g *Game) CreatePlayer(id uint32) *protos.Unit {
+func (g *Game) CreatePlayer(id uint32, networkEntity *protos.NetworkEntity) *protos.Unit {
 	g.Mx.Lock()
 	defer g.Mx.Unlock()
 
@@ -96,6 +96,11 @@ func (g *Game) CreatePlayer(id uint32) *protos.Unit {
 		Frame:  int32(rnd.Intn(4)),
 		Action: protos.Action_idle,
 		Hp:     100,
+	}
+
+	if networkEntity != nil {
+		unit.Position.X = networkEntity.Transform.Position.X
+		unit.Position.Y = networkEntity.Transform.Position.Y
 	}
 
 	playerEntityId := g.World.Create(components.Transform, components.Physics, components.NetworkEntity, components.Render)
@@ -116,6 +121,10 @@ func (g *Game) CreatePlayer(id uint32) *protos.Unit {
 		X: unit.Position.X,
 		Y: unit.Position.Y,
 	})
+
+	if networkEntity != nil {
+		body.SetVelocity(networkEntity.Physics.Velocity.X, networkEntity.Physics.Velocity.Y)
+	}
 
 	shape := g.Space.AddShape(cp.NewCircle(body, 8, cp.Vector{}))
 	shape.SetElasticity(0)
@@ -190,6 +199,7 @@ func (g *Game) HandleEvent(event *protos.Event) {
 
 		entityId := g.NetworkManager.NetworkIdToEntityId[event.PlayerId]
 		if g.World.Valid(entityId) == false {
+			log.Println("No entity with id ", event.PlayerId)
 			return
 		}
 
@@ -208,7 +218,7 @@ func (g *Game) HandleEvent(event *protos.Event) {
 		entities := event.GetState().GetEntities()
 		if entities != nil {
 			for id := range entities {
-				g.CreatePlayer(id)
+				g.CreatePlayer(id, entities[id])
 			}
 		} else {
 			log.Println("No units")
@@ -227,11 +237,12 @@ func (g *Game) HandleEvent(event *protos.Event) {
 		}
 
 		g.NetworkManager.IncomingPatch = data
+		log.Println(g.NetworkManager.IncomingPatch)
 
 		createdEntities := data.GetCreatedEntities()
 		if createdEntities != nil {
 			for id := range createdEntities {
-				err := g.CreatePlayer(id)
+				err := g.CreatePlayer(id, createdEntities[id])
 				if err != nil {
 					log.Println(err)
 				}
@@ -259,7 +270,7 @@ func (g *Game) HandleEvents() {
 }
 
 const (
-	patchRate     = time.Second / 2
+	patchRate     = time.Second / 20
 	lazyPatchRate = time.Minute * 5
 )
 
@@ -280,10 +291,10 @@ func (g *Game) Run(tickRate time.Duration) {
 			g.Update(dt)
 			lastEvolveTime = time.Now()
 
-		// case <-patchTicker.C:
-		// 	g.Mx.Lock()
-		// 	g.NetworkManager.SendPatch()
-		// 	g.Mx.Unlock()
+		case <-patchTicker.C:
+			g.Mx.Lock()
+			g.NetworkManager.SendPatch()
+			g.Mx.Unlock()
 
 		case <-lazyPatchTicker.C:
 			// g.Broadcast <- *g.StateSerialized

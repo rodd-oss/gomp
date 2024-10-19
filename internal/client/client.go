@@ -168,7 +168,8 @@ func (c *Client) handleInput() error {
 
 	if pInput != c.playerInput {
 		event = &protos.Event{
-			Type: protos.EventType_move,
+			PlayerId: *c.Game.NetworkManager.MyID,
+			Type:     protos.EventType_move,
 			Data: &protos.Event_Move{
 				Move: &protos.EventMove{
 					Direction: &protos.Vector2{
@@ -183,8 +184,6 @@ func (c *Client) handleInput() error {
 	}
 
 	if event != nil {
-		c.Game.HandleEvent(event)
-
 		message, err := proto.Marshal(event)
 		if err != nil {
 			return err

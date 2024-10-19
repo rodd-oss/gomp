@@ -3,6 +3,7 @@ package components
 import (
 	"tomb_mates/internal/protos"
 
+	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/features/transform"
 )
@@ -12,6 +13,8 @@ type NetworkEntityData struct {
 	Transform *protos.Transform
 	Physics   *protos.Physics
 	Skin      *protos.Skin
+
+	Body *cp.Body
 }
 
 var NetworkEntity = ecs.NewComponentType[*NetworkEntityData]()
@@ -60,7 +63,7 @@ func (ne *NetworkEntityData) RequestPatch(entity *ecs.Entry) (patch *protos.Patc
 	patchTransform := ne.requestTransformPatch(transform)
 	patchPhysics := ne.requestPhysicsPatch(physics)
 
-	if patchTransform == nil && patchPhysics == nil {
+	if patchPhysics == nil {
 		return nil
 	}
 
@@ -118,16 +121,14 @@ func (ne *NetworkEntityData) requestPhysicsPatch(physics *PhysicsData) (patchPhy
 	velocityChanged := velocity.X != ne.Physics.Velocity.X || velocity.Y != ne.Physics.Velocity.Y
 
 	if !(velocityChanged) {
-		return
+		return nil
 	}
 
 	patchPhysics = &protos.PatchPhysics{}
 
-	if velocityChanged {
-		patchPhysics.Velocity = &protos.Vector2{
-			X: velocity.X,
-			Y: velocity.Y,
-		}
+	patchPhysics.Velocity = &protos.Vector2{
+		X: velocity.X,
+		Y: velocity.Y,
 	}
 
 	return patchPhysics

@@ -36,7 +36,7 @@ func (h *Hub) handleWsConnection(world *game.Game, w http.ResponseWriter, r *htt
 	}
 
 	id := world.GeneratePlayerId()
-	world.CreatePlayer(id)
+	world.CreatePlayer(id, nil)
 	defer world.RemovePlayer(id)
 
 	client := &Client{id: id, hub: h, conn: conn, send: make(chan []byte, 512)}

@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/features/math"
+	ecsmath "github.com/yohamta/donburi/features/math"
 )
 
 type PhysicsData struct {
@@ -20,7 +20,7 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 	}
 
 	pos := p.Body.Position()
-	posDelta := &math.Vec2{
+	posDelta := &ecsmath.Vec2{
 		X: 0,
 		Y: 0,
 	}
@@ -34,25 +34,30 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 			posDelta.Y = pos.Y - networkPos.Y
 		}
 
+		// Force sync client body pos to server body pos
 		if isClient {
-			p.Body.SetPosition(cp.Vector{
-				X: pos.X - posDelta.X*interpolationSpeed,
-				Y: pos.Y - posDelta.Y*interpolationSpeed,
-			})
+			if p.Body.Velocity().X == 0 && p.Body.Velocity().Y == 0 {
+				p.Body.SetPosition(cp.Vector{
+					X: pos.X - posDelta.X*interpolationSpeed,
+					Y: pos.Y - posDelta.Y*interpolationSpeed,
+				})
+			}
 		}
 	}
 
 	if isClient {
 		Transform.SetValue(e, TransformData{
-			LocalPosition: math.NewVec2(pos.X-posDelta.X*(1-interpolationSpeed)/2, pos.Y-posDelta.Y*(1-interpolationSpeed)/2),
+			LocalPosition: ecsmath.NewVec2(
+				p.Body.Position().X,
+				p.Body.Position().Y),
 		})
+
+		p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
 	} else {
 		Transform.SetValue(e, TransformData{
-			LocalPosition: math.NewVec2(pos.X, pos.Y),
+			LocalPosition: ecsmath.NewVec2(p.Body.Position().X, p.Body.Position().Y),
 		})
 	}
-
-	p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
 
 	return nil
 }

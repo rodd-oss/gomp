@@ -17,7 +17,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const gameTickRate = time.Second / 20
+const gameTickRate = time.Second / 60
 
 func main() {
 	g := game.New(false)

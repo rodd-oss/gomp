@@ -143,33 +143,6 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 		nm.IncomingPatch = nil
 	}
 
-	if !isClient {
-		if nm.OutgoingPatch == nil {
-			nm.OutgoingPatch = &protos.GameStatePatch{}
-		}
-
-		NetworkEntity.Each(nm.World, func(ent *ecs.Entry) {
-			ne := NetworkEntity.GetValue(ent)
-			if ne == nil {
-				return
-			}
-
-			patch := ne.RequestPatch(ent)
-			if patch == nil {
-				return
-			}
-
-			if nm.OutgoingPatch.Entities == nil {
-				nm.OutgoingPatch.Entities = make(map[uint32]*protos.PatchNetworkEntity)
-			}
-
-			nm.OutgoingPatch.Entities[ne.Id] = patch
-			ne.ApplyPatch(patch)
-		})
-
-		nm.SendPatch()
-	}
-
 	// // Create new entities -> TODO: move to global manager?
 	// for _, entity := range nm.IncomingPatch.CreatedEntities {
 	// 	if entity == nil {
@@ -237,6 +210,40 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 }
 
 func (n *NetworkManagerData) SendPatch() {
+	if n.OutgoingPatch == nil {
+		n.OutgoingPatch = &protos.GameStatePatch{}
+	}
+
+	NetworkEntity.Each(n.World, func(ent *ecs.Entry) {
+		ne := NetworkEntity.GetValue(ent)
+		if ne == nil {
+			return
+		}
+
+		patch := ne.RequestPatch(ent)
+		if patch == nil {
+			return
+		}
+
+		if n.OutgoingPatch.Entities == nil {
+			n.OutgoingPatch.Entities = make(map[uint32]*protos.PatchNetworkEntity)
+		}
+
+		if n.OutgoingPatch.Entities[ne.Id] == nil {
+			n.OutgoingPatch.Entities[ne.Id] = &protos.PatchNetworkEntity{}
+		}
+
+		if patch.Physics != nil {
+			n.OutgoingPatch.Entities[ne.Id].Physics = patch.Physics
+		}
+
+		if patch.Transform != nil {
+			n.OutgoingPatch.Entities[ne.Id].Transform = patch.Transform
+		}
+
+		ne.ApplyPatch(patch)
+	})
+
 	if n.OutgoingPatch == nil {
 		return
 	}
