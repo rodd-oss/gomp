@@ -1,6 +1,8 @@
 package components
 
 import (
+	"math"
+
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
 	ecsmath "github.com/yohamta/donburi/features/math"
@@ -20,42 +22,26 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 	}
 
 	pos := p.Body.Position()
+	pos.X = math.Round(pos.X)
+	pos.Y = math.Round(pos.Y)
+	// round body position to nearest integer
+	p.Body.SetPosition(pos.Lerp(pos, interpolationSpeed))
+
+	lastTransformPosition := Transform.GetValue(e).LocalPosition
+	newTransformPosition := ecsmath.NewVec2(pos.X, pos.Y)
+
 	posDelta := &ecsmath.Vec2{
-		X: 0,
-		Y: 0,
-	}
-
-	ne := NetworkEntity.GetValue(e)
-
-	if ne.Transform != nil {
-		networkPos := ne.Transform.Position
-		if networkPos != nil {
-			posDelta.X = pos.X - networkPos.X
-			posDelta.Y = pos.Y - networkPos.Y
-		}
-
-		// Force sync client body pos to server body pos
-		if isClient {
-			if p.Body.Velocity().X == 0 && p.Body.Velocity().Y == 0 {
-				p.Body.SetPosition(cp.Vector{
-					X: pos.X - posDelta.X*interpolationSpeed,
-					Y: pos.Y - posDelta.Y*interpolationSpeed,
-				})
-			}
-		}
+		X: p.Body.Position().X - lastTransformPosition.X,
+		Y: p.Body.Position().Y - lastTransformPosition.Y,
 	}
 
 	if isClient {
 		Transform.SetValue(e, TransformData{
-			LocalPosition: ecsmath.NewVec2(
-				p.Body.Position().X,
-				p.Body.Position().Y),
+			LocalPosition: newTransformPosition.Add(posDelta.MulScalar(-0.66)),
 		})
-
-		p.Body.SetVelocity(ne.Physics.Velocity.X, ne.Physics.Velocity.Y)
 	} else {
 		Transform.SetValue(e, TransformData{
-			LocalPosition: ecsmath.NewVec2(p.Body.Position().X, p.Body.Position().Y),
+			LocalPosition: newTransformPosition,
 		})
 	}
 

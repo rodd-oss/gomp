@@ -5,16 +5,16 @@ import (
 
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/features/transform"
+	"github.com/yohamta/donburi/features/math"
 )
 
 type NetworkEntityData struct {
-	Id        uint32
-	Transform *protos.Transform
-	Physics   *protos.Physics
-	Skin      *protos.Skin
+	Id uint32
 
-	Body *cp.Body
+	LastPatch *protos.PatchNetworkEntity
+
+	Body      *cp.Body
+	Transform *TransformData
 }
 
 var NetworkEntity = ecs.NewComponentType[*NetworkEntityData]()
@@ -29,15 +29,15 @@ func (ne *NetworkEntityData) ApplyPatch(patch *protos.PatchNetworkEntity) {
 	if ieTransform != nil {
 		iePosition := ieTransform.GetPosition()
 		if iePosition != nil {
-			ne.Transform.Position = iePosition
+			ne.Body.SetPosition(cp.Vector{X: iePosition.X, Y: iePosition.Y})
 		}
 		ieRotation := ieTransform.Rotation
 		if ieRotation != nil {
-			ne.Transform.Rotation = *ieRotation
+			ne.Transform.LocalRotation = *ieRotation
 		}
 		ieScale := ieTransform.GetScale()
 		if ieScale != nil {
-			ne.Transform.Scale = ieScale
+			ne.Transform.LocalScale = math.Vec2{X: ieScale.X, Y: ieScale.Y}
 		}
 	}
 
@@ -45,23 +45,20 @@ func (ne *NetworkEntityData) ApplyPatch(patch *protos.PatchNetworkEntity) {
 	if iePhysics != nil {
 		ieVelocity := iePhysics.GetVelocity()
 		if ieVelocity != nil {
-			ne.Physics.Velocity = ieVelocity
+			ne.Body.SetVelocity(ieVelocity.X, ieVelocity.Y)
 		}
-	}
-
-	ieSkin := patch.Skin
-	if ieSkin != nil {
-		ne.Skin = ieSkin
+		iePosition := iePhysics.GetPosition()
+		if iePosition != nil {
+			ne.Body.SetPosition(cp.Vector{X: iePosition.X, Y: iePosition.Y})
+		}
 	}
 }
 
 // Server-side
 func (ne *NetworkEntityData) RequestPatch(entity *ecs.Entry) (patch *protos.PatchNetworkEntity) {
-	transform := Transform.Get(entity)
-	physics := Physics.Get(entity)
 
-	patchTransform := ne.requestTransformPatch(transform)
-	patchPhysics := ne.requestPhysicsPatch(physics)
+	patchTransform := ne.requestTransformPatch()
+	patchPhysics := ne.requestPhysicsPatch()
 
 	if patchPhysics == nil {
 		return nil
@@ -72,20 +69,38 @@ func (ne *NetworkEntityData) RequestPatch(entity *ecs.Entry) (patch *protos.Patc
 		Physics:   patchPhysics,
 	}
 
+	ne.LastPatch = patch
+
 	return patch
 }
 
-func (ne *NetworkEntityData) requestTransformPatch(transform *transform.TransformData) (patchTransform *protos.PatchTransform) {
+func (ne *NetworkEntityData) requestTransformPatch() (patchTransform *protos.PatchTransform) {
+	transform := ne.Transform
+
 	if transform == nil {
 		return nil
 	}
 
-	positionChanged := transform.LocalPosition.X != ne.Transform.Position.X || transform.LocalPosition.Y != ne.Transform.Position.Y
-	rotationChanged := transform.LocalRotation != ne.Transform.Rotation
-	scaleChanged := transform.LocalScale.X != ne.Transform.Scale.X || transform.LocalScale.Y != ne.Transform.Scale.Y
+	var positionChanged, rotationChanged, scaleChanged bool = false, false, false
 
-	if !(positionChanged || rotationChanged || scaleChanged) {
-		return nil
+	if ne.LastPatch != nil {
+		if ne.LastPatch.Transform != nil {
+			if ne.LastPatch.Transform.Position != nil {
+				positionChanged = transform.LocalPosition.X != ne.LastPatch.Transform.Position.X || transform.LocalPosition.Y != ne.LastPatch.Transform.Position.Y
+			}
+
+			if ne.LastPatch.Transform.Rotation != nil {
+				rotationChanged = transform.LocalRotation != *ne.LastPatch.Transform.Rotation
+			}
+
+			if ne.LastPatch.Transform.Scale != nil {
+				scaleChanged = transform.LocalScale.X != ne.LastPatch.Transform.Scale.X || transform.LocalScale.Y != ne.LastPatch.Transform.Scale.Y
+			}
+		}
+
+		if !(positionChanged || rotationChanged || scaleChanged) {
+			return nil
+		}
 	}
 
 	patchTransform = &protos.PatchTransform{}
@@ -98,7 +113,7 @@ func (ne *NetworkEntityData) requestTransformPatch(transform *transform.Transfor
 	}
 
 	if rotationChanged {
-		patchTransform.Rotation = &ne.Transform.Rotation
+		patchTransform.Rotation = ne.LastPatch.Transform.Rotation
 	}
 
 	if scaleChanged {
@@ -111,17 +126,21 @@ func (ne *NetworkEntityData) requestTransformPatch(transform *transform.Transfor
 	return patchTransform
 }
 
-func (ne *NetworkEntityData) requestPhysicsPatch(physics *PhysicsData) (patchPhysics *protos.PatchPhysics) {
-	if physics == nil {
+func (ne *NetworkEntityData) requestPhysicsPatch() (patchPhysics *protos.PatchPhysics) {
+	if ne.Body == nil {
 		return nil
 	}
 
-	velocity := physics.Body.Velocity()
+	velocity := ne.Body.Velocity()
+	position := ne.Body.Position()
 
-	velocityChanged := velocity.X != ne.Physics.Velocity.X || velocity.Y != ne.Physics.Velocity.Y
+	if ne.LastPatch != nil {
 
-	if !(velocityChanged) {
-		return nil
+		velocityChanged := velocity.X != ne.LastPatch.Physics.Velocity.X || velocity.Y != ne.LastPatch.Physics.Velocity.Y
+
+		if !(velocityChanged) {
+			return nil
+		}
 	}
 
 	patchPhysics = &protos.PatchPhysics{}
@@ -129,6 +148,11 @@ func (ne *NetworkEntityData) requestPhysicsPatch(physics *PhysicsData) (patchPhy
 	patchPhysics.Velocity = &protos.Vector2{
 		X: velocity.X,
 		Y: velocity.Y,
+	}
+
+	patchPhysics.Position = &protos.Vector2{
+		X: position.X,
+		Y: position.Y,
 	}
 
 	return patchPhysics

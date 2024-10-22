@@ -307,10 +307,24 @@ func (g *Game) CacheGameState() error {
 		cachedEntities := make(map[uint32]*protos.NetworkEntity, len(g.NetworkManager.NetworkEntities))
 		for key, value := range g.NetworkManager.NetworkEntities {
 			cachedEntities[key] = &protos.NetworkEntity{
-				Id:        value.Id,
-				Transform: value.Transform,
-				Physics:   value.Physics,
-				Skin:      *value.Skin,
+				Id: value.Id,
+				Transform: &protos.Transform{
+					Position: &protos.Vector2{
+						X: value.Transform.LocalPosition.X,
+						Y: value.Transform.LocalPosition.Y,
+					},
+					Rotation: value.Transform.LocalRotation,
+					Scale: &protos.Vector2{
+						X: value.Transform.LocalScale.X,
+						Y: value.Transform.LocalScale.Y,
+					},
+				},
+				Physics: &protos.Physics{
+					Velocity: &protos.Vector2{
+						X: value.Body.Velocity().X,
+						Y: value.Body.Velocity().Y,
+					},
+				},
 			}
 		}
 

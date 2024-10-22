@@ -255,14 +255,14 @@ func (c *Client) Draw(screen *e.Image) {
 		ne := components.NetworkEntity.GetValue(e)
 
 		op.GeoM.Reset()
-		op.GeoM.Translate(ne.Transform.Position.X, ne.Transform.Position.Y)
+		op.GeoM.Translate(ne.Transform.LocalPosition.X, ne.Transform.LocalPosition.Y)
 		screen.DrawImage(dotRed, op)
 	})
 
 	g.Space.EachBody(func(body *cp.Body) {
 		op.GeoM.Reset()
 		op.GeoM.Translate(body.Position().X, body.Position().Y)
-		screen.DrawImage(dotGreen, op)
+		// screen.DrawImage(dotGreen, op)
 	})
 	g.Mx.Unlock()
 

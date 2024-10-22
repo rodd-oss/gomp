@@ -14,7 +14,6 @@ message NetworkEntity {
   uint32 Id = 1;
   Transform transform = 2;
   Physics physics = 3;
-  Skin skin = 4;
 }
 
 message Transform {
@@ -25,6 +24,7 @@ message Transform {
 
 message Physics {
   Vector2 velocity = 1;
+  Vector2 position = 2;
 }
 
 //
@@ -35,11 +35,11 @@ message PatchNetworkEntity {
   uint32 Id = 1;
   optional PatchTransform transform = 2;
   optional PatchPhysics physics = 3;
-  optional Skin skin = 4;
 }
 
 message PatchPhysics {
   optional Vector2 velocity = 1;
+  optional Vector2 position = 2;
 }
 
 message PatchTransform {

@@ -1,8 +1,6 @@
 package components
 
 import (
-	"math/rand"
-	"time"
 	"tomb_mates/internal/protos"
 
 	"github.com/jakecoffman/cp/v2"
@@ -41,30 +39,11 @@ func (nm *NetworkManagerData) Register(entityId ecs.Entity, id uint32) *protos.N
 	transform := Transform.GetValue(entity)
 	physics := Physics.GetValue(entity)
 
-	velocity := physics.Body.Velocity()
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	skin := protos.Skin(rnd.Intn(len(protos.Skin_name)))
-
 	ned := &NetworkEntityData{
-		Id: id,
-		Transform: &protos.Transform{
-			Position: &protos.Vector2{
-				X: transform.LocalPosition.X,
-				Y: transform.LocalPosition.Y,
-			},
-			Rotation: transform.LocalRotation,
-			Scale: &protos.Vector2{
-				X: transform.LocalScale.X,
-				Y: transform.LocalScale.Y,
-			},
-		},
-		Physics: &protos.Physics{
-			Velocity: &protos.Vector2{
-				X: velocity.X,
-				Y: velocity.Y,
-			},
-		},
-		Skin: &skin,
+		Id:        id,
+		LastPatch: nil,
+		Transform: &transform,
+		Body:      physics.Body,
 	}
 
 	NetworkEntity.SetValue(entity, ned)
@@ -82,10 +61,27 @@ func (nm *NetworkManagerData) Register(entityId ecs.Entity, id uint32) *protos.N
 		nm.OutgoingPatch.CreatedEntities = make(map[uint32]*protos.NetworkEntity)
 	}
 
+	velocity := physics.Body.Velocity()
+
 	nm.OutgoingPatch.CreatedEntities[id] = &protos.NetworkEntity{
-		Id:        ned.Id,
-		Transform: ned.Transform,
-		Physics:   ned.Physics,
+		Id: ned.Id,
+		Transform: &protos.Transform{
+			Position: &protos.Vector2{
+				X: transform.LocalPosition.X,
+				Y: transform.LocalPosition.Y,
+			},
+			Rotation: transform.LocalRotation,
+			Scale: &protos.Vector2{
+				X: transform.LocalScale.X,
+				Y: transform.LocalScale.Y,
+			},
+		},
+		Physics: &protos.Physics{
+			Velocity: &protos.Vector2{
+				X: velocity.X,
+				Y: velocity.Y,
+			},
+		},
 	}
 
 	// Register new entities
