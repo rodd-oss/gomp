@@ -27,10 +27,11 @@ type NetworkManagerData struct {
 	NetworkEntities map[uint32]*NetworkEntityData
 
 	// Sync game state
-	IncomingPatch       *protos.GameStatePatch // Clientside
-	OutgoingPatch       *protos.GameStatePatch // Serverside
-	NetworkIdToEntityId map[uint32]ecs.Entity
-	EntityIdToNetworkId map[ecs.Entity]uint32
+	IncomingPatch          *protos.GameStatePatch // Clientside
+	OutgoingPatch          *protos.GameStatePatch // Serverside
+	SerializedPatchHistory *chan []byte
+	NetworkIdToEntityId    map[uint32]ecs.Entity
+	EntityIdToNetworkId    map[ecs.Entity]uint32
 
 	LastNetworkEntityId uint32
 
@@ -144,71 +145,6 @@ func (nm *NetworkManagerData) Update(dt float64, isClient bool) {
 
 		nm.IncomingPatch = nil
 	}
-
-	// // Create new entities -> TODO: move to global manager?
-	// for _, entity := range nm.IncomingPatch.CreatedEntities {
-	// 	if entity == nil {
-	// 		continue
-	// 	}
-
-	// 	newEntityId := nm.World.Create(Transform, Physics, NetworkEntity)
-	// 	newEntity := nm.World.Entry(newEntityId)
-
-	// 	// TODO: this should be done in a entity type switcher
-	// 	// switch entity.Type {
-	// 	// case protos.EntityType_unit:
-	// 	// 	nm.CreatedUnits[entity.Id] = entity.Unit
-	// 	// case protos.EntityType_area:
-	// 	// 	nm.CreatedAreas[entity.Id] = entity.Area
-	// 	// }
-	// 	Transform.SetValue(newEntity, TransformData{
-	// 		LocalPosition: math.Vec2{X: 1, Y: 2},
-	// 		LocalRotation: 0,
-	// 		LocalScale: math.Vec2{
-	// 			X: 1,
-	// 			Y: 1,
-	// 		},
-	// 	})
-
-	// 	body := cp.NewKinematicBody()
-	// 	body = nm.Space.AddBody(body)
-	// 	body.SetPosition(cp.Vector{
-	// 		X: 1,
-	// 		Y: 2,
-	// 	})
-
-	// 	shape := nm.Space.AddShape(cp.NewCircle(body, 8, cp.Vector{}))
-	// 	shape.SetElasticity(0)
-	// 	shape.SetFriction(0)
-
-	// 	Physics.SetValue(newEntity, PhysicsData{
-	// 		Body: body,
-	// 	})
-
-	// 	// For all entities in the patch
-	// 	newNetworkId := nm.LastNetworkEntityId + 1
-	// 	NetworkEntity.SetValue(newEntity, NetworkEntityData{
-	// 		Id: newNetworkId,
-	// 	})
-	// 	nm.LastNetworkEntityId = newNetworkId
-	// }
-
-	// // Delete entities -> TODO: move to global manager?
-	// for id, entity := range nm.IncomingPatch.DeletedEntities {
-	// 	if entity == nil {
-	// 		continue
-	// 	}
-
-	// 	entityId := nm.NetworkIdToEntity[id]
-	// 	entityToDelete := nm.World.Entry(entityId)
-	// 	if entityToDelete == nil {
-	// 		continue
-	// 	}
-
-	// 	physics := Physics.GetValue(entityToDelete)
-	// 	nm.Space.RemoveBody(physics.Body)
-	// 	nm.World.Remove(entityId)
-	// }
 }
 
 func (n *NetworkManagerData) SendPatch() {
@@ -268,6 +204,7 @@ func (n *NetworkManagerData) SendPatch() {
 		return
 	}
 
+	*n.SerializedPatchHistory <- message
 	n.Broadcast <- message
 
 	n.OutgoingPatch = &protos.GameStatePatch{}

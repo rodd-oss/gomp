@@ -56,3 +56,7 @@ message GameStatePatch {
     map<uint32, NetworkEntity> created_entities = 2;
     map<uint32, Empty> deleted_entities = 3;
 }
+
+message GameStatePatches {
+ repeated GameStatePatch patches = 1;   
+}

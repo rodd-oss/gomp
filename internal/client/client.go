@@ -262,7 +262,7 @@ func (c *Client) Draw(screen *e.Image) {
 
 		op.GeoM.Reset()
 		op.GeoM.Translate(ne.Transform.LocalPosition.X, ne.Transform.LocalPosition.Y)
-		screen.DrawImage(dotRed, op)
+		// screen.DrawImage(dotRed, op)
 	})
 
 	g.Space.EachBody(func(body *cp.Body) {

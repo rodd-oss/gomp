@@ -21,3 +21,7 @@ tasks:
   proto:
     cmds:
       - protoc --go_out=. internal/**/*.proto
+
+  pprof:
+    cmds:
+      - go tool pprof -http=":8000" 'http://localhost:3000/debug/pprof/profile?seconds=10'

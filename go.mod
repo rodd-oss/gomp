@@ -20,8 +20,10 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/labstack/echo v3.3.10+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
+	github.com/sevenNt/echo-pprof v0.1.1-0.20230131020615-4dd36891e14b // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
