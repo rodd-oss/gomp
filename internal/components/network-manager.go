@@ -27,11 +27,10 @@ type NetworkManagerData struct {
 	NetworkEntities map[uint32]*NetworkEntityData
 
 	// Sync game state
-	IncomingPatch          *protos.GameStatePatch // Clientside
-	OutgoingPatch          *protos.GameStatePatch // Serverside
-	SerializedPatchHistory *chan []byte
-	NetworkIdToEntityId    map[uint32]ecs.Entity
-	EntityIdToNetworkId    map[ecs.Entity]uint32
+	IncomingPatch       *protos.GameStatePatch // Clientside
+	OutgoingPatch       *protos.GameStatePatch // Serverside
+	NetworkIdToEntityId map[uint32]ecs.Entity
+	EntityIdToNetworkId map[ecs.Entity]uint32
 
 	LastNetworkEntityId uint32
 
@@ -204,7 +203,6 @@ func (n *NetworkManagerData) SendPatch() {
 		return
 	}
 
-	*n.SerializedPatchHistory <- message
 	n.Broadcast <- message
 
 	n.OutgoingPatch = &protos.GameStatePatch{}
