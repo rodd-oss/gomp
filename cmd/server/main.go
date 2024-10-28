@@ -9,23 +9,28 @@ package main
 import (
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 	"tomb_mates/internal/game"
 	"tomb_mates/internal/hub"
 	"tomb_mates/web"
 
+	_ "net/http/pprof"
+
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	echopprof "github.com/sevenNt/echo-pprof"
 	"golang.org/x/time/rate"
 )
 
 const gameTickRate = time.Second / 60
 
 func main() {
+	runtime.SetCPUProfileRate(1000)
 	g := game.New(false)
 	go g.Run(gameTickRate)
 
@@ -61,6 +66,8 @@ func main() {
 	})
 
 	e.GET("/ws", h.WsHandler(g))
+
+	echopprof.Wrap(e)
 
 	e.Logger.Fatal(e.Start(":3000"))
 }
