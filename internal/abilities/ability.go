@@ -7,9 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package abilities
 
 import (
+	"gomp_game/internal/effects"
+	"gomp_game/internal/protos"
 	"time"
-	"tomb_mates/internal/effects"
-	"tomb_mates/internal/protos"
 )
 
 type Position struct {

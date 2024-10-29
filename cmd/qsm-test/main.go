@@ -7,9 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package main
 
 import (
+	"gomp_game/internal/qsm"
 	"log"
 	"time"
-	"tomb_mates/internal/qsm"
 )
 
 type State int

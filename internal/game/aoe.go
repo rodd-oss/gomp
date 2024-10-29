@@ -7,8 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package game
 
 import (
-	"tomb_mates/internal/effects"
-	"tomb_mates/internal/protos"
+	"gomp_game/internal/effects"
+	"gomp_game/internal/protos"
 )
 
 type AreaOfEffects struct {

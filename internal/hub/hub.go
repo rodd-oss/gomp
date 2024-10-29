@@ -7,8 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package hub
 
 import (
+	"gomp_game/internal/game"
 	"time"
-	"tomb_mates/internal/game"
 )
 
 // Hub maintains the set of active clients and broadcasts messages

@@ -7,12 +7,12 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package game
 
 import (
+	"gomp_game/internal/components"
+	"gomp_game/internal/protos"
 	"log"
 	"math/rand"
 	"sync"
 	"time"
-	"tomb_mates/internal/components"
-	"tomb_mates/internal/protos"
 
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"

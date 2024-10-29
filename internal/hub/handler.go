@@ -7,10 +7,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package hub
 
 import (
+	"gomp_game/internal/game"
+	"gomp_game/internal/protos"
 	"net/http"
 	"sync"
-	"tomb_mates/internal/game"
-	"tomb_mates/internal/protos"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"

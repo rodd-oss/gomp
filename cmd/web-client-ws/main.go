@@ -8,8 +8,8 @@ package main
 
 import (
 	"context"
+	"gomp_game/internal/client"
 	"syscall/js"
-	"tomb_mates/internal/client"
 
 	e "github.com/hajimehoshi/ebiten/v2"
 	input "github.com/quasilyte/ebitengine-input"

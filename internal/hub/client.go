@@ -8,10 +8,10 @@ package hub
 
 import (
 	"fmt"
+	"gomp_game/internal/game"
+	"gomp_game/internal/protos"
 	"sync"
 	"time"
-	"tomb_mates/internal/game"
-	"tomb_mates/internal/protos"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"

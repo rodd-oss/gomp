@@ -7,8 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package game
 
 import (
+	"gomp_game/internal/abilities"
 	"time"
-	"tomb_mates/internal/abilities"
 )
 
 func (g *Game) CastAbility(a *abilities.Ability) (err error) {

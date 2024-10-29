@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"tomb_mates/internal/components"
-	"tomb_mates/internal/game"
-	"tomb_mates/internal/protos"
+	"gomp_game/internal/components"
+	"gomp_game/internal/game"
+	"gomp_game/internal/protos"
 
 	e "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"

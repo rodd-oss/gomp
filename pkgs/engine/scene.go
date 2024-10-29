@@ -7,6 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package engine
 
 import (
+	capnp "capnproto.org/go/capnp/v3"
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
 )
@@ -18,7 +19,7 @@ type Scene struct {
 	Space *cp.Space
 
 	Entities   []ecs.Entity
-	Components []*ecs.ComponentType[NetworkSyncComponent[any, any]]
+	Components []Component[capnp.Struct]
 
 	currentTick uint
 	syncPeriod  uint // in ticks
@@ -28,11 +29,12 @@ func (s *Scene) Update(dt float64) {
 	needToSync := s.currentTick%s.syncPeriod == 0
 
 	for i := range s.Components {
-		s.Components[i].Each(s.World, func(e *ecs.Entry) {
-			s.Components[i].GetValue(e).Update(dt)
+		s.Components[i].System.Each(s.World, func(e *ecs.Entry) {
+			comp := s.Components[i].System.GetValue(e)
+			comp.Controller.Update(dt)
 
 			if needToSync {
-				s.Components[i].GetValue(e).Sync()
+				comp.Controller.OnStateRequest(comp.State).Message().Marshal()
 			}
 		})
 	}
@@ -47,9 +49,9 @@ func (s *Scene) Update(dt float64) {
 	s.currentTick++
 }
 
-type EntityState struct {
-	Id         uint
-	Components []ComponentState
-}
+// type EntityState struct {
+// 	Id         uint
+// 	Components []ComponentState
+// }
 
-type SceneState map[uint]EntityState
+// type SceneState map[uint]EntityState

@@ -7,7 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package components
 
 import (
-	"tomb_mates/internal/protos"
+	"gomp_game/internal/protos"
 
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"

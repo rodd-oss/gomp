@@ -7,14 +7,14 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package main
 
 import (
+	"gomp_game/internal/game"
+	"gomp_game/internal/hub"
+	web "gomp_game/web"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
 	"time"
-	"tomb_mates/internal/game"
-	"tomb_mates/internal/hub"
-	"tomb_mates/web"
 
 	_ "net/http/pprof"
 
