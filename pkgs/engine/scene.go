@@ -48,7 +48,8 @@ func (s *Scene) Update(dt float64) {
 }
 
 type EntityState struct {
-	Id   uint
+	Id         uint
+	Components []ComponentState
 }
 
-type SceneState map[uint]type
+type SceneState map[uint]EntityState
