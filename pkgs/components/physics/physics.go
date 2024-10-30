@@ -34,6 +34,27 @@ func (c *PhysicsController) CreateState(s *capnp.Segment) (PhysicsState, error) 
 	return NewRootPhysicsState(s)
 }
 
+// func (c *PhysicsController) OnSerialize(state PhysicsState) [][]byte {
+// 	s := [][]byte{
+// 		state.X().Marshal(),
+// 		state.Y().Marshal(),
+// 	}
+
+// 	// FRAMEWORK PART START HERE
+// 	l := len(s)
+
+// 	for i := 0; i < l; i++ {
+// 		if s[i] != cachedS[s] {
+// 			cachedS[s] = s[i]
+
+// 			includeValueToPatch()
+// 		}
+// 	}
+// 	// FRAMEWORK PART ENDS HERE
+
+// 	return s
+// }
+
 func (c *PhysicsController) OnStateRequest(state PhysicsState) PhysicsState {
 	state.SetX(int32(c.body.Position().X))
 	state.SetY(int32(c.body.Position().Y))

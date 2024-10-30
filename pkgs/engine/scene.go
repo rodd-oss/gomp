@@ -7,6 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package engine
 
 import (
+	"log"
+
 	capnp "capnproto.org/go/capnp/v3"
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
@@ -21,11 +23,33 @@ type Scene struct {
 	Entities   []ecs.Entity
 	Components []Component[capnp.Struct]
 
+	Contoller SceneContorller
+
 	currentTick uint
 	syncPeriod  uint // in ticks
 }
 
+type SceneContorller interface {
+	Update(dt float64)
+	OnLoad(scene *Scene)
+	OnUnload(scene *Scene)
+}
+
+func NewScene(controller SceneContorller) *Scene {
+	scene := new(Scene)
+
+	scene.World = ecs.NewWorld()
+	scene.Space = cp.NewSpace()
+	scene.Contoller = controller
+	scene.currentTick = 0
+	scene.syncPeriod = 3
+
+	return scene
+}
+
 func (s *Scene) Update(dt float64) {
+	log.Println("Scene update")
+	s.Contoller.Update(dt)
 	needToSync := s.currentTick%s.syncPeriod == 0
 
 	for i := range s.Components {
