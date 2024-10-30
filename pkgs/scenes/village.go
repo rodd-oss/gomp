@@ -9,7 +9,7 @@ type VillageSceneController struct {
 }
 
 func (s *VillageSceneController) Update(dt float64) {
-	log.Println("Village scene update")
+	log.Println("Village controller")
 }
 
 func (s *VillageSceneController) OnLoad(scene *engine.Scene) {

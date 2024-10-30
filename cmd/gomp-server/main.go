@@ -7,12 +7,13 @@ import (
 	"time"
 )
 
-const tickRate = time.Second / 4
+const tickRate = time.Second / 1
 
 func main() {
 	e := engine.NewEngine(tickRate)
 
-	e.Scenes = append(e.Scenes, scenes.VillageScene)
+	e.RegisterScene("Village", scenes.VillageScene)
+	e.RegisterScene("Dungeon", scenes.DungeonScene)
 
 	ctx := context.Background()
 	e.Run(ctx)

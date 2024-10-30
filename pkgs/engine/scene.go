@@ -15,6 +15,7 @@ import (
 )
 
 type Scene struct {
+	Name   string
 	Engine *Engine
 
 	World ecs.World
@@ -35,8 +36,8 @@ type SceneContorller interface {
 	OnUnload(scene *Scene)
 }
 
-func NewScene(controller SceneContorller) *Scene {
-	scene := new(Scene)
+func NewScene(controller SceneContorller) Scene {
+	scene := Scene{}
 
 	scene.World = ecs.NewWorld()
 	scene.Space = cp.NewSpace()
@@ -48,7 +49,7 @@ func NewScene(controller SceneContorller) *Scene {
 }
 
 func (s *Scene) Update(dt float64) {
-	log.Println("Scene update")
+	log.Println("Scene update:", s.Name)
 	s.Contoller.Update(dt)
 	needToSync := s.currentTick%s.syncPeriod == 0
 

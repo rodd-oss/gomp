@@ -10,9 +10,9 @@ import (
 type Engine struct {
 	wg *sync.WaitGroup
 
-	Network  *Network
-	Scenes   []*Scene
-	tickRate time.Duration
+	Network          *Network
+	registeredScenes map[string]*Scene
+	tickRate         time.Duration
 }
 
 func NewEngine(tickRate time.Duration) *Engine {
@@ -20,6 +20,7 @@ func NewEngine(tickRate time.Duration) *Engine {
 
 	e.tickRate = tickRate
 	e.wg = new(sync.WaitGroup)
+	e.registeredScenes = make(map[string]*Scene)
 
 	return e
 }
@@ -41,20 +42,25 @@ func (e *Engine) Run(ctx context.Context) {
 }
 
 func (e *Engine) Update(dt float64) {
-	log.Println("Engine update")
+	log.Println("===================")
+	log.Println("ENGINE UPDATE START")
 	e.Network.Update()
 
-	e.wg.Add(len(e.Scenes))
+	e.wg.Add(len(e.registeredScenes))
 
-	for i := range e.Scenes {
-		go updateSceneAsync(e.Scenes[i], dt, e.wg)
+	for i := range e.registeredScenes {
+		go updateSceneAsync(e.registeredScenes[i], dt, e.wg)
 	}
 
 	e.wg.Wait()
+	log.Println("ENGINE UPDATE FINISH")
+	log.Println("===================")
+
 }
 
-func (e *Engine) LoadScene(scene *Scene) {
-	e.Scenes = append(e.Scenes, scene)
+func (e *Engine) RegisterScene(name string, scene Scene) {
+	scene.Name = name
+	e.registeredScenes[name] = &scene
 }
 
 func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {
