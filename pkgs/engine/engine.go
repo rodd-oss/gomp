@@ -8,11 +8,12 @@ import (
 )
 
 type Engine struct {
+	mx sync.Mutex
 	wg *sync.WaitGroup
 
-	Network          *Network
-	registeredScenes map[string]*Scene
-	tickRate         time.Duration
+	Network      *Network
+	LoadedScenes map[string]*Scene
+	tickRate     time.Duration
 }
 
 func NewEngine(tickRate time.Duration) *Engine {
@@ -20,7 +21,7 @@ func NewEngine(tickRate time.Duration) *Engine {
 
 	e.tickRate = tickRate
 	e.wg = new(sync.WaitGroup)
-	e.registeredScenes = make(map[string]*Scene)
+	e.LoadedScenes = make(map[string]*Scene)
 
 	return e
 }
@@ -42,25 +43,58 @@ func (e *Engine) Run(ctx context.Context) {
 }
 
 func (e *Engine) Update(dt float64) {
-	log.Println("===================")
-	log.Println("ENGINE UPDATE START")
+	e.mx.Lock()
+	defer e.mx.Unlock()
+
+	log.Println("=========ENGINE UPDATE START==========")
+	defer log.Println("=========ENGINE UPDATE FINISH=========")
+
 	e.Network.Update()
 
-	e.wg.Add(len(e.registeredScenes))
+	sceneLen := len(e.LoadedScenes)
+	if sceneLen == 0 {
+		log.Println("NO ACTIVE SCENES")
+		return
+	}
 
-	for i := range e.registeredScenes {
-		go updateSceneAsync(e.registeredScenes[i], dt, e.wg)
+	e.wg.Add(sceneLen)
+	for i := range e.LoadedScenes {
+		go updateSceneAsync(e.LoadedScenes[i], dt, e.wg)
 	}
 
 	e.wg.Wait()
-	log.Println("ENGINE UPDATE FINISH")
-	log.Println("===================")
-
 }
 
-func (e *Engine) RegisterScene(name string, scene Scene) {
+func (e *Engine) LoadScene(name string, scene Scene) {
+	e.mx.Lock()
+	defer e.mx.Unlock()
+
+	scene.Engine = e
 	scene.Name = name
-	e.registeredScenes[name] = &scene
+
+	scene.Contoller.OnLoad(e.LoadedScenes[name])
+
+	e.LoadedScenes[name] = &scene
+}
+
+func (e *Engine) UnloadScene(name string) {
+	e.mx.Lock()
+	defer e.mx.Unlock()
+
+	// check if scene exists
+	if _, ok := e.LoadedScenes[name]; !ok {
+		return
+	}
+
+	e.LoadedScenes[name].Contoller.OnUnload(e.LoadedScenes[name])
+
+	delete(e.LoadedScenes, name)
+}
+
+func (e *Engine) UnloadAllScenes() {
+	for i := range e.LoadedScenes {
+		e.UnloadScene(i)
+	}
 }
 
 func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {

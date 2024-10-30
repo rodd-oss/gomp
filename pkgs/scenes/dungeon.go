@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+const DungeonSceneName = "Dungeon"
+
 type DungeonSceneController struct {
 }
 

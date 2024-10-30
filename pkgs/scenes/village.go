@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+const VillageSceneName = "Village"
+
 type VillageSceneController struct {
 }
 
