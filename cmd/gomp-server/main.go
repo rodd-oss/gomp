@@ -13,11 +13,12 @@ const tickRate = time.Second * 5
 func main() {
 	e := engine.NewEngine(tickRate).SetDebug(true)
 
+	base := e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
-	e.LoadScene(scenes.VillageScene)
-	e.UnloadScene("") // this is a problem
+
+	e.UnloadScene(base) // this is a problem
 
 	e.Run(context.Background())
 }

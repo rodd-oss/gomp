@@ -36,6 +36,8 @@ func (e *Engine) Run(ctx context.Context) {
 
 	dt := e.tickRate.Seconds()
 
+	e.Update(dt)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -74,7 +76,7 @@ func (e *Engine) Update(dt float64) {
 	e.wg.Wait()
 }
 
-func (e *Engine) LoadScene(scene Scene) {
+func (e *Engine) LoadScene(scene Scene) *Scene {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
@@ -103,11 +105,18 @@ func (e *Engine) LoadScene(scene Scene) {
 	}
 
 	e.LoadedScenes[scene.Name] = &scene
+	return &scene
 }
 
-func (e *Engine) UnloadScene(name string) {
+func (e *Engine) UnloadScene(scene *Scene) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
+
+	if scene == nil {
+		panic("Trying to unload nil scene")
+	}
+
+	name := scene.Name
 
 	if e.Debug {
 		log.Println("Unloading scene: ", name)
@@ -126,7 +135,7 @@ func (e *Engine) UnloadScene(name string) {
 
 func (e *Engine) UnloadAllScenes() {
 	for i := range e.LoadedScenes {
-		e.UnloadScene(i)
+		e.UnloadScene(e.LoadedScenes[i])
 	}
 }
 
