@@ -52,6 +52,7 @@ func (p PhysicsData) Update(dt float64, e *ecs.Entry, isClient bool) error {
 	}
 
 	return nil
+
 }
 
 var Physics = ecs.NewComponentType[PhysicsData]()

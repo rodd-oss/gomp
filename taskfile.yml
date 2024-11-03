@@ -13,6 +13,10 @@ tasks:
     cmds:
       - go run ./cmd/client-desktop .
 
+  gomp-server:
+    cmds:
+      - go run ./cmd/gomp-server .
+
   build-web-client:
     cmds:
       - env GOOS=js GOARCH=wasm go build -o ./.dist/web-client.wasm ./cmd/web-client-ws/main.go

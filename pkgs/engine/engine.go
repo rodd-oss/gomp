@@ -14,6 +14,8 @@ type Engine struct {
 	Network      *Network
 	LoadedScenes map[string]*Scene
 	tickRate     time.Duration
+
+	Debug bool
 }
 
 func NewEngine(tickRate time.Duration) *Engine {
@@ -22,6 +24,7 @@ func NewEngine(tickRate time.Duration) *Engine {
 	e.tickRate = tickRate
 	e.wg = new(sync.WaitGroup)
 	e.LoadedScenes = make(map[string]*Scene)
+	e.Debug = false
 
 	return e
 }
@@ -46,14 +49,19 @@ func (e *Engine) Update(dt float64) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
-	log.Println("=========ENGINE UPDATE START==========")
-	defer log.Println("=========ENGINE UPDATE FINISH=========")
+	if e.Debug {
+		log.Println("=========ENGINE UPDATE START==========")
+		defer log.Println("=========ENGINE UPDATE FINISH=========")
+	}
 
 	e.Network.Update()
 
 	sceneLen := len(e.LoadedScenes)
 	if sceneLen == 0 {
-		log.Println("NO ACTIVE SCENES")
+		if e.Debug {
+			log.Println("NO ACTIVE SCENES")
+		}
+
 		return
 	}
 
@@ -69,11 +77,25 @@ func (e *Engine) LoadScene(name string, scene Scene) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
+	if e.Debug {
+		log.Println("Loading scene:", name)
+		defer log.Println("Scene loaded:", name)
+	}
+
 	scene.Engine = e
 	scene.Name = name
 
-	scene.Contoller.OnLoad(e.LoadedScenes[name])
+	systems, entities := scene.Contoller.Load(&scene)
 
+	for i := range entities {
+		scene.World.Create(entities[i]...)
+	}
+
+	for i := range systems {
+		systems[i].Init(&scene)
+	}
+
+	scene.Systems = systems
 	e.LoadedScenes[name] = &scene
 }
 
@@ -81,12 +103,17 @@ func (e *Engine) UnloadScene(name string) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
+	if e.Debug {
+		log.Println("Unloading scene: ", name)
+		defer log.Println("Scene unloaded: ", name)
+	}
+
 	// check if scene exists
 	if _, ok := e.LoadedScenes[name]; !ok {
 		return
 	}
 
-	e.LoadedScenes[name].Contoller.OnUnload(e.LoadedScenes[name])
+	e.LoadedScenes[name].Contoller.Unload(e.LoadedScenes[name])
 
 	delete(e.LoadedScenes, name)
 }
@@ -95,6 +122,10 @@ func (e *Engine) UnloadAllScenes() {
 	for i := range e.LoadedScenes {
 		e.UnloadScene(i)
 	}
+}
+
+func (e *Engine) SetDebug(mode bool) {
+	e.Debug = mode
 }
 
 func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {

@@ -9,7 +9,6 @@ package engine
 import (
 	"log"
 
-	capnp "capnproto.org/go/capnp/v3"
 	"github.com/jakecoffman/cp/v2"
 	ecs "github.com/yohamta/donburi"
 )
@@ -21,50 +20,46 @@ type Scene struct {
 	World ecs.World
 	Space *cp.Space
 
-	Entities   []ecs.Entity
-	Components []Component[capnp.Struct]
-
 	Contoller SceneContorller
+	Systems   []*System
+
+	ShouldRender bool
 
 	currentTick uint
 	syncPeriod  uint // in ticks
 }
 
 type SceneContorller interface {
+	Load(scene *Scene) (s []*System, e []Entity)
 	Update(dt float64)
-	OnLoad(scene *Scene)
-	OnUnload(scene *Scene)
+	Unload(scene *Scene)
 }
 
-func NewScene(controller SceneContorller) Scene {
-	scene := Scene{}
-
+func CreateScene(controller SceneContorller) (scene Scene) {
 	scene.World = ecs.NewWorld()
 	scene.Space = cp.NewSpace()
+	scene.Space.Iterations = 1
 	scene.Contoller = controller
 	scene.currentTick = 0
 	scene.syncPeriod = 3
+	scene.ShouldRender = false
 
 	return scene
 }
 
 func (s *Scene) Update(dt float64) {
-	log.Println("Scene update:", s.Name)
-	s.Contoller.Update(dt)
-	needToSync := s.currentTick%s.syncPeriod == 0
-
-	for i := range s.Components {
-		s.Components[i].System.Each(s.World, func(e *ecs.Entry) {
-			comp := s.Components[i].System.GetValue(e)
-			comp.Controller.Update(dt)
-
-			if needToSync {
-				comp.Controller.OnStateRequest(comp.State).Message().Marshal()
-			}
-		})
+	if s.Engine.Debug {
+		log.Println("Scene Updating:", s.Name)
+		defer log.Println("Scene Updated:", s.Name)
 	}
 
-	s.Space.Step(dt)
+	for i := range s.Systems {
+		s.Systems[i].Update(dt)
+	}
+
+	s.Contoller.Update(dt)
+
+	// needToSync := s.currentTick%s.syncPeriod == 0
 
 	if s.currentTick%s.syncPeriod == 0 {
 		//send s.Patch
@@ -73,10 +68,3 @@ func (s *Scene) Update(dt float64) {
 	// network sync
 	s.currentTick++
 }
-
-// type EntityState struct {
-// 	Id         uint
-// 	Components []ComponentState
-// }
-
-// type SceneState map[uint]EntityState

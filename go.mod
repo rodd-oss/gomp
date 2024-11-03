@@ -25,6 +25,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
+	github.com/setanarut/anim v1.0.1 // indirect
 	github.com/sevenNt/echo-pprof v0.1.1-0.20230131020615-4dd36891e14b // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
