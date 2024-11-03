@@ -10,12 +10,15 @@ import (
 	"gomp_game/pkgs/engine"
 	"gomp_game/pkgs/example/entities"
 	"log"
+	"math/rand"
 
 	"github.com/jakecoffman/cp/v2"
 	"github.com/yohamta/donburi"
 )
 
-var PhysicsSystem = engine.CreateSystem(&physicsSystemController{})
+func PhysicsSystem() engine.System {
+	return engine.CreateSystem(new(physicsSystemController))
+}
 
 // physicsSystemController is a system that updates the physics of a game
 type physicsSystemController struct {
@@ -30,9 +33,14 @@ func (c *physicsSystemController) Init(scene *engine.Scene) {
 	entities.PlayerPhysics.Each(c.world, func(e *donburi.Entry) {
 		component := entities.PlayerPhysics.Get(e)
 
-		c.space.AddBody(component.Body)
+		body := cp.NewKinematicBody()
 
-		component.Body.SetVelocity(1, 0)
+		randVelocity := rand.Float64() - 0.5
+
+		body.SetVelocity(10*randVelocity, 0)
+
+		c.space.AddBody(body)
+		component.Body = body
 	})
 }
 
@@ -40,10 +48,11 @@ func (c *physicsSystemController) Update(dt float64) {
 	entities.PlayerPhysics.Each(c.world, func(e *donburi.Entry) {
 		p := entities.PlayerPhysics.Get(e)
 
-		vel := p.Body.Position()
+		pos := p.Body.Position()
 
-		log.Println(vel)
+		log.Println(pos)
 	})
 
 	c.space.Step(dt)
+	log.Println(c.world.Len())
 }

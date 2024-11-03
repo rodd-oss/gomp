@@ -9,13 +9,9 @@ package entities
 import (
 	"gomp_game/pkgs/engine"
 	"gomp_game/pkgs/example/components"
-
-	"github.com/jakecoffman/cp/v2"
 )
 
-var PlayerPhysics = components.PhysicsComponent(components.PhysicsData{
-	Body: cp.NewKinematicBody(),
-})
+var PlayerPhysics = components.PhysicsComponent(components.PhysicsData{})
 
 var Player = engine.CreateEntity(
 	PlayerPhysics,

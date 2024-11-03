@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -73,30 +74,35 @@ func (e *Engine) Update(dt float64) {
 	e.wg.Wait()
 }
 
-func (e *Engine) LoadScene(name string, scene Scene) {
+func (e *Engine) LoadScene(scene Scene) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
 	if e.Debug {
-		log.Println("Loading scene:", name)
-		defer log.Println("Scene loaded:", name)
+		log.Println("Loading scene:", scene.Name)
+		defer log.Println("Scene loaded:", scene.Name)
 	}
 
 	scene.Engine = e
-	scene.Name = name
 
-	systems, entities := scene.Contoller.Load(&scene)
+	scene.Load()
 
-	for i := range entities {
-		scene.World.Create(entities[i]...)
+	//check if scene already exists
+	suffix := 1
+
+	for {
+		prefixedName := fmt.Sprintf("%s_%d", scene.Name, suffix)
+
+		if _, ok := e.LoadedScenes[prefixedName]; ok {
+			suffix++
+			continue
+		}
+
+		scene.Name = prefixedName
+		break
 	}
 
-	for i := range systems {
-		systems[i].Init(&scene)
-	}
-
-	scene.Systems = systems
-	e.LoadedScenes[name] = &scene
+	e.LoadedScenes[scene.Name] = &scene
 }
 
 func (e *Engine) UnloadScene(name string) {
@@ -113,7 +119,7 @@ func (e *Engine) UnloadScene(name string) {
 		return
 	}
 
-	e.LoadedScenes[name].Contoller.Unload(e.LoadedScenes[name])
+	e.LoadedScenes[name].Unload()
 
 	delete(e.LoadedScenes, name)
 }
@@ -124,8 +130,10 @@ func (e *Engine) UnloadAllScenes() {
 	}
 }
 
-func (e *Engine) SetDebug(mode bool) {
+func (e *Engine) SetDebug(mode bool) *Engine {
 	e.Debug = mode
+
+	return e
 }
 
 func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {

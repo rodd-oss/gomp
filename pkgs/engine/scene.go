@@ -20,8 +20,8 @@ type Scene struct {
 	World ecs.World
 	Space *cp.Space
 
-	Contoller SceneContorller
-	Systems   []*System
+	Systems  []System
+	entities []Entity
 
 	ShouldRender bool
 
@@ -29,23 +29,54 @@ type Scene struct {
 	syncPeriod  uint // in ticks
 }
 
-type SceneContorller interface {
-	Load(scene *Scene) (s []*System, e []Entity)
-	Update(dt float64)
-	Unload(scene *Scene)
+type sceneFactoryEntities struct {
+	scene *Scene
 }
 
-func CreateScene(controller SceneContorller) (scene Scene) {
-	scene.World = ecs.NewWorld()
-	scene.Space = cp.NewSpace()
-	scene.Space.Iterations = 1
-	scene.Contoller = controller
+func (f sceneFactoryEntities) AddEntities(ent ...Entity) sceneFactorySystems {
+	f.scene.entities = ent
+	return sceneFactorySystems(f)
+}
+
+type sceneFactorySystems struct {
+	scene *Scene
+}
+
+func (f sceneFactorySystems) AddSystems(sys ...System) Scene {
+	f.scene.Systems = sys
+	return *f.scene
+}
+
+func CreateScene(name string) sceneFactoryEntities {
+	scene := Scene{}
+
+	scene.Name = name
 	scene.currentTick = 0
 	scene.syncPeriod = 3
 	scene.ShouldRender = false
 
-	return scene
+	factory := sceneFactoryEntities{
+		scene: &scene,
+	}
+
+	return factory
 }
+
+func (s *Scene) Load() {
+	s.World = ecs.NewWorld()
+	s.Space = cp.NewSpace()
+	s.Space.Iterations = 1
+
+	for i := range s.entities {
+		s.World.Create(s.entities[i]...)
+	}
+
+	for i := range s.Systems {
+		s.Systems[i].Init(s)
+	}
+}
+
+func (s *Scene) Unload() {}
 
 func (s *Scene) Update(dt float64) {
 	if s.Engine.Debug {
@@ -56,8 +87,6 @@ func (s *Scene) Update(dt float64) {
 	for i := range s.Systems {
 		s.Systems[i].Update(dt)
 	}
-
-	s.Contoller.Update(dt)
 
 	// needToSync := s.currentTick%s.syncPeriod == 0
 
