@@ -15,6 +15,7 @@ func main() {
 
 	base := e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
+	e.LoadScene(scenes.VillageScene)
 
 	e.UnloadScene(base)
 
