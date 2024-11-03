@@ -16,7 +16,7 @@ func main() {
 	base := e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
 
-	e.UnloadScene(base) // this is a problem
+	e.UnloadScene(base)
 
 	e.Run(context.Background())
 }
