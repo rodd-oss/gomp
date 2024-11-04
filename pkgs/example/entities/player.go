@@ -12,7 +12,9 @@ import (
 )
 
 var PlayerPhysics = components.PhysicsComponent(components.PhysicsData{})
+var PlayerRender = components.RenderComponent(components.RenderData{})
 
 var Player = engine.CreateEntity(
 	PlayerPhysics,
+	PlayerRender,
 )

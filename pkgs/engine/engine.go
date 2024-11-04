@@ -16,7 +16,8 @@ type Engine struct {
 	LoadedScenes map[string]*Scene
 	tickRate     time.Duration
 
-	Debug bool
+	Debug     bool
+	DebugDraw bool
 }
 
 func NewEngine(tickRate time.Duration) *Engine {
@@ -26,6 +27,7 @@ func NewEngine(tickRate time.Duration) *Engine {
 	e.wg = new(sync.WaitGroup)
 	e.LoadedScenes = make(map[string]*Scene)
 	e.Debug = false
+	e.DebugDraw = false
 
 	return e
 }
@@ -55,6 +57,14 @@ func (e *Engine) Update(dt float64) {
 	if e.Debug {
 		log.Println("=========ENGINE UPDATE START==========")
 		defer log.Println("=========ENGINE UPDATE FINISH=========")
+		log.Println("dt:", dt)
+	}
+
+	if dt > e.tickRate.Seconds()*2 {
+		if e.Debug {
+			log.Println("WARNING: Engine tick rate is too high")
+		}
+		return
 	}
 
 	e.Network.Update()
@@ -141,6 +151,12 @@ func (e *Engine) UnloadAllScenes() {
 
 func (e *Engine) SetDebug(mode bool) *Engine {
 	e.Debug = mode
+
+	return e
+}
+
+func (e *Engine) SetDebugDraw(mode bool) *Engine {
+	e.DebugDraw = mode
 
 	return e
 }

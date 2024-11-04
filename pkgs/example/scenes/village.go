@@ -13,4 +13,7 @@ var VillageScene = engine.CreateScene("Village").
 	).
 	AddSystems(
 		systems.PhysicsSystem(),
+	).
+	AddRenderSystems(
+		systems.RenderSystem(),
 	)

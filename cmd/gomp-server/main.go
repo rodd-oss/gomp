@@ -8,16 +8,12 @@ import (
 	"time"
 )
 
-const tickRate = time.Second * 5
+const tickRate = time.Second
 
 func main() {
-	e := engine.NewEngine(tickRate).SetDebug(true)
+	e := engine.NewEngine(tickRate).SetDebug(true).SetDebugDraw(false)
 
-	base := e.LoadScene(scenes.VillageScene)
 	e.LoadScene(scenes.VillageScene)
-	e.LoadScene(scenes.VillageScene)
-
-	e.UnloadScene(base)
 
 	e.Run(context.Background())
 }

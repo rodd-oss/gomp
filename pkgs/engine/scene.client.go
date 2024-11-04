@@ -9,16 +9,18 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package engine
 
 import (
+	"log"
+
 	"github.com/hajimehoshi/ebiten/v2"
-	ecs "github.com/yohamta/donburi"
 )
 
-type drawableController interface {
-	Init()
-	Update(dt float64)
-	Draw(screen *ebiten.Image)
-}
+func (s *Scene) Draw(screen *ebiten.Image, dt float64) {
+	if s.Engine.DebugDraw {
+		log.Println("Scene Draw:", s.Name)
+		defer log.Println("Scene Draw:", s.Name)
+	}
 
-func CreateComponentDrawable[T drawableController](opts ...T) *ecs.ComponentType[T] {
-	return ecs.NewComponentType[T](opts)
+	for i := range s.RenderSystems {
+		s.RenderSystems[i].Draw(screen, dt)
+	}
 }

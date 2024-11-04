@@ -20,8 +20,9 @@ type Scene struct {
 	World ecs.World
 	Space *cp.Space
 
-	Systems  []System
-	entities []Entity
+	Systems       []System
+	RenderSystems []RenderSystem
+	entities      []Entity
 
 	ShouldRender bool
 
@@ -42,8 +43,17 @@ type sceneFactorySystems struct {
 	scene *Scene
 }
 
-func (f sceneFactorySystems) AddSystems(sys ...System) Scene {
+func (f sceneFactorySystems) AddSystems(sys ...System) sceneFactoryRenderSystems {
 	f.scene.Systems = sys
+	return sceneFactoryRenderSystems(f)
+}
+
+type sceneFactoryRenderSystems struct {
+	scene *Scene
+}
+
+func (f sceneFactoryRenderSystems) AddRenderSystems(sys ...RenderSystem) Scene {
+	f.scene.RenderSystems = sys
 	return *f.scene
 }
 
@@ -73,6 +83,10 @@ func (s *Scene) Load() {
 
 	for i := range s.Systems {
 		s.Systems[i].Init(s)
+	}
+
+	for i := range s.RenderSystems {
+		s.RenderSystems[i].Init(s)
 	}
 }
 
