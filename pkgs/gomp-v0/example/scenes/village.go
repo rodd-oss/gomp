@@ -1,9 +1,9 @@
 package scenes
 
 import (
-	"gomp_game/pkgs/gomp-v1/engine"
-	"gomp_game/pkgs/gomp-v1/example/entities"
-	"gomp_game/pkgs/gomp-v1/example/systems"
+	"gomp_game/pkgs/gomp-v0/engine"
+	"gomp_game/pkgs/gomp-v0/example/entities"
+	"gomp_game/pkgs/gomp-v0/example/systems"
 )
 
 var VillageScene = engine.CreateScene("Village").
