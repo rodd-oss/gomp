@@ -4,14 +4,16 @@ Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-package transform
+package components
 
 import (
-	"gomp_game/pkgs/engine"
+	"gomp_game/pkgs/gomp-v1/engine"
 
-	"github.com/yohamta/donburi/features/transform"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type TransformData = transform.TransformData
+type RenderData struct {
+	Sprite *ebiten.Image
+}
 
-var TransformComponent = engine.CreateComponent[TransformData]
+var RenderComponent = engine.CreateComponent[RenderData]

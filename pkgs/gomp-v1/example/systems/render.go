@@ -7,9 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
-	"gomp_game/pkgs/engine"
-	"gomp_game/pkgs/example/components"
-	"gomp_game/pkgs/example/entities"
+	"gomp_game/pkgs/gomp-v1/engine"
+	"gomp_game/pkgs/gomp-v1/example/components"
+	"gomp_game/pkgs/gomp-v1/example/entities"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"

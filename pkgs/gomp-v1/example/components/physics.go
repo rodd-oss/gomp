@@ -7,7 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package components
 
 import (
-	"gomp_game/pkgs/engine"
+	"gomp_game/pkgs/gomp-v1/engine"
 
 	"github.com/jakecoffman/cp/v2"
 )
