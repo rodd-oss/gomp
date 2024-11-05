@@ -4,13 +4,12 @@ Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-package engine
+package gomp
 
 import (
 	"context"
 	"fmt"
 	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp/scene"
 	"log"
 	"sync"
 	"time"
@@ -24,7 +23,7 @@ type Game struct {
 
 	world        donburi.World
 	systems      []ecs.System
-	LoadedScenes map[string]*scene.Scene
+	LoadedScenes map[string]*Scene
 
 	tickRate time.Duration
 	Debug    bool
@@ -35,7 +34,7 @@ func (g *Game) Init(tickRate time.Duration) {
 	g.systems = []ecs.System{}
 	g.tickRate = tickRate
 	g.wg = new(sync.WaitGroup)
-	g.LoadedScenes = make(map[string]*scene.Scene)
+	g.LoadedScenes = make(map[string]*Scene)
 	g.Debug = false
 }
 
@@ -90,7 +89,7 @@ func (g *Game) Update(dt float64) {
 	g.updateAsync(dt)
 }
 
-func (g *Game) LoadScene(scene scene.Scene) *scene.Scene {
+func (g *Game) LoadScene(scene Scene) *Scene {
 	g.mx.Lock()
 	defer g.mx.Unlock()
 
@@ -118,7 +117,7 @@ func (g *Game) LoadScene(scene scene.Scene) *scene.Scene {
 	return &scene
 }
 
-func (g *Game) UnloadScene(scene *scene.Scene) {
+func (g *Game) UnloadScene(scene *Scene) {
 	g.mx.Lock()
 	defer g.mx.Unlock()
 
@@ -155,6 +154,6 @@ func (g *Game) updateAsync(dt float64) {
 	g.wg.Wait()
 }
 
-func updateSceneAsync(scene *scene.Scene, dt float64, wg *sync.WaitGroup) {
+func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {
 	defer wg.Done()
 }

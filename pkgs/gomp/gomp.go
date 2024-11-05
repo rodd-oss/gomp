@@ -8,14 +8,13 @@ package gomp
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp/engine"
 	"time"
 
 	"github.com/yohamta/donburi"
 )
 
-func NewGame(tickRate time.Duration) *engine.Game {
-	game := new(engine.Game)
+func NewGame(tickRate time.Duration) *Game {
+	game := new(Game)
 
 	game.Init(tickRate)
 

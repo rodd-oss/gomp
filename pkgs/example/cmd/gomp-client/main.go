@@ -1,8 +1,8 @@
 package main
 
 import (
+	"gomp_game/pkgs/example/scenes"
 	"gomp_game/pkgs/gomp"
-	"gomp_game/pkgs/gomp/example/scenes"
 
 	"time"
 
@@ -22,7 +22,8 @@ func main() {
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Engine")
 
-	if err := ebiten.RunGame(e); err != nil {
+	err := ebiten.RunGame(e)
+	if err != nil {
 		panic(err)
 	}
 }

@@ -16,4 +16,4 @@ type PhysicsData struct {
 	Body *cp.Body
 }
 
-var PhysicsComponent = gomp.CreateComponent[PhysicsData]
+var PhysicsComponent = gomp.CreateComponent(PhysicsData{})

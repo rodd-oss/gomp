@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"gomp_game/pkgs/example/scenes"
 	"gomp_game/pkgs/gomp"
-	"gomp_game/pkgs/gomp/example/scenes"
 
 	"time"
 )

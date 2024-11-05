@@ -8,11 +8,17 @@ package gomp
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp/scene"
 )
 
+type Scene struct {
+	Name string
+
+	Systems  []ecs.System
+	Entities []ecs.Entity
+}
+
 type sceneFactoryEntities struct {
-	scene *scene.Scene
+	scene *Scene
 }
 
 func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) sceneFactorySystems {
@@ -21,16 +27,16 @@ func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) sceneFactorySystems
 }
 
 type sceneFactorySystems struct {
-	scene *scene.Scene
+	scene *Scene
 }
 
-func (f sceneFactorySystems) AddSystems(sys ...ecs.System) scene.Scene {
+func (f sceneFactorySystems) AddSystems(sys ...ecs.System) Scene {
 	f.scene.Systems = sys
 	return *f.scene
 }
 
 func CreateScene(name string) sceneFactoryEntities {
-	scene := new(scene.Scene)
+	scene := new(Scene)
 
 	scene.Name = name
 

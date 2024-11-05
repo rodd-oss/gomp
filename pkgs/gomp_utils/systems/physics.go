@@ -9,7 +9,7 @@ package systems
 import (
 	"gomp_game/pkgs/gomp"
 	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp/example/entities"
+	"gomp_game/pkgs/gomp_utils/components"
 	"log"
 	"math/rand/v2"
 
@@ -31,8 +31,8 @@ func (c *physicsSystemController) Init(world donburi.World) {
 	c.space = cp.NewSpace()
 	c.world = world
 
-	entities.PlayerPhysics.Each(c.world, func(e *donburi.Entry) {
-		component := entities.PlayerPhysics.Get(e)
+	components.PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
+		component := components.PhysicsComponent.Get(e)
 
 		body := cp.NewKinematicBody()
 
@@ -47,8 +47,8 @@ func (c *physicsSystemController) Init(world donburi.World) {
 }
 
 func (c *physicsSystemController) Update(dt float64) {
-	entities.PlayerPhysics.Each(c.world, func(e *donburi.Entry) {
-		p := entities.PlayerPhysics.Get(e)
+	components.PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
+		p := components.PhysicsComponent.Get(e)
 
 		if p.Body.IsSleeping() {
 			log.Println("is sleeping")

@@ -7,9 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
+	"gomp_game/pkgs/example/entities"
 	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp/example/components"
-	"gomp_game/pkgs/gomp/example/entities"
+	"gomp_game/pkgs/gomp_utils/components"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -45,11 +45,11 @@ func (c *ebitenRenderSystemController) Init(world donburi.World) {
 func (c *ebitenRenderSystemController) Draw(screen *ebiten.Image, dt float64) {
 	op := &ebiten.DrawImageOptions{}
 
-	query := donburi.NewQuery(filter.Contains(entities.PlayerPhysics, entities.PlayerRender))
+	query := donburi.NewQuery(filter.Contains(components.PhysicsComponent, entities.PlayerRender))
 
 	query.Each(c.world, func(e *donburi.Entry) {
 		render := entities.PlayerRender.Get(e)
-		physics := entities.PlayerPhysics.Get(e)
+		physics := components.PhysicsComponent.Get(e)
 
 		op.GeoM.Reset()
 		op.GeoM.Translate(physics.Body.Position().X, physics.Body.Position().Y)
