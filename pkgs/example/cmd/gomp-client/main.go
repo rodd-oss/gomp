@@ -16,6 +16,7 @@ func main() {
 	game.Debug = true
 
 	game.LoadScene(scenes.VillageScene)
+	// game.RegisterSystems(systems.PhysicsSystem())
 
 	e := game.Ebiten()
 	ebiten.SetRunnableOnUnfocused(true)

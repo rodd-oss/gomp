@@ -9,7 +9,6 @@ package gomp
 import (
 	"context"
 	"fmt"
-	"gomp_game/pkgs/gomp/ecs"
 	"log"
 	"sync"
 	"time"
@@ -21,8 +20,8 @@ type Game struct {
 	mx sync.Mutex
 	wg *sync.WaitGroup
 
-	world        donburi.World
-	systems      []ecs.System
+	world donburi.World
+	// systems      []ecs.System
 	LoadedScenes map[string]*Scene
 
 	tickRate time.Duration
@@ -31,7 +30,7 @@ type Game struct {
 
 func (g *Game) Init(tickRate time.Duration) {
 	g.world = donburi.NewWorld()
-	g.systems = []ecs.System{}
+	// g.systems = []ecs.System{}
 	g.tickRate = tickRate
 	g.wg = new(sync.WaitGroup)
 	g.LoadedScenes = make(map[string]*Scene)
@@ -73,20 +72,11 @@ func (g *Game) Update(dt float64) {
 		return
 	}
 
-	systemsLen := len(g.systems)
-	if systemsLen == 0 {
-		if g.Debug {
-			log.Println("NO ACTIVE SYSTEMS")
-		}
-
-		return
+	g.wg.Add(len(g.LoadedScenes))
+	for i := range g.LoadedScenes {
+		go updateSystemsAsync(g.LoadedScenes[i], dt, g.wg)
 	}
-
-	for i := 0; i < systemsLen; i++ {
-		g.systems[i].Update(dt)
-	}
-
-	g.updateAsync(dt)
+	g.wg.Wait()
 }
 
 func (g *Game) LoadScene(scene Scene) *Scene {
@@ -113,6 +103,11 @@ func (g *Game) LoadScene(scene Scene) *Scene {
 		break
 	}
 
+	entitiesLen := len(scene.Entities)
+	for i := 0; i < entitiesLen; i++ {
+		g.world.Create(append(scene.Entities[i], scene.SceneComponent)...)
+	}
+
 	g.LoadedScenes[scene.Name] = &scene
 	return &scene
 }
@@ -125,19 +120,21 @@ func (g *Game) UnloadScene(scene *Scene) {
 		panic("Trying to unload nil scene")
 	}
 
-	name := scene.Name
-
 	if g.Debug {
-		log.Println("Unloading scene: ", name)
-		defer log.Println("Scene unloaded: ", name)
+		log.Println("Unloading scene: ", scene.Name)
+		defer log.Println("Scene unloaded: ", scene.Name)
 	}
 
 	// check if scene exists
-	if _, ok := g.LoadedScenes[name]; !ok {
+	if _, ok := g.LoadedScenes[scene.Name]; !ok {
 		return
 	}
 
-	delete(g.LoadedScenes, name)
+	scene.SceneComponent.Each(g.world, func(e *donburi.Entry) {
+		g.world.Remove(e.Entity())
+	})
+
+	delete(g.LoadedScenes, scene.Name)
 }
 
 func (g *Game) UnloadAllScenes() {
@@ -146,14 +143,20 @@ func (g *Game) UnloadAllScenes() {
 	}
 }
 
-func (g *Game) updateAsync(dt float64) {
-	g.wg.Add(len(g.systems))
-	for i := range g.LoadedScenes {
-		go updateSceneAsync(g.LoadedScenes[i], dt, g.wg)
-	}
-	g.wg.Wait()
-}
+// func (g *Game) RegisterSystems(systems ...ecs.System) {
+// 	g.mx.Lock()
+// 	defer g.mx.Unlock()
 
-func updateSceneAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {
+// 	for i := range systems {
+// 		g.systems = append(g.systems, systems[i])
+// 		g.systems[i].Init(g.world)
+// 	}
+// }
+
+func updateSystemsAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {
 	defer wg.Done()
+	lenSys := len(scene.Systems)
+	for i := 0; i < lenSys; i++ {
+		scene.Systems[i].Update(dt)
+	}
 }

@@ -29,8 +29,15 @@ func CreateComponent[T any](initData T) *donburi.ComponentType[T] {
 	return donburi.NewComponentType[T](initData)
 }
 
+var systemId uint16 = 0
+
 func CreateSystem(controller ecs.SystemController) ecs.System {
-	return ecs.System{
+	sys := ecs.System{
+		ID:         systemId,
 		Controller: controller,
 	}
+
+	systemId++
+
+	return sys
 }

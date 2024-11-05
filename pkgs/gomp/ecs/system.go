@@ -12,6 +12,7 @@ import (
 
 type System struct {
 	Controller SystemController
+	ID         uint16
 }
 
 type SystemController interface {
