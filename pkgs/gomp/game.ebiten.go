@@ -24,8 +24,9 @@ func (g *Game) Ebiten() *ebitenGame {
 	e := new(ebitenGame)
 	e.game = g
 
-	tps := int(1000 / e.game.tickRate.Milliseconds())
-	ebiten.SetTPS(tps)
+	tps := 1 / g.tickRate.Seconds()
+	log.Println(tps)
+	ebiten.SetTPS(int(tps))
 	if g.Debug {
 		log.Println("Initial TPS:", tps)
 	}

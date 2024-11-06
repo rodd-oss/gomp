@@ -41,7 +41,6 @@ func (c *bodySystemController) Init(world donburi.World) {
 
 func (c *bodySystemController) Update(dt float64) {
 	BodyComponent.Each(c.world, func(e *donburi.Entry) {
-		log.Println(e)
 		body := BodyComponent.Get(e)
 
 		if body.IsSleeping() {
@@ -53,16 +52,7 @@ func (c *bodySystemController) Update(dt float64) {
 		randY := (rand.Float64()) * 100
 
 		body.SetPosition(cp.Vector{X: randX, Y: randY})
-
-		pos := body.Position()
-
-		log.Println(pos)
-	})
-
-	c.space.EachBody(func(body *cp.Body) {
-		log.Println(body)
 	})
 
 	c.space.Step(dt)
-	log.Println(c.world.Len())
 }

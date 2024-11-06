@@ -8,7 +8,6 @@ package gomp
 
 import (
 	"image/color"
-	"log"
 
 	"github.com/yohamta/donburi"
 )
@@ -25,7 +24,6 @@ func (c *ebitenRenderSystemController) Init(world donburi.World) {
 
 	RenderComponent.Each(c.world, func(e *donburi.Entry) {
 		RenderComponent.Get(e).Sprite.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
-		log.Println("rendering sprite")
 	})
 }
 

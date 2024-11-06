@@ -9,16 +9,23 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package gomp
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type ebitenGame struct {
-	game *Game
+	game         *Game
+	dt           time.Duration
+	lastUpdateAt time.Time
 }
 
 func (e *ebitenGame) Update() error {
-	tps := ebiten.ActualTPS()
-	e.game.Update(tps)
+	e.dt = time.Since(e.lastUpdateAt)
 
+	e.game.Update(e.dt.Seconds())
+	e.lastUpdateAt = time.Now()
 	return nil
 }
 

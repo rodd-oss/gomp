@@ -66,10 +66,10 @@ func (g *Game) Update(dt float64) {
 		log.Println("dt:", dt)
 	}
 
-	if dt > g.tickRate.Seconds()*2 {
-		if g.Debug {
-			log.Println("WARNING: Game tick rate is too high")
-		}
+	dtTreshold := g.tickRate.Seconds() * 2
+
+	if dt > dtTreshold {
+		log.Println("WARNING: Game tick rate is too high", dt, dtTreshold)
 		return
 	}
 
