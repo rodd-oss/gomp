@@ -37,19 +37,23 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	op := &ebiten.DrawImageOptions{}
 
-	query := donburi.NewQuery(filter.Contains(PhysicsComponent, RenderComponent))
+	query := donburi.NewQuery(filter.Contains(BodyComponent, RenderComponent))
 
 	query.Each(g.world, func(e *donburi.Entry) {
 		render := RenderComponent.Get(e)
-		physics := PhysicsComponent.Get(e)
 
-		if render == nil || physics == nil {
-			log.Println("RenderComponent or PhysicsComponent is nil")
-			return
+		if render == nil {
+			log.Fatalln("RenderComponent is nil")
+		}
+
+		body := BodyComponent.Get(e)
+
+		if body == nil {
+			log.Fatalln("BodyComponent is nil")
 		}
 
 		op.GeoM.Reset()
-		op.GeoM.Translate(physics.Body.Position().X, physics.Body.Position().Y)
+		op.GeoM.Translate(body.Position().X, body.Position().Y)
 
 		screen.DrawImage(render.Sprite, op)
 	})

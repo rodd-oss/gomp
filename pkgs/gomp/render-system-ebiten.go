@@ -10,9 +10,7 @@ import (
 	"image/color"
 	"log"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/filter"
 )
 
 var EbitenRenderSystem = CreateSystem(new(ebitenRenderSystemController))
@@ -33,20 +31,4 @@ func (c *ebitenRenderSystemController) Init(world donburi.World) {
 
 func (c *ebitenRenderSystemController) Update(dt float64) {
 
-}
-
-func (c *ebitenRenderSystemController) Draw(screen *ebiten.Image, dt float64) {
-	op := &ebiten.DrawImageOptions{}
-
-	query := donburi.NewQuery(filter.Contains(PhysicsComponent, RenderComponent))
-
-	query.Each(c.world, func(e *donburi.Entry) {
-		render := RenderComponent.Get(e)
-		physics := PhysicsComponent.Get(e)
-
-		op.GeoM.Reset()
-		op.GeoM.Translate(physics.Body.Position().X, physics.Body.Position().Y)
-
-		screen.DrawImage(render.Sprite, op)
-	})
 }

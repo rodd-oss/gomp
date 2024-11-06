@@ -10,10 +10,4 @@ import (
 	"github.com/jakecoffman/cp/v2"
 )
 
-type PhysicsData struct {
-	Body *cp.Body
-}
-
-var PhysicsComponent = CreateComponent(PhysicsData{
-	Body: cp.NewKinematicBody(),
-})
+var BodyComponent = CreateComponent(cp.Body{})

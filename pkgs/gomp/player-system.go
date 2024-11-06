@@ -14,39 +14,37 @@ import (
 	"github.com/yohamta/donburi"
 )
 
-var PhysicsSystem = CreateSystem(new(physicsSystemController))
+var BodySystem = CreateSystem(new(bodySystemController))
 
 // physicsSystemController is a system that updates the physics of a game
-type physicsSystemController struct {
+type bodySystemController struct {
 	world donburi.World
 	space *cp.Space
 }
 
-func (c *physicsSystemController) Init(world donburi.World) {
+func (c *bodySystemController) Init(world donburi.World) {
 	c.space = cp.NewSpace()
 	c.world = world
 
-	PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
-		component := PhysicsComponent.Get(e)
+	BodyComponent.Each(c.world, func(e *donburi.Entry) {
+		body := cp.NewKinematicBody()
+		BodyComponent.Set(e, body)
 
-		// body := cp.NewKinematicBody()
+		randX := 100 + (rand.Float64()+0.5)*100
+		randY := 100 + (rand.Float64()-0.5)*100
 
-		// randX := 100 + (rand.Float64()+0.5)*100
-		// randY := 100 + (rand.Float64()-0.5)*100
+		body.SetPosition(cp.Vector{X: randX, Y: randY})
 
-		// body.SetPosition(cp.Vector{X: randX, Y: randY})
-
-		c.space.AddBody(component.Body)
-		// component.Body = body
+		c.space.AddBody(body)
 	})
 }
 
-func (c *physicsSystemController) Update(dt float64) {
-	PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
+func (c *bodySystemController) Update(dt float64) {
+	BodyComponent.Each(c.world, func(e *donburi.Entry) {
 		log.Println(e)
-		p := PhysicsComponent.Get(e)
+		body := BodyComponent.Get(e)
 
-		if p.Body.IsSleeping() {
+		if body.IsSleeping() {
 			log.Println("is sleeping")
 			return
 		}
@@ -54,9 +52,9 @@ func (c *physicsSystemController) Update(dt float64) {
 		randX := (rand.Float64()) * 100
 		randY := (rand.Float64()) * 100
 
-		p.Body.SetPosition(cp.Vector{X: randX, Y: randY})
+		body.SetPosition(cp.Vector{X: randX, Y: randY})
 
-		pos := p.Body.Position()
+		pos := body.Position()
 
 		log.Println(pos)
 	})

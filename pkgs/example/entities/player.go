@@ -11,6 +11,6 @@ import (
 )
 
 var Player = gomp.CreateEntity(
-	gomp.PhysicsComponent,
+	gomp.BodyComponent,
 	gomp.RenderComponent,
 )

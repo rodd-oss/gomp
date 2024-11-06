@@ -16,7 +16,7 @@ func main() {
 	game.Debug = true
 
 	game.LoadScene(scenes.VillageScene)
-	game.RegisterSystems(gomp.PhysicsSystem)
+	game.RegisterSystems(gomp.BodySystem)
 
 	e := game.Ebiten()
 	ebiten.SetRunnableOnUnfocused(true)
