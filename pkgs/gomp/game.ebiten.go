@@ -13,10 +13,13 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/filter"
 )
 
 func (g *Game) Ebiten() *ebitenGame {
-	// g.systems = append(g.systems, systems.RenderSystem())
+	g.systems = append(g.systems, EbitenRenderSystem)
+	EbitenRenderSystem.Init(g.world)
 
 	e := new(ebitenGame)
 	e.game = g
@@ -31,7 +34,25 @@ func (g *Game) Ebiten() *ebitenGame {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	// renderSystem.Draw()
+
+	op := &ebiten.DrawImageOptions{}
+
+	query := donburi.NewQuery(filter.Contains(PhysicsComponent, RenderComponent))
+
+	query.Each(g.world, func(e *donburi.Entry) {
+		render := RenderComponent.Get(e)
+		physics := PhysicsComponent.Get(e)
+
+		if render == nil || physics == nil {
+			log.Println("RenderComponent or PhysicsComponent is nil")
+			return
+		}
+
+		op.GeoM.Reset()
+		op.GeoM.Translate(physics.Body.Position().X, physics.Body.Position().Y)
+
+		screen.DrawImage(render.Sprite, op)
+	})
 }
 
 func (c *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

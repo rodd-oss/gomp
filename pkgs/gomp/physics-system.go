@@ -4,12 +4,9 @@ Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-package systems
+package gomp
 
 import (
-	"gomp_game/pkgs/gomp"
-	"gomp_game/pkgs/gomp/ecs"
-	"gomp_game/pkgs/gomp_utils/components"
 	"log"
 	"math/rand/v2"
 
@@ -17,9 +14,7 @@ import (
 	"github.com/yohamta/donburi"
 )
 
-func PhysicsSystem() ecs.System {
-	return gomp.CreateSystem(new(physicsSystemController))
-}
+var PhysicsSystem = CreateSystem(new(physicsSystemController))
 
 // physicsSystemController is a system that updates the physics of a game
 type physicsSystemController struct {
@@ -31,38 +26,43 @@ func (c *physicsSystemController) Init(world donburi.World) {
 	c.space = cp.NewSpace()
 	c.world = world
 
-	components.PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
-		component := components.PhysicsComponent.Get(e)
+	PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
+		component := PhysicsComponent.Get(e)
 
-		body := cp.NewKinematicBody()
+		// body := cp.NewKinematicBody()
 
-		randX := 100 + (rand.Float64()-0.5)*10
-		randY := 100 + (rand.Float64()-0.5)*10
+		// randX := 100 + (rand.Float64()+0.5)*100
+		// randY := 100 + (rand.Float64()-0.5)*100
 
-		body.SetPosition(cp.Vector{X: randX, Y: randY})
+		// body.SetPosition(cp.Vector{X: randX, Y: randY})
 
-		c.space.AddBody(body)
-		component.Body = body
+		c.space.AddBody(component.Body)
+		// component.Body = body
 	})
 }
 
 func (c *physicsSystemController) Update(dt float64) {
-	components.PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
-		p := components.PhysicsComponent.Get(e)
+	PhysicsComponent.Each(c.world, func(e *donburi.Entry) {
+		log.Println(e)
+		p := PhysicsComponent.Get(e)
 
 		if p.Body.IsSleeping() {
 			log.Println("is sleeping")
 			return
 		}
 
-		randX := 100 + (rand.Float64()-0.5)*10
-		randY := 100 + (rand.Float64()-0.5)*10
+		randX := (rand.Float64()) * 100
+		randY := (rand.Float64()) * 100
 
-		p.Body.SetVelocity(randX, randY)
+		p.Body.SetPosition(cp.Vector{X: randX, Y: randY})
 
 		pos := p.Body.Position()
 
 		log.Println(pos)
+	})
+
+	c.space.EachBody(func(body *cp.Body) {
+		log.Println(body)
 	})
 
 	c.space.Step(dt)

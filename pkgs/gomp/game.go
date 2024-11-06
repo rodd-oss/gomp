@@ -9,6 +9,7 @@ package gomp
 import (
 	"context"
 	"fmt"
+	"gomp_game/pkgs/gomp/ecs"
 	"log"
 	"sync"
 	"time"
@@ -20,8 +21,8 @@ type Game struct {
 	mx sync.Mutex
 	wg *sync.WaitGroup
 
-	world donburi.World
-	// systems      []ecs.System
+	world        donburi.World
+	systems      []ecs.System
 	LoadedScenes map[string]*Scene
 
 	tickRate time.Duration
@@ -70,6 +71,11 @@ func (g *Game) Update(dt float64) {
 			log.Println("WARNING: Game tick rate is too high")
 		}
 		return
+	}
+
+	lenSys := len(g.systems)
+	for i := 0; i < lenSys; i++ {
+		g.systems[i].Update(dt)
 	}
 
 	g.wg.Add(len(g.LoadedScenes))
@@ -143,15 +149,15 @@ func (g *Game) UnloadAllScenes() {
 	}
 }
 
-// func (g *Game) RegisterSystems(systems ...ecs.System) {
-// 	g.mx.Lock()
-// 	defer g.mx.Unlock()
+func (g *Game) RegisterSystems(systems ...ecs.System) {
+	g.mx.Lock()
+	defer g.mx.Unlock()
 
-// 	for i := range systems {
-// 		g.systems = append(g.systems, systems[i])
-// 		g.systems[i].Init(g.world)
-// 	}
-// }
+	for i := range systems {
+		g.systems = append(g.systems, systems[i])
+		g.systems[i].Init(g.world)
+	}
+}
 
 func updateSystemsAsync(scene *Scene, dt float64, wg *sync.WaitGroup) {
 	defer wg.Done()

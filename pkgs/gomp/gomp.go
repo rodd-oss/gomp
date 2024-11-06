@@ -21,8 +21,10 @@ func NewGame(tickRate time.Duration) *Game {
 	return game
 }
 
-func CreateEntity(components ...ecs.IComponent) ecs.Entity {
-	return components
+func CreateEntity(components ...ecs.IComponent) func() ecs.Entity {
+	return func() ecs.Entity {
+		return components
+	}
 }
 
 func CreateComponent[T any](initData T) *donburi.ComponentType[T] {

@@ -1,13 +1,12 @@
-package systems
+package gomp
 
 import (
-	"gomp_game/pkgs/gomp"
 	"gomp_game/pkgs/gomp/ecs"
 )
 
-func SceneSystem() ecs.System {
-	return gomp.CreateSystem(new(sceneSystemController))
-}
+// func SceneSystem() ecs.System {
+// 	return gomp.CreateSystem(new(sceneSystemController))
+// }
 
 type sceneSystemController struct {
 }

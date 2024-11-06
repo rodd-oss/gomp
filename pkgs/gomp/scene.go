@@ -30,20 +30,8 @@ type sceneFactoryEntities struct {
 	scene *Scene
 }
 
-func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) sceneFactorySystems {
+func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) Scene {
 	f.scene.Entities = ent
-	return sceneFactorySystems(f)
-}
-
-type sceneFactorySystems struct {
-	scene *Scene
-}
-
-func (f sceneFactorySystems) AddSystems(sys ...ecs.System) Scene {
-	lenSys := len(sys)
-	for i := 0; i < lenSys; i++ {
-		f.scene.Systems = append(f.scene.Systems, &sys[i])
-	}
 	return *f.scene
 }
 

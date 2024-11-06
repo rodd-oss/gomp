@@ -8,11 +8,9 @@ package entities
 
 import (
 	"gomp_game/pkgs/gomp"
-	"gomp_game/pkgs/gomp_utils/components"
 )
 
-var PlayerRender = components.RenderComponent(components.RenderData{})
-
 var Player = gomp.CreateEntity(
-	components.PhysicsComponent,
+	gomp.PhysicsComponent,
+	gomp.RenderComponent,
 )
