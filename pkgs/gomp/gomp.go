@@ -32,19 +32,18 @@ type Component struct {
 	set func(*donburi.Entry)
 }
 
-func CreateEntity(components ...Component) func(world donburi.World) donburi.Entity {
+func CreateEntity(components ...Component) ecs.Entity {
 	cmpnnts := make([]ecs.IComponent, len(components))
-	return func(world donburi.World) donburi.Entity {
+	return func(world donburi.World, extra ...ecs.IComponent) {
 		for i, c := range components {
 			cmpnnts[i] = c.IComponent
 		}
 
-		entity := world.Create(cmpnnts...)
+		entity := world.Create(append(cmpnnts, extra...)...)
 		entry := world.Entry(entity)
 		for _, c := range components {
 			c.set(entry)
 		}
-		return entity
 	}
 }
 

@@ -8,8 +8,6 @@ package gomp
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-
-	"github.com/yohamta/donburi"
 )
 
 type Scene struct {
@@ -17,14 +15,12 @@ type Scene struct {
 
 	Systems        []*ecs.System
 	Entities       []ecs.Entity
-	SceneComponent *donburi.ComponentType[SceneData]
+	SceneComponent ComponentFactory[SceneData]
 }
 
 type SceneData struct {
 	Name string
 }
-
-var SceneComponent = CreateComponent[SceneData]
 
 type sceneFactoryEntities struct {
 	scene *Scene
@@ -36,10 +32,9 @@ func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) Scene {
 }
 
 func CreateScene(name string) sceneFactoryEntities {
+	var SceneComponent = CreateComponent[SceneData]()
 	scene := new(Scene)
-	scene.SceneComponent = SceneComponent(SceneData{
-		Name: name,
-	})
+	scene.SceneComponent = SceneComponent
 
 	scene.Name = name
 

@@ -109,9 +109,10 @@ func (g *Game) LoadScene(scene Scene) *Scene {
 		break
 	}
 
+	c := scene.SceneComponent.New(SceneData{Name: scene.Name})
 	entitiesLen := len(scene.Entities)
 	for i := 0; i < entitiesLen; i++ {
-		g.world.Create(append(scene.Entities[i], scene.SceneComponent)...)
+		scene.Entities[i](g.world, c)
 	}
 
 	g.LoadedScenes[scene.Name] = &scene
@@ -136,7 +137,7 @@ func (g *Game) UnloadScene(scene *Scene) {
 		return
 	}
 
-	scene.SceneComponent.Each(g.world, func(e *donburi.Entry) {
+	scene.SceneComponent.Query.Each(g.world, func(e *donburi.Entry) {
 		g.world.Remove(e.Entity())
 	})
 
