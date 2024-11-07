@@ -10,7 +10,24 @@ import (
 	"gomp_game/pkgs/gomp"
 )
 
-var Player = gomp.CreateEntity(
-	gomp.BodyComponent,
-	gomp.RenderComponent,
+type HealthData struct {
+	Health    int
+	MaxHealth int
+}
+
+var HealthComponent = gomp.CreateComponent[HealthData]()
+var ManaComponent = gomp.CreateComponent[uint16]()
+
+// var Player = gomp.CreateEntity(
+// 	gomp.BodyComponent,
+// 	gomp.RenderComponent,
+// )
+
+var Enemy = gomp.CreateEntity(
+	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
+	ManaComponent.New(125),
+)
+
+var Enemy2 = gomp.CreateEntity(
+	HealthComponent.New(HealthData{Health: 125, MaxHealth: 300}),
 )

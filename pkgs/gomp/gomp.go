@@ -21,15 +21,53 @@ func NewGame(tickRate time.Duration) *Game {
 	return game
 }
 
-func CreateEntity(components ...ecs.IComponent) func() ecs.Entity {
-	return func() ecs.Entity {
-		return components
+// func CreateEntity(components ...ecs.IComponent) func() ecs.Entity {
+// 	return func() ecs.Entity {
+// 		return components
+// 	}
+// }
+
+type Component struct {
+	ecs.IComponent
+	set func(*donburi.Entry)
+}
+
+func CreateEntity(components ...Component) func(world donburi.World) donburi.Entity {
+	cmpnnts := make([]ecs.IComponent, len(components))
+	return func(world donburi.World) donburi.Entity {
+		for i, c := range components {
+			cmpnnts[i] = c.IComponent
+		}
+
+		entity := world.Create(cmpnnts...)
+		entry := world.Entry(entity)
+		for _, c := range components {
+			c.set(entry)
+		}
+		return entity
 	}
 }
 
-func CreateComponent[T any](initData T) *donburi.ComponentType[T] {
-	return donburi.NewComponentType[T](initData)
+type ComponentFactory[T any] struct {
+	Query *donburi.ComponentType[T]
 }
+
+func CreateComponent[T any]() ComponentFactory[T] {
+	return ComponentFactory[T]{Query: donburi.NewComponentType[T]()}
+}
+
+func (cf ComponentFactory[T]) New(data T) Component {
+	return Component{
+		cf.Query,
+		func(entity *donburi.Entry) {
+			cf.Query.SetValue(entity, data)
+		},
+	}
+}
+
+// func CreateComponent[T any](initData T) *donburi.ComponentType[T] {
+// 	return donburi.NewComponentType[T](initData)
+// }
 
 var systemId uint16 = 0
 

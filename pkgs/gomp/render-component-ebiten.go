@@ -14,6 +14,4 @@ type RenderData struct {
 	Sprite *ebiten.Image
 }
 
-var RenderComponent = CreateComponent(RenderData{
-	Sprite: ebiten.NewImage(20, 20),
-})
+var RenderComponent = CreateComponent[RenderData]()
