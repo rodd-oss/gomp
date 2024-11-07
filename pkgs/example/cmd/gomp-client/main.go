@@ -9,11 +9,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const tickRate = time.Second / 60
+const tickRate = time.Second
 
 func main() {
 	game := gomp.NewGame(tickRate)
-	// game.Debug = true
+	game.Debug = true
 
 	game.LoadScene(scenes.VillageScene)
 	game.RegisterSystems(gomp.BodySystem)

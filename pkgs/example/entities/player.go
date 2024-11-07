@@ -8,6 +8,9 @@ package entities
 
 import (
 	"gomp_game/pkgs/gomp"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp/v2"
 )
 
 type HealthData struct {
@@ -24,6 +27,8 @@ var ManaComponent = gomp.CreateComponent[uint16]()
 // )
 
 var Enemy = gomp.CreateEntity(
+	gomp.RenderComponent.New(gomp.RenderData{Sprite: ebiten.NewImage(100, 20)}),
+	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
 	ManaComponent.New(125),
 )
