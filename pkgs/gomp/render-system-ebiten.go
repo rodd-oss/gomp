@@ -22,8 +22,8 @@ type ebitenRenderSystemController struct {
 func (c *ebitenRenderSystemController) Init(world donburi.World) {
 	c.world = world
 
-	RenderComponent.Each(c.world, func(e *donburi.Entry) {
-		RenderComponent.Get(e).Sprite.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
+	RenderComponent.Query.Each(c.world, func(e *donburi.Entry) {
+		RenderComponent.Query.Get(e).Sprite.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 	})
 }
 

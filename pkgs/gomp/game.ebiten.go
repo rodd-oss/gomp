@@ -38,16 +38,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	op := &ebiten.DrawImageOptions{}
 
-	query := donburi.NewQuery(filter.Contains(BodyComponent, RenderComponent))
+	query := donburi.NewQuery(filter.Contains(BodyComponent.Query, RenderComponent.Query))
 
 	query.Each(g.world, func(e *donburi.Entry) {
-		render := RenderComponent.Get(e)
+		render := RenderComponent.Query.Get(e)
 
 		if render == nil {
 			log.Fatalln("RenderComponent is nil")
 		}
 
-		body := BodyComponent.Get(e)
+		body := BodyComponent.Query.Get(e)
 
 		if body == nil {
 			log.Fatalln("BodyComponent is nil")
