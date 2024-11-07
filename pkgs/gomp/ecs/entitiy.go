@@ -2,4 +2,4 @@ package ecs
 
 import "github.com/yohamta/donburi"
 
-type Entity func(world donburi.World, extra ...IComponent)
+type Entity func(world donburi.World, extra ...Component)

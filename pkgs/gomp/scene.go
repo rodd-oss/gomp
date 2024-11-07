@@ -26,8 +26,11 @@ type sceneFactoryEntities struct {
 	scene *Scene
 }
 
-func (f sceneFactoryEntities) AddEntities(ent ...ecs.Entity) Scene {
-	f.scene.Entities = ent
+func (f sceneFactoryEntities) AddEntities(ent ...[]ecs.Entity) Scene {
+	for i := 0; i <= len(ent); i++ {
+		f.scene.Entities = ent[0]
+	}
+
 	return *f.scene
 }
 

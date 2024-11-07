@@ -23,29 +23,32 @@ func NewGame(tickRate time.Duration) *Game {
 	return game
 }
 
-// func CreateEntity(components ...ecs.IComponent) func() ecs.Entity {
-// 	return func() ecs.Entity {
-// 		return components
-// 	}
-// }
-
-type Component struct {
-	ecs.IComponent
-	set func(*donburi.Entry)
-}
-
-func CreateEntity(components ...Component) ecs.Entity {
-	cmpnnts := make([]ecs.IComponent, len(components))
-	return func(world donburi.World, extra ...ecs.IComponent) {
-		for i, c := range components {
-			cmpnnts[i] = c.IComponent
+func CreateEntity(components ...ecs.Component) func(amount int) []ecs.Entity {
+	return func(amount int) []ecs.Entity {
+		if amount <= 0 {
+			panic(fmt.Sprint("Adding Entity to scene with (", amount, ") amount failed. Amount must be greater than 0."))
 		}
 
-		entity := world.Create(append(cmpnnts, extra...)...)
-		entry := world.Entry(entity)
-		for _, c := range components {
-			c.set(entry)
+		entArr := make([]ecs.Entity, amount)
+		ent := func(world donburi.World, extra ...ecs.Component) {
+			components := append(components, extra...)
+			cmpnnts := make([]ecs.IComponent, len(components))
+			for i, c := range components {
+				cmpnnts[i] = c.ComponentType
+			}
+
+			entity := world.Create(cmpnnts...)
+			entry := world.Entry(entity)
+			for _, c := range components {
+				c.Set(entry)
+			}
 		}
+
+		for i := 0; i < amount; i++ {
+			entArr[i] = ent
+		}
+
+		return entArr
 	}
 }
 
@@ -63,10 +66,10 @@ func CreateComponent[T any]() ComponentFactory[T] {
 	return ComponentFactory[T]{Query: donburi.NewComponentType[T]()}
 }
 
-func (cf ComponentFactory[T]) New(data T) Component {
-	return Component{
-		cf.Query,
-		func(entity *donburi.Entry) {
+func (cf ComponentFactory[T]) New(data T) ecs.Component {
+	return ecs.Component{
+		ComponentType: cf.Query,
+		Set: func(entity *donburi.Entry) {
 			cf.Query.SetValue(entity, data)
 		},
 	}

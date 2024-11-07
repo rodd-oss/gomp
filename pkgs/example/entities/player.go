@@ -21,16 +21,11 @@ type HealthData struct {
 var HealthComponent = gomp.CreateComponent[HealthData]()
 var ManaComponent = gomp.CreateComponent[uint16]()
 
-// var Player = gomp.CreateEntity(
-// 	gomp.BodyComponent,
-// 	gomp.RenderComponent,
-// )
-
 // Сделать ресурсер которому можно будет передать embedFs, а он будет ходить сам в папку и возвращать gomp.Image{image.Image, image.Cfg}
 var Player = gomp.CreateEntity(
 	// gomp.ImageComponent.New(gomp.Resources.Image("enemy")),
 	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
 	ManaComponent.New(125),
-	gomp.RenderComponent.New(gomp.RenderData{Sprite: ebiten.NewImage(100, 20)}),
+	gomp.RenderComponent.New(gomp.RenderData{Sprite: ebiten.NewImage(20, 20)}),
 )
