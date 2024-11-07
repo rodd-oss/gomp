@@ -7,7 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package gomp
 
 import (
+	"fmt"
 	"gomp_game/pkgs/gomp/ecs"
+	"reflect"
 	"time"
 
 	"github.com/yohamta/donburi"
@@ -52,6 +54,12 @@ type ComponentFactory[T any] struct {
 }
 
 func CreateComponent[T any]() ComponentFactory[T] {
+	typeFor := reflect.TypeFor[T]()
+
+	if typeFor.Kind() == reflect.Interface {
+		panic(fmt.Sprint("CreateComponent[", typeFor.String(), "] failed. Type must not be an interface."))
+	}
+
 	return ComponentFactory[T]{Query: donburi.NewComponentType[T]()}
 }
 

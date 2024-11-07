@@ -26,13 +26,11 @@ var ManaComponent = gomp.CreateComponent[uint16]()
 // 	gomp.RenderComponent,
 // )
 
-var Enemy = gomp.CreateEntity(
-	gomp.RenderComponent.New(gomp.RenderData{Sprite: ebiten.NewImage(100, 20)}),
+// Сделать ресурсер которому можно будет передать embedFs, а он будет ходить сам в папку и возвращать gomp.Image{image.Image, image.Cfg}
+var Player = gomp.CreateEntity(
+	// gomp.ImageComponent.New(gomp.Resources.Image("enemy")),
 	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
 	ManaComponent.New(125),
-)
-
-var Enemy2 = gomp.CreateEntity(
-	HealthComponent.New(HealthData{Health: 125, MaxHealth: 300}),
+	gomp.RenderComponent.New(gomp.RenderData{Sprite: ebiten.NewImage(100, 20)}),
 )

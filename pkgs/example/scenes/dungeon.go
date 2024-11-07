@@ -6,4 +6,4 @@ import (
 )
 
 var DungeonScene = gomp.CreateScene("DungeonScene").
-	AddEntities(entities.Enemy)
+	AddEntities(entities.Player)

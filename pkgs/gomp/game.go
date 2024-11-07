@@ -111,6 +111,7 @@ func (g *Game) LoadScene(scene Scene) *Scene {
 
 	c := scene.SceneComponent.New(SceneData{Name: scene.Name})
 	entitiesLen := len(scene.Entities)
+	log.Println(entitiesLen, scene.Entities)
 	for i := 0; i < entitiesLen; i++ {
 		scene.Entities[i](g.world, c)
 	}
