@@ -10,9 +10,12 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package gomp
 
 import (
+	"log"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/filter"
 )
 
 type ebitenGame struct {
@@ -30,9 +33,32 @@ func (e *ebitenGame) Update() error {
 }
 
 func (e *ebitenGame) Draw(screen *ebiten.Image) {
-	e.game.Draw(screen)
+	// e.game.Draw(screen)
+
+	op := &ebiten.DrawImageOptions{}
+
+	query := donburi.NewQuery(filter.Contains(BodyComponent.Query, RenderComponent.Query))
+
+	query.Each(e.game.world, func(e *donburi.Entry) {
+		render := RenderComponent.Query.Get(e)
+
+		if render == nil {
+			log.Fatalln("RenderComponent is nil")
+		}
+
+		body := BodyComponent.Query.Get(e)
+
+		if body == nil {
+			log.Fatalln("BodyComponent is nil")
+		}
+
+		op.GeoM.Reset()
+		op.GeoM.Translate(body.Position().X, body.Position().Y)
+
+		screen.DrawImage(render.Sprite, op)
+	})
 }
 
 func (e *ebitenGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return e.game.Layout(outsideWidth, outsideHeight)
+	return outsideWidth, outsideHeight
 }
