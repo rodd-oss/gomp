@@ -8,6 +8,7 @@ package gomp
 
 import (
 	"embed"
+	"fmt"
 	"image/png"
 	"io/fs"
 	"log"
@@ -35,8 +36,8 @@ func walkDir(fs fs.ReadDirFS, prefix string, fn func(path string, info os.FileIn
 	return nil
 }
 
-func CreateSpriteResource(fs embed.FS, prefix string) (sprites map[string]SpriteData) {
-	sprites = make(map[string]SpriteData)
+func CreateSpriteResource(fs embed.FS, prefix string) func(filename string) SpriteData {
+	sprites := make(map[string]SpriteData)
 
 	err := walkDir(fs, prefix, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -86,5 +87,11 @@ func CreateSpriteResource(fs embed.FS, prefix string) (sprites map[string]Sprite
 		panic(err)
 	}
 
-	return sprites
+	return func(filename string) SpriteData {
+		if sprite, ok := sprites[filename]; ok {
+			return sprite
+		}
+
+		panic(fmt.Sprint("File <", filename, "> does not exist in <", prefix, "> resource."))
+	}
 }

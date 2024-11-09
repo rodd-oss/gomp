@@ -22,7 +22,7 @@ var HealthComponent = gomp.CreateComponent[HealthData]()
 var ManaComponent = gomp.CreateComponent[uint16]()
 
 var Player = gomp.CreateEntity(
-	gomp.SpriteComponent.New(resources.Sprites["player.png"]),
+	gomp.SpriteComponent.New(resources.Sprites("big_demon_idle_anim_f0.png")),
 	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 
 	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
