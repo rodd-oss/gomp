@@ -9,7 +9,8 @@ import (
 var BodyComponent = CreateComponent[cp.Body]()
 
 type SpriteData struct {
-	Image image.Image
+	Image  image.Image
+	Config image.Config
 }
 
 var SpriteComponent = CreateComponent[SpriteData]()

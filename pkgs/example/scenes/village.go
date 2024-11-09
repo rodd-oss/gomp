@@ -7,5 +7,5 @@ import (
 
 var VillageScene = gomp.CreateScene("Village").
 	AddEntities(
-		entities.Player(20),
+		entities.Player(2000),
 	)

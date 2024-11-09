@@ -9,18 +9,22 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const tickRate = time.Second
+const tickRate = time.Second / 1
 
 func main() {
 	game := gomp.NewGame(tickRate)
 	game.Debug = true
 
 	game.LoadScene(scenes.VillageScene)
-	game.RegisterSystems(gomp.BodySystem)
+
+	// TODO: move BodySystem inside gomp engine such as render system
+	game.RegisterSystems(
+		gomp.BodySystem,
+	)
 
 	e := game.Ebiten()
 	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetWindowSize(800, 600)
+	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("Engine")
 
 	err := ebiten.RunGame(e)

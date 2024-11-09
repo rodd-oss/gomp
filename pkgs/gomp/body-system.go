@@ -30,10 +30,15 @@ func (c *bodySystemController) Init(world donburi.World) {
 		body := cp.NewKinematicBody()
 		BodyComponent.Query.Set(e, body)
 
-		randX := 100 + (rand.Float64()+0.5)*100
-		randY := 100 + (rand.Float64()-0.5)*100
+		randX := (rand.Float64()) * 1000
+		randY := (rand.Float64()) * 1000
 
 		body.SetPosition(cp.Vector{X: randX, Y: randY})
+
+		randX = (rand.Float64() - 0.5) * 10
+		randY = (rand.Float64() - 0.5) * 10
+
+		body.SetVelocity(randX, randY)
 
 		c.space.AddBody(body)
 	})
@@ -48,10 +53,10 @@ func (c *bodySystemController) Update(dt float64) {
 			return
 		}
 
-		randX := (rand.Float64()) * 100
-		randY := (rand.Float64()) * 100
+		// randX := (rand.Float64()) * 1000
+		// randY := (rand.Float64()) * 1000
 
-		body.SetPosition(cp.Vector{X: randX, Y: randY})
+		// body.SetPosition(cp.Vector{X: randX, Y: randY})
 	})
 
 	c.space.Step(dt)

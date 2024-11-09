@@ -7,8 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package gomp
 
 import (
-	"image/color"
-
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/yohamta/donburi"
 )
 
@@ -21,12 +20,15 @@ type ebitenRenderSystemController struct {
 
 func (c *ebitenRenderSystemController) Init(world donburi.World) {
 	c.world = world
-
-	RenderComponent.Query.Each(c.world, func(e *donburi.Entry) {
-		RenderComponent.Query.Get(e).Sprite.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
-	})
 }
 
 func (c *ebitenRenderSystemController) Update(dt float64) {
-
+	SpriteComponent.Query.Each(c.world, func(e *donburi.Entry) {
+		sprite := SpriteComponent.Query.Get(e)
+		if !e.HasComponent(RenderComponent.Query) {
+			donburi.Add(e, RenderComponent.Query, &RenderData{
+				Sprite: ebiten.NewImageFromImage(sprite.Image),
+			})
+		}
+	})
 }
