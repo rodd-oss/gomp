@@ -7,6 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package entities
 
 import (
+	"gomp_game/pkgs/example/components"
 	"gomp_game/pkgs/example/resources"
 	"gomp_game/pkgs/gomp"
 
@@ -25,6 +26,7 @@ var Player = gomp.CreateEntity(
 	gomp.SpriteComponent.New(resources.Sprites("big_demon_idle_anim_f0.png")),
 	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 
+	components.HeroIntentComponent.New(components.HeroIntentData{}),
 	HealthComponent.New(HealthData{Health: 100, MaxHealth: 100}),
 	ManaComponent.New(125),
 )

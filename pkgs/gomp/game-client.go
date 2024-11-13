@@ -1,5 +1,5 @@
-//go:build !graphics
-// +build !graphics
+//go:build !server
+// +build !server
 
 /*
 This Source Code Form is subject to the terms of the Mozilla
@@ -13,7 +13,18 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	input "github.com/quasilyte/ebitengine-input"
 )
+
+func initInputSystem(cfg input.SystemConfig) input.System {
+	sys := input.System{}
+	sys.Init(cfg)
+	return sys
+}
+
+var InputSystem = initInputSystem(input.SystemConfig{
+	DevicesEnabled: input.AnyDevice,
+})
 
 func (g *Game) Ebiten() *ebitenGame {
 	g.systems = append(g.systems, EbitenRenderSystem)
@@ -21,9 +32,9 @@ func (g *Game) Ebiten() *ebitenGame {
 
 	e := new(ebitenGame)
 	e.game = g
+	e.inputSystem = &InputSystem
 
 	tps := 1 / g.tickRate.Seconds()
-	log.Println(tps)
 	ebiten.SetTPS(int(tps))
 	if g.Debug {
 		log.Println("Initial TPS:", tps)

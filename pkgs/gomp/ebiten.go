@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	input "github.com/quasilyte/ebitengine-input"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/filter"
 )
@@ -22,12 +23,15 @@ type ebitenGame struct {
 	game         *Game
 	dt           time.Duration
 	lastUpdateAt time.Time
+	inputSystem  *input.System
 }
 
 func (e *ebitenGame) Update() error {
 	e.dt = time.Since(e.lastUpdateAt)
 
+	e.inputSystem.UpdateWithDelta(e.dt.Seconds())
 	e.game.Update(e.dt.Seconds())
+
 	e.lastUpdateAt = time.Now()
 	return nil
 }
@@ -62,3 +66,9 @@ func (e *ebitenGame) Draw(screen *ebiten.Image) {
 func (e *ebitenGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
+
+func (e *ebitenGame) RegisterInputHandlers(...input.Handler) {
+	// e.inputSystem
+}
+
+// TODO: create input system that could register the gomp.CreateKeyboardHandler() and gomp.CreateMouseHandler()

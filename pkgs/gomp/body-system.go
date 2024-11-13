@@ -27,18 +27,17 @@ func (c *bodySystemController) Init(world donburi.World) {
 	c.world = world
 
 	BodyComponent.Query.Each(c.world, func(e *donburi.Entry) {
-		body := cp.NewKinematicBody()
-		BodyComponent.Query.Set(e, body)
+		body := BodyComponent.Query.Get(e)
 
 		randX := (rand.Float64()) * 1000
 		randY := (rand.Float64()) * 1000
 
 		body.SetPosition(cp.Vector{X: randX, Y: randY})
 
-		randX = (rand.Float64() - 0.5) * 10
-		randY = (rand.Float64() - 0.5) * 10
+		// randX = (rand.Float64() - 0.5) * 10
+		// randY = (rand.Float64() - 0.5) * 10
 
-		body.SetVelocity(randX, randY)
+		// body.SetVelocity(randX, randY)
 
 		c.space.AddBody(body)
 	})
@@ -52,11 +51,6 @@ func (c *bodySystemController) Update(dt float64) {
 			log.Println("is sleeping")
 			return
 		}
-
-		// randX := (rand.Float64()) * 1000
-		// randY := (rand.Float64()) * 1000
-
-		// body.SetPosition(cp.Vector{X: randX, Y: randY})
 	})
 
 	c.space.Step(dt)
