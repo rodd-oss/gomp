@@ -9,8 +9,6 @@ package systems
 import (
 	"gomp_game/pkgs/example/components"
 	"gomp_game/pkgs/gomp"
-	"log"
-	"math"
 
 	"github.com/yohamta/donburi"
 )
@@ -37,8 +35,6 @@ func (c *heroMoveController) Update(dt float64) {
 		playerSpeed := 200.0
 		newX := intent.Move.X * playerSpeed
 		newY := -intent.Move.Y * playerSpeed
-
-		log.Println(math.Sqrt(newX*newX + newY*newY))
 
 		body.SetVelocity(newX, newY)
 	})

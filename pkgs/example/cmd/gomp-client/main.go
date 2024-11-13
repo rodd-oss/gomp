@@ -14,7 +14,7 @@ const tickRate = time.Second / 60
 
 func main() {
 	game := gomp.NewGame(tickRate)
-	game.Debug = true
+	game.Debug = false
 
 	game.LoadScene(scenes.VillageScene)
 
