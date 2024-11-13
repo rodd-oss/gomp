@@ -22,7 +22,7 @@ type HealthData struct {
 var HealthComponent = gomp.CreateComponent[HealthData]()
 var ManaComponent = gomp.CreateComponent[uint16]()
 
-var Player = gomp.CreateEntity(
+var Hero = gomp.CreateEntity(
 	gomp.SpriteComponent.New(resources.Sprites("big_demon_idle_anim_f0.png")),
 	gomp.BodyComponent.New(*cp.NewKinematicBody()),
 
