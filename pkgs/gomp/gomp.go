@@ -8,7 +8,6 @@ package gomp
 
 import (
 	"fmt"
-	"gomp_game/pkgs/gomp/ecs"
 	"reflect"
 	"time"
 
@@ -23,16 +22,16 @@ func NewGame(tickRate time.Duration) *Game {
 	return game
 }
 
-func CreateEntity(components ...ecs.Component) func(amount int) []ecs.Entity {
-	return func(amount int) []ecs.Entity {
+func CreateEntity(components ...Component) func(amount int) []Entity {
+	return func(amount int) []Entity {
 		if amount <= 0 {
 			panic(fmt.Sprint("Adding Entity to scene with (", amount, ") amount failed. Amount must be greater than 0."))
 		}
 
-		entArr := make([]ecs.Entity, amount)
-		ent := func(world donburi.World, extra ...ecs.Component) {
+		entArr := make([]Entity, amount)
+		ent := func(world donburi.World, extra ...Component) {
 			components := append(components, extra...)
-			cmpnnts := make([]ecs.IComponent, len(components))
+			cmpnnts := make([]IComponent, len(components))
 			for i, c := range components {
 				cmpnnts[i] = c.ComponentType
 			}
@@ -66,8 +65,8 @@ func CreateComponent[T any]() ComponentFactory[T] {
 	return ComponentFactory[T]{Query: donburi.NewComponentType[T]()}
 }
 
-func (cf ComponentFactory[T]) New(data T) ecs.Component {
-	return ecs.Component{
+func (cf ComponentFactory[T]) New(data T) Component {
+	return Component{
 		ComponentType: cf.Query,
 		Set: func(entity *donburi.Entry) {
 			cf.Query.SetValue(entity, data)
@@ -81,8 +80,8 @@ func (cf ComponentFactory[T]) New(data T) ecs.Component {
 
 var systemId uint16 = 0
 
-func CreateSystem(controller ecs.SystemController) ecs.System {
-	sys := ecs.System{
+func CreateSystem(controller SystemController) System {
+	sys := System{
 		ID:         systemId,
 		Controller: controller,
 	}

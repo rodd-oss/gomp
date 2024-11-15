@@ -1,9 +1,5 @@
 package gomp
 
-import (
-	"gomp_game/pkgs/gomp/ecs"
-)
-
 // func SceneSystem() ecs.System {
 // 	return gomp.CreateSystem(new(sceneSystemController))
 // }
@@ -11,7 +7,7 @@ import (
 type sceneSystemController struct {
 }
 
-func (s *sceneSystemController) Init(world ecs.World) {
+func (s *sceneSystemController) Init(game *Game) {
 
 }
 

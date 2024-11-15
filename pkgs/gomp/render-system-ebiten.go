@@ -18,8 +18,8 @@ type ebitenRenderSystemController struct {
 	world donburi.World
 }
 
-func (c *ebitenRenderSystemController) Init(world donburi.World) {
-	c.world = world
+func (c *ebitenRenderSystemController) Init(game *Game) {
+	c.world = game.World
 }
 
 func (c *ebitenRenderSystemController) Update(dt float64) {

@@ -28,7 +28,7 @@ var InputSystem = initInputSystem(input.SystemConfig{
 
 func (g *Game) Ebiten() *ebitenGame {
 	g.systems = append(g.systems, EbitenRenderSystem)
-	EbitenRenderSystem.Init(g.world)
+	EbitenRenderSystem.Init(g)
 
 	e := new(ebitenGame)
 	e.game = g

@@ -31,8 +31,8 @@ type intentContoller struct {
 	heroInputHandler *input.Handler
 }
 
-func (c *intentContoller) Init(world donburi.World) {
-	c.world = world
+func (c *intentContoller) Init(game *gomp.Game) {
+	c.world = game.World
 
 	c.heroInputHandler = gomp.InputSystem.NewHandler(0, input.Keymap{
 		heroActionMoveUp:    {input.KeyGamepadUp, input.KeyUp, input.KeyW},

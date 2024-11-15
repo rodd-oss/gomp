@@ -43,7 +43,7 @@ func (e *ebitenGame) Draw(screen *ebiten.Image) {
 
 	query := donburi.NewQuery(filter.Contains(BodyComponent.Query, RenderComponent.Query))
 
-	query.Each(e.game.world, func(e *donburi.Entry) {
+	query.Each(e.game.World, func(e *donburi.Entry) {
 		render := RenderComponent.Query.Get(e)
 
 		if render == nil {

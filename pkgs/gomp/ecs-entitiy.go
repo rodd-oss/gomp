@@ -1,4 +1,4 @@
-package ecs
+package gomp
 
 import "github.com/yohamta/donburi"
 

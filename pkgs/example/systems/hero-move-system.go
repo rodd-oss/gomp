@@ -19,8 +19,8 @@ type heroMoveController struct {
 	world donburi.World
 }
 
-func (c *heroMoveController) Init(world donburi.World) {
-	c.world = world
+func (c *heroMoveController) Init(game *gomp.Game) {
+	c.world = game.World
 }
 
 func (c *heroMoveController) Update(dt float64) {

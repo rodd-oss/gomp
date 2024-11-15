@@ -22,9 +22,9 @@ type bodySystemController struct {
 	space *cp.Space
 }
 
-func (c *bodySystemController) Init(world donburi.World) {
+func (c *bodySystemController) Init(game *Game) {
 	c.space = cp.NewSpace()
-	c.world = world
+	c.world = game.World
 
 	BodyComponent.Query.Each(c.world, func(e *donburi.Entry) {
 		body := BodyComponent.Query.Get(e)

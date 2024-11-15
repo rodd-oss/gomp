@@ -6,15 +6,11 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package gomp
 
-import (
-	"gomp_game/pkgs/gomp/ecs"
-)
-
 type Scene struct {
 	Name string
 
-	Systems        []*ecs.System
-	Entities       []ecs.Entity
+	Systems        []*System
+	Entities       []Entity
 	SceneComponent ComponentFactory[SceneData]
 }
 
@@ -26,7 +22,7 @@ type sceneFactoryEntities struct {
 	scene *Scene
 }
 
-func (f sceneFactoryEntities) AddEntities(ent ...[]ecs.Entity) Scene {
+func (f sceneFactoryEntities) AddEntities(ent ...[]Entity) Scene {
 	for i := 0; i <= len(ent); i++ {
 		f.scene.Entities = ent[0]
 	}

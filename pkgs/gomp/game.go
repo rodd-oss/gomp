@@ -9,7 +9,6 @@ package gomp
 import (
 	"context"
 	"fmt"
-	"gomp_game/pkgs/gomp/ecs"
 	"log"
 	"sync"
 	"time"
@@ -17,20 +16,39 @@ import (
 	"github.com/yohamta/donburi"
 )
 
+type TNetworkMode int
+
+const (
+	NetworkModeNone TNetworkMode = iota
+	NetworkModeHost
+	NetworkModePeer
+)
+
+type Network struct {
+	NewPlayers     chan int
+	RemovedPlayers chan int
+
+	InEvents  chan int
+	OutEvents chan int
+
+	Mode TNetworkMode
+}
+
 type Game struct {
 	mx sync.Mutex
 	wg *sync.WaitGroup
 
-	world        donburi.World
-	systems      []ecs.System
+	World        donburi.World
+	systems      []System
 	LoadedScenes map[string]*Scene
+	Network      *Network
 
 	tickRate time.Duration
 	Debug    bool
 }
 
 func (g *Game) Init(tickRate time.Duration) {
-	g.world = donburi.NewWorld()
+	g.World = donburi.NewWorld()
 	// g.systems = []ecs.System{}
 	g.tickRate = tickRate
 	g.wg = new(sync.WaitGroup)
@@ -112,7 +130,7 @@ func (g *Game) LoadScene(scene Scene) *Scene {
 	c := scene.SceneComponent.New(SceneData{Name: scene.Name})
 	entitiesLen := len(scene.Entities)
 	for i := 0; i < entitiesLen; i++ {
-		scene.Entities[i](g.world, c)
+		scene.Entities[i](g.World, c)
 	}
 
 	g.LoadedScenes[scene.Name] = &scene
@@ -137,8 +155,8 @@ func (g *Game) UnloadScene(scene *Scene) {
 		return
 	}
 
-	scene.SceneComponent.Query.Each(g.world, func(e *donburi.Entry) {
-		g.world.Remove(e.Entity())
+	scene.SceneComponent.Query.Each(g.World, func(e *donburi.Entry) {
+		g.World.Remove(e.Entity())
 	})
 
 	delete(g.LoadedScenes, scene.Name)
@@ -150,13 +168,13 @@ func (g *Game) UnloadAllScenes() {
 	}
 }
 
-func (g *Game) RegisterSystems(systems ...ecs.System) {
+func (g *Game) RegisterSystems(systems ...System) {
 	g.mx.Lock()
 	defer g.mx.Unlock()
 
 	for i := range systems {
 		g.systems = append(g.systems, systems[i])
-		g.systems[i].Init(g.world)
+		g.systems[i].Init(g)
 	}
 }
 
