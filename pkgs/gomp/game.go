@@ -16,24 +16,6 @@ import (
 	"github.com/yohamta/donburi"
 )
 
-type TNetworkMode int
-
-const (
-	NetworkModeNone TNetworkMode = iota
-	NetworkModeHost
-	NetworkModePeer
-)
-
-type Network struct {
-	NewPlayers     chan int
-	RemovedPlayers chan int
-
-	InEvents  chan int
-	OutEvents chan int
-
-	Mode TNetworkMode
-}
-
 type Game struct {
 	mx sync.Mutex
 	wg *sync.WaitGroup
