@@ -6,17 +6,17 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
+type Mask uint64
+type EntityID int
+type ComponentID uint64
+type ComponentInstanceID uint64
+
 var World world = world{
 	Entities: make(map[EntityID]Entity),
 
 	nextEntityID:    0,
 	nextComponentID: 0,
 }
-
-type Mask = uint64
-type EntityID = uint64
-type ComponentID = uint64
-type ComponentInstanceID = uint64
 
 type world struct {
 	Entities map[EntityID]Entity
@@ -32,6 +32,19 @@ func (w *world) Create(components ...Component[any]) EntityID {
 	w.nextEntityID++
 
 	return entity.ID
+}
+
+func (w *world) Get(id EntityID) *Entity {
+	ent, ok := w.Entities[id]
+	if !ok {
+		return nil
+	}
+
+	return &ent
+}
+
+func (w *world) Destroy(id EntityID) {
+	delete(w.Entities, id)
 }
 
 type Entity struct {
@@ -54,6 +67,8 @@ type Component[T any] struct {
 	Instances []ComponentInstance[T]
 }
 
+func (e *Component[T]) Add(id EntityID, data T) {}
+
 func (c *Component[T]) New(initialValue T) ComponentInstance[T] {
 	id := ComponentInstanceID(len(c.Instances))
 	instance := ComponentInstance[T]{}
@@ -73,4 +88,17 @@ type ComponentInstance[T any] struct {
 	ID       ComponentInstanceID
 	EntityID EntityID
 	Data     T
+}
+
+type Transform struct {
+	x, y, z float32
+}
+
+func main() {
+	var transformComponent = NewSparseSet[EntityID, Transform]()
+
+	transformComponent.Add(10, Transform{1, 2, 3})
+	t := transformComponent.Get(10)
+	t.x = 0
+	transformComponent.Delete(10)
 }
