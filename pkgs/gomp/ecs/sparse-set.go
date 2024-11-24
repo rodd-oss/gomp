@@ -6,35 +6,33 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-const NULL_INDEX = -1
-
-func NewSparseSet[TKey EntityID, TData any]() SparseSet[TKey, TData] {
-	return SparseSet[TKey, TData]{
+func NewSparseSet[TData any, TKey EntityID | int]() SparseSet[TData, TKey] {
+	return SparseSet[TData, TKey]{
 		sparse: make(map[TKey]int),
 		dense:  make([]TData, 0),
 	}
 }
 
-type SparseSet[TKey EntityID, TData any] struct {
+type SparseSet[TData any, TKey EntityID | int] struct {
 	sparse map[TKey]int
 	dense  []TData
 }
 
-func (s *SparseSet[TKey, TData]) Add(id TKey, data TData) {
+func (s *SparseSet[TData, TKey]) Add(id TKey, data TData) {
 	s.sparse[id] = len(s.dense)
 	s.dense = append(s.dense, data)
 }
 
-func (s *SparseSet[TKey, TData]) Get(id TKey) *TData {
+func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {
 	i, ok := s.sparse[id]
-	if !ok || i == NULL_INDEX {
+	if !ok {
 		return nil
 	}
 
 	return &s.dense[i]
 }
 
-func (s *SparseSet[TKey, TData]) Delete(id TKey) {
+func (s *SparseSet[TData, TKey]) Delete(id TKey) {
 
 	i, ok := s.sparse[id]
 	if !ok {
@@ -44,7 +42,7 @@ func (s *SparseSet[TKey, TData]) Delete(id TKey) {
 	var lastEntity = TKey(len(s.sparse) - 1)
 	s.dense[i] = s.dense[len(s.dense)]
 
-	s.sparse[id] = NULL_INDEX
+	delete(s.sparse, id)
 	s.sparse[lastEntity] = i
 
 	s.dense = s.dense[:len(s.dense)-1]

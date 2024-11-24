@@ -95,7 +95,7 @@ type Transform struct {
 }
 
 func main() {
-	var transformComponent = NewSparseSet[EntityID, Transform]()
+	var transformComponent = NewSparseSet[Transform, EntityID]()
 
 	transformComponent.Add(10, Transform{1, 2, 3})
 	t := transformComponent.Get(10)
