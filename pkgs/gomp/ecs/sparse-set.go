@@ -33,7 +33,6 @@ func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {
 }
 
 func (s *SparseSet[TData, TKey]) Delete(id TKey) {
-
 	i, ok := s.sparse[id]
 	if !ok {
 		return
