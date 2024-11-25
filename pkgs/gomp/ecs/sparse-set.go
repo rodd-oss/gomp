@@ -14,6 +14,7 @@ func NewSparseSet[TData any, TKey EntityID | int]() SparseSet[TData, TKey] {
 }
 
 type SparseSet[TData any, TKey EntityID | int] struct {
+	// TODO: refactor map to a slice with using of a deletedSparseElements slice
 	sparse map[TKey]int
 	dense  []TData
 }
