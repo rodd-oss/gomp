@@ -34,7 +34,7 @@ func New(title string) ECS {
 	ecs := ECS{
 		ID:       generateECSID(),
 		Title:    title,
-		Entities: NewSparseSet[Entity, EntityID](10000000),
+		Entities: NewSparseSet[Entity, EntityID](1000000),
 
 		nextEntityID:    0,
 		nextComponentID: 0,

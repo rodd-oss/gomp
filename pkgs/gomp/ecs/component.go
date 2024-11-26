@@ -40,6 +40,6 @@ func (c *Component[T]) Get(entity *Entity) *T {
 
 func (c *Component[T]) register(ecs *ECS) {
 	c.IDs[ecs] = ecs.generateComponentID()
-	set := NewSparseSet[T, EntityID](10000000)
+	set := NewSparseSet[T, EntityID](1000000)
 	c.Instances[ecs] = &set
 }

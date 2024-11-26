@@ -8,6 +8,7 @@ package ecs
 
 import (
 	"testing"
+	"time"
 )
 
 type Transform struct {
@@ -28,11 +29,8 @@ type Scale struct {
 
 var scaleComponent = CreateComponent[Scale]()
 
-func BenchmarkExample8(b *testing.B) {
-	count := b.N
-	if count > 10000000 {
-		count = 10000000
-	}
+func TestExample(t *testing.T) {
+	count := 10000000
 	var world = New("Main")
 
 	world.RegisterComponents(
@@ -43,23 +41,24 @@ func BenchmarkExample8(b *testing.B) {
 	tra := Transform{0, 1, 2}
 
 	var player *Entity
-	b.ResetTimer()
+	start := time.Now()
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
 		transformComponent.Set(player, tra)
 	}
-	b.StopTimer()
+	t.Log("Creating", count, "entities in", time.Since(start))
 
 	arr := transformComponent.Instances[&world].dense
 	l := len(arr)
 	if l != count {
-		b.Fatal("Not equal")
+		t.Fatal("Not equal", l, count)
 	}
 
+	start = time.Now()
 	for i := 0; i < l; i++ {
 		arr[i].X += 1
 		arr[i].Y = 0
 		arr[i].Z += 2
 	}
-
+	t.Log("Updating", l, "components in", time.Since(start))
 }
