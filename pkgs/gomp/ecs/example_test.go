@@ -7,9 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"log"
 	"testing"
-	"time"
 )
 
 type Transform struct {
@@ -30,7 +28,11 @@ type Scale struct {
 
 var scaleComponent = CreateComponent[Scale]()
 
-func TestExample(t *testing.T) {
+func BenchmarkExample8(b *testing.B) {
+	count := b.N
+	if count > 10000000 {
+		count = 10000000
+	}
 	var world = New("Main")
 
 	world.RegisterComponents(
@@ -40,20 +42,24 @@ func TestExample(t *testing.T) {
 
 	tra := Transform{0, 1, 2}
 
-	start := time.Now()
-	for i := 0; i < 10000000; i++ {
-		v := world.CreateEntity("Player")
-		transformComponent.Set(v, tra)
+	var player *Entity
+	b.ResetTimer()
+	for i := 0; i < count; i++ {
+		player = world.CreateEntity("Player")
+		transformComponent.Set(player, tra)
 	}
-	middle := time.Since(start)
-	log.Println(middle)
+	b.StopTimer()
 
 	arr := transformComponent.Instances[&world].dense
 	l := len(arr)
+	if l != count {
+		b.Fatal("Not equal")
+	}
+
 	for i := 0; i < l; i++ {
 		arr[i].X += 1
 		arr[i].Y = 0
 		arr[i].Z += 2
 	}
-	log.Println(time.Since(start) - middle)
+
 }

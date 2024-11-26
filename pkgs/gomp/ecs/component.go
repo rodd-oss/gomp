@@ -22,8 +22,7 @@ func CreateComponent[T any]() Component[T] {
 }
 
 func (c *Component[T]) Set(entity *Entity, data T) *T {
-	_, ok := c.Instances[entity.ecs]
-	if !ok {
+	if _, ok := c.Instances[entity.ecs]; !ok {
 		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%s> entity", c, entity.ecs.Title, entity.Title))
 	}
 
@@ -32,10 +31,8 @@ func (c *Component[T]) Set(entity *Entity, data T) *T {
 }
 
 func (c *Component[T]) Get(entity *Entity) *T {
-	_, ok := c.Instances[entity.ecs]
-	if !ok {
+	if _, ok := c.Instances[entity.ecs]; !ok {
 		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%s> entity", c, entity.ecs.Title, entity.Title))
-
 	}
 
 	return c.Instances[entity.ecs].Get(entity.ID)
@@ -43,6 +40,6 @@ func (c *Component[T]) Get(entity *Entity) *T {
 
 func (c *Component[T]) register(ecs *ECS) {
 	c.IDs[ecs] = ecs.generateComponentID()
-	set := NewSparseSet[T, EntityID](1000000)
+	set := NewSparseSet[T, EntityID](10000000)
 	c.Instances[ecs] = &set
 }

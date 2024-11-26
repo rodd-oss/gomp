@@ -9,7 +9,7 @@ package ecs
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](size int) SparseSet[TData, TKey] {
 	return SparseSet[TData, TKey]{
 		sparse: make(map[TKey]int, size),
-		dense:  make([]TData, 0),
+		dense:  make([]TData, 0, size),
 	}
 }
 
