@@ -6,29 +6,54 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "testing"
+import (
+	"log"
+	"testing"
+	"time"
+)
 
 type Transform struct {
 	X, Y, Z float32
 }
 
+var transformComponent = CreateComponent[Transform]()
+
 type Rotation struct {
 	RX, RY, RZ int
 }
+
+var _ = CreateComponent[Rotation]()
 
 type Scale struct {
 	Value float32
 }
 
+var scaleComponent = CreateComponent[Scale]()
+
 func TestExample(t *testing.T) {
-	var ecs = New()
+	var world = New("Main")
 
-	var transformComponent = CreateComponent[Transform](&ecs)
-	var _ = CreateComponent[Rotation](&ecs)
-	var scaleComponent = CreateComponent[Scale](&ecs)
+	world.RegisterComponents(
+		&scaleComponent,
+		&transformComponent,
+	)
 
-	var playerEntity = ecs.CreateEntity()
+	tra := Transform{0, 1, 2}
 
-	transformComponent.Set(playerEntity, Transform{0, 1, 2})
-	scaleComponent.Set(playerEntity, Scale{0})
+	start := time.Now()
+	for i := 0; i < 10000000; i++ {
+		v := world.CreateEntity("Player")
+		transformComponent.Set(v, tra)
+	}
+	middle := time.Since(start)
+	log.Println(middle)
+
+	arr := transformComponent.Instances[&world].dense
+	l := len(arr)
+	for i := 0; i < l; i++ {
+		arr[i].X += 1
+		arr[i].Y = 0
+		arr[i].Z += 2
+	}
+	log.Println(time.Since(start) - middle)
 }

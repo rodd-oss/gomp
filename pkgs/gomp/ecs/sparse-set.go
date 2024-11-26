@@ -6,22 +6,28 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-func NewSparseSet[TData any, TKey EntityID | int]() SparseSet[TData, TKey] {
+func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](size int) SparseSet[TData, TKey] {
 	return SparseSet[TData, TKey]{
-		sparse: make(map[TKey]int),
+		sparse: make(map[TKey]int, size),
 		dense:  make([]TData, 0),
 	}
 }
 
-type SparseSet[TData any, TKey EntityID | int] struct {
+type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
 	sparse map[TKey]int
 	dense  []TData
 }
 
-func (s *SparseSet[TData, TKey]) Add(id TKey, data TData) {
+func (s *SparseSet[TData, TKey]) Set(id TKey, data TData) *TData {
+	if _, ok := s.sparse[id]; ok {
+		s.dense[s.sparse[id]] = data
+		return &s.dense[s.sparse[id]]
+	}
+
 	s.sparse[id] = len(s.dense)
 	s.dense = append(s.dense, data)
+	return &s.dense[s.sparse[id]]
 }
 
 func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {

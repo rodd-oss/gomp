@@ -6,16 +6,34 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
+type ECSID uint
+
 type ECS struct {
+	ID       ECSID
+	Title    string
 	Entities SparseSet[Entity, EntityID]
 
 	nextEntityID    EntityID
 	nextComponentID ComponentID
 }
 
-func New() ECS {
+type AnyComponentPtr interface {
+	register(ecs *ECS)
+}
+
+var nextId ECSID = 0
+
+func generateECSID() ECSID {
+	id := nextId
+	nextId++
+	return id
+}
+
+func New(title string) ECS {
 	ecs := ECS{
-		Entities: NewSparseSet[Entity, EntityID](),
+		ID:       generateECSID(),
+		Title:    title,
+		Entities: NewSparseSet[Entity, EntityID](1000000),
 
 		nextEntityID:    0,
 		nextComponentID: 0,
@@ -36,11 +54,19 @@ func (e *ECS) generateEntityID() EntityID {
 	return id
 }
 
-func (e *ECS) CreateEntity() *Entity {
+func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
+	for i := 0; i < len(component_ptr); i++ {
+		component_ptr[i].register(e)
+	}
+}
+
+func (e *ECS) CreateEntity(title string) *Entity {
 	entity := Entity{}
 	entity.ID = e.generateEntityID()
+	entity.Title = title
 	entity.ComponentsMask = NewBitArray(64)
+	entity.ecs = e
 
-	e.Entities.Add(entity.ID, entity)
+	e.Entities.Set(entity.ID, entity)
 	return e.Entities.Get(entity.ID)
 }

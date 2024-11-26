@@ -8,5 +8,7 @@ package ecs
 
 type Entity struct {
 	ID             EntityID
+	Title          string
 	ComponentsMask BitArray
+	ecs            *ECS
 }

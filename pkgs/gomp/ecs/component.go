@@ -6,24 +6,43 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
+import "fmt"
+
 type Component[T any] struct {
-	ecs       *ECS
-	ID        ComponentID
-	Instances SparseSet[T, EntityID]
+	IDs       map[*ECS]ComponentID
+	Instances map[*ECS]*SparseSet[T, EntityID]
 }
 
-func CreateComponent[T any](ecs *ECS) Component[T] {
+func CreateComponent[T any]() Component[T] {
 	component := Component[T]{}
-
-	component.ID = ecs.generateComponentID()
-	component.Instances = NewSparseSet[T, EntityID]()
-	component.ecs = ecs
+	component.IDs = make(map[*ECS]ComponentID, 1)
+	component.Instances = make(map[*ECS]*SparseSet[T, EntityID], 1)
 
 	return component
 }
 
 func (c *Component[T]) Set(entity *Entity, data T) *T {
-	c.Instances.Add(entity.ID, data)
-	c.ecs.Entities.Get(entity.ID).ComponentsMask.Set(uint(c.ID))
-	return c.Instances.Get(entity.ID)
+	_, ok := c.Instances[entity.ecs]
+	if !ok {
+		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%s> entity", c, entity.ecs.Title, entity.Title))
+	}
+
+	entity.ComponentsMask.Set(uint(c.IDs[entity.ecs]))
+	return c.Instances[entity.ecs].Set(entity.ID, data)
+}
+
+func (c *Component[T]) Get(entity *Entity) *T {
+	_, ok := c.Instances[entity.ecs]
+	if !ok {
+		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%s> entity", c, entity.ecs.Title, entity.Title))
+
+	}
+
+	return c.Instances[entity.ecs].Get(entity.ID)
+}
+
+func (c *Component[T]) register(ecs *ECS) {
+	c.IDs[ecs] = ecs.generateComponentID()
+	set := NewSparseSet[T, EntityID](1000000)
+	c.Instances[ecs] = &set
 }
