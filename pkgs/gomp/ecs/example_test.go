@@ -7,6 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
+	"fmt"
+	"runtime"
 	"testing"
 )
 
@@ -30,6 +32,10 @@ var scaleComponent = CreateComponent[Scale]()
 
 func BenchmarkEntityUpdate(b *testing.B) {
 	b.ReportAllocs()
+	var m1, m2 runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&m1)
+
 	count := 10_000_000
 
 	var world = New("Main")
@@ -56,11 +62,6 @@ func BenchmarkEntityUpdate(b *testing.B) {
 	b.ResetTimer()
 	for range b.N {
 		transformComponent.Each(&world, func(entity *Entity, data *Transform) {
-			scale := scaleComponent.Get(entity)
-			if scale == nil {
-				return
-			}
-
 			data.X += 1
 			data.Y -= 1
 			data.Z += 2
@@ -77,11 +78,15 @@ func BenchmarkEntityUpdate(b *testing.B) {
 		// 	tr.Z += 2
 		// })
 	}
+
+	runtime.ReadMemStats(&m2)
+	fmt.Println("total:", m2.TotalAlloc-m1.TotalAlloc)
+	fmt.Println("mallocs:", m2.Mallocs-m1.Mallocs)
 }
 
 func BenchmarkCreateWorld(b *testing.B) {
 	b.ReportAllocs()
-	count := 1_000_000
+	count := 10_000_000
 
 	b.ResetTimer()
 	for range b.N {

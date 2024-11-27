@@ -31,7 +31,7 @@ func (c *Component[T]) Set(entity *Entity, data T) *T {
 		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%s> entity", c, entity.ecs.Title, entity.Title))
 	}
 
-	entity.ComponentsMask.Set(uint64(c.IDs[entity.ecs]))
+	// entity.ComponentsMask.Set(uint64(c.IDs[entity.ecs]))
 	var instance ComponentInstance[T]
 	instance.Entity = entity
 	instance.Data = data

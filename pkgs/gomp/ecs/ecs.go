@@ -78,13 +78,13 @@ func (e *ECS) CreateEntity(title string) *Entity {
 		ecs:   e,
 	}
 
-	if len(e.EntityComponentMask) <= int(entity.ID) {
-		e.EntityComponentMask = append(e.EntityComponentMask, make([]BitArray, ALLOC_CHUNK)...)
-		for i := int(entity.ID); i < ALLOC_CHUNK; i++ {
-			e.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
-		}
-	}
-	entity.ComponentsMask = e.EntityComponentMask[entity.ID]
+	// if len(e.EntityComponentMask) <= int(entity.ID) {
+	// 	e.EntityComponentMask = append(e.EntityComponentMask, make([]BitArray, ALLOC_CHUNK)...)
+	// 	for i := int(entity.ID); i < ALLOC_CHUNK; i++ {
+	// 		e.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
+	// 	}
+	// }
+	// entity.ComponentsMask = e.EntityComponentMask[entity.ID]
 
 	return e.Entities.Set(entity.ID, entity)
 }
