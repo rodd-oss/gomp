@@ -8,10 +8,16 @@ package ecs
 
 type ECSID uint
 
+const (
+	MAX_COMPONENTS = 128
+	ALLOC_CHUNK    = 1_000_000
+)
+
 type ECS struct {
-	ID       ECSID
-	Title    string
-	Entities SparseSet[Entity, EntityID]
+	ID                  ECSID
+	Title               string
+	Entities            SparseSet[Entity, EntityID]
+	EntityComponentMask []BitArray
 
 	nextEntityID    EntityID
 	nextComponentID ComponentID
@@ -32,12 +38,17 @@ func generateECSID() ECSID {
 
 func New(title string) ECS {
 	ecs := ECS{
-		ID:       generateECSID(),
-		Title:    title,
-		Entities: NewSparseSet[Entity, EntityID](1000000),
+		ID:                  generateECSID(),
+		Title:               title,
+		Entities:            NewSparseSet[Entity, EntityID](ALLOC_CHUNK),
+		EntityComponentMask: make([]BitArray, ALLOC_CHUNK),
 
 		nextEntityID:    0,
 		nextComponentID: 0,
+	}
+
+	for i := 0; i < ALLOC_CHUNK; i++ {
+		ecs.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
 	}
 
 	return ecs
@@ -64,8 +75,14 @@ func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
 func (e *ECS) CreateEntity(title string) *Entity {
 	e.entity.ID = e.generateEntityID()
 	e.entity.Title = title
-	e.entity.ComponentsMask = NewBitArray(64)
 	e.entity.ecs = e
+	if len(e.EntityComponentMask) <= int(e.entity.ID) {
+		e.EntityComponentMask = append(e.EntityComponentMask, make([]BitArray, ALLOC_CHUNK)...)
+		for i := int(e.entity.ID); i < ALLOC_CHUNK; i++ {
+			e.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
+		}
+	}
+	e.entity.ComponentsMask = e.EntityComponentMask[e.entity.ID]
 
 	return e.Entities.Set(e.entity.ID, e.entity)
 }

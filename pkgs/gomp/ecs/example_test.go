@@ -8,7 +8,6 @@ package ecs
 
 import (
 	"testing"
-	"time"
 )
 
 type Transform struct {
@@ -31,7 +30,7 @@ var scaleComponent = CreateComponent[Scale]()
 
 func BenchmarkEntityUpdate(b *testing.B) {
 	b.ReportAllocs()
-	count := 10000000
+	count := 10_000_000
 
 	var world = New("Main")
 
@@ -41,21 +40,65 @@ func BenchmarkEntityUpdate(b *testing.B) {
 	)
 
 	tra := Transform{0, 1, 2}
+	sc := Scale{1}
 
 	var player *Entity
-	start := time.Now()
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
-		transformComponent.Set(player, tra)
+		if i%2 == 0 {
+			transformComponent.Set(player, tra)
+		}
+		if i%10 == 0 {
+			scaleComponent.Set(player, sc)
+		}
 	}
-	b.Log("Creating", count, "entities in", time.Since(start))
 
 	b.ResetTimer()
 	for range b.N {
-		transformComponent.Each(&world, func(data *Transform) {
+		transformComponent.Each(&world, func(entity *Entity, data *Transform) {
+			scale := scaleComponent.Get(entity)
+			if scale == nil {
+				return
+			}
+
 			data.X += 1
-			data.Y = 0
+			data.Y -= 1
 			data.Z += 2
 		})
+
+		// scaleComponent.Each(&world, func(entity *Entity, data *Scale) {
+		// 	tr := transformComponent.Get(entity)
+		// 	if tr == nil {
+		// 		return
+		// 	}
+
+		// 	tr.X += 1
+		// 	tr.Y -= 1
+		// 	tr.Z += 2
+		// })
+	}
+}
+
+func BenchmarkCreateWorld(b *testing.B) {
+	b.ReportAllocs()
+	count := 1_000_000
+
+	b.ResetTimer()
+	for range b.N {
+		b.StopTimer()
+		var world = New("Main")
+
+		world.RegisterComponents(
+			&transformComponent,
+		)
+
+		tra := Transform{0, 1, 2}
+
+		var player *Entity
+		b.StartTimer()
+		for i := 0; i < count; i++ {
+			player = world.CreateEntity("Player")
+			transformComponent.Set(player, tra)
+		}
 	}
 }
