@@ -16,18 +16,16 @@ type Transform struct {
 	X, Y, Z float32
 }
 
-var transformComponent = CreateComponent[Transform]()
-
 type Rotation struct {
 	RX, RY, RZ int
 }
-
-var _ = CreateComponent[Rotation]()
 
 type Scale struct {
 	Value float32
 }
 
+var _ = CreateComponent[Rotation]()
+var transformComponent = CreateComponent[Transform]()
 var scaleComponent = CreateComponent[Scale]()
 
 func BenchmarkEntityUpdate(b *testing.B) {
@@ -61,22 +59,22 @@ func BenchmarkEntityUpdate(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		transformComponent.Each(&world, func(entity *Entity, data *Transform) {
-			data.X += 1
-			data.Y -= 1
-			data.Z += 2
-		})
-
-		// scaleComponent.Each(&world, func(entity *Entity, data *Scale) {
-		// 	tr := transformComponent.Get(entity)
-		// 	if tr == nil {
-		// 		return
-		// 	}
-
-		// 	tr.X += 1
-		// 	tr.Y -= 1
-		// 	tr.Z += 2
+		// transformComponent.Each(&world, func(entity *Entity, data *Transform) {
+		// 	data.X += 1
+		// 	data.Y -= 1
+		// 	data.Z += 2
 		// })
+
+		scaleComponent.Each(&world, func(entity *Entity, data *Scale) {
+			tr := transformComponent.Get(entity)
+			if tr == nil {
+				return
+			}
+
+			tr.X += 1
+			tr.Y -= 1
+			tr.Z += 2
+		})
 	}
 
 	runtime.ReadMemStats(&m2)

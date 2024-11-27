@@ -61,6 +61,6 @@ func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, *T)) {
 
 func (c *Component[T]) register(ecs *ECS) {
 	c.IDs[ecs] = ecs.generateComponentID()
-	set := NewSparseSet[ComponentInstance[T], EntityID](1000000)
+	set := NewSparseSet[ComponentInstance[T], EntityID](PREALLOC_BUCKETS, PREALLOC_BUCKETS_SIZE)
 	c.Instances[ecs] = &set
 }

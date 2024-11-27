@@ -6,10 +6,15 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](size int) SparseSet[TData, TKey] {
+func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](buckets uint32, bucketSize uint32) SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{
 		deleted: make(map[TKey]int),
 	}
+	set.sparse.initialBucketsCount = buckets
+	set.dense.initialBucketsCount = buckets
+	set.sparse.initialBucketSize = bucketSize
+	set.dense.initialBucketSize = bucketSize
+
 	return set
 }
 
@@ -65,6 +70,9 @@ type Collection[T any] struct {
 	buckets []Bucket[T]
 	last    *Bucket[T]
 	count   int
+
+	initialBucketsCount uint32
+	initialBucketSize   uint32
 }
 
 type Bucket[T any] struct {
@@ -73,10 +81,10 @@ type Bucket[T any] struct {
 
 func (c *Collection[T]) Append(obj T) (int, *T) {
 	if c.last == nil {
-		c.init()
+		c.init(c.initialBucketsCount, c.initialBucketSize)
 	}
 	if c.last.Cap() < 1 {
-		c.extend()
+		c.extend(c.initialBucketSize)
 	}
 	curr := c.count
 	r := c.last.Add(obj)
@@ -84,16 +92,14 @@ func (c *Collection[T]) Append(obj T) (int, *T) {
 	return curr, r
 }
 
-const preallocated = 1_000_000
-
-func (c *Collection[T]) init() {
-	c.buckets = make([]Bucket[T], 1, 32)
-	c.buckets[0].data = make([]T, 0, preallocated)
+func (c *Collection[T]) init(buckets uint32, size uint32) {
+	c.buckets = make([]Bucket[T], 1, buckets)
+	c.buckets[0].data = make([]T, 0, size)
 	c.last = &c.buckets[0]
 }
 
-func (c *Collection[T]) extend() {
-	c.buckets = append(c.buckets, Bucket[T]{data: make([]T, 0, preallocated)})
+func (c *Collection[T]) extend(size uint32) {
+	c.buckets = append(c.buckets, Bucket[T]{data: make([]T, 0, size)})
 	c.last = &c.buckets[len(c.buckets)-1]
 }
 

@@ -9,8 +9,9 @@ package ecs
 type ECSID uint
 
 const (
-	MAX_COMPONENTS = 128
-	ALLOC_CHUNK    = 1_000_000
+	MAX_COMPONENTS               = 128
+	PREALLOC_BUCKETS      uint32 = 32
+	PREALLOC_BUCKETS_SIZE uint32 = 1_000_000
 )
 
 type ECS struct {
@@ -35,20 +36,36 @@ func generateECSID() ECSID {
 	return id
 }
 
-func New(title string) ECS {
+func New(title string, preallocated ...int32) ECS {
+	var buckets, size uint32
+
+	switch len(preallocated) {
+	case 0:
+		buckets = PREALLOC_BUCKETS
+		size = PREALLOC_BUCKETS_SIZE
+	case 1:
+		buckets = uint32(preallocated[0])
+		size = PREALLOC_BUCKETS_SIZE
+	case 2:
+		buckets = uint32(preallocated[0])
+		size = uint32(preallocated[1])
+	default:
+		panic("Too many parameters")
+	}
+
 	ecs := ECS{
-		ID:                  generateECSID(),
-		Title:               title,
-		Entities:            NewSparseSet[Entity, EntityID](ALLOC_CHUNK),
-		EntityComponentMask: make([]BitArray, ALLOC_CHUNK),
+		ID:       generateECSID(),
+		Title:    title,
+		Entities: NewSparseSet[Entity, EntityID](buckets, size),
+		// EntityComponentMask: make([]BitArray, ALLOC_BUCKETS_SIZE),
 
 		nextEntityID:    0,
 		nextComponentID: 0,
 	}
 
-	for i := 0; i < ALLOC_CHUNK; i++ {
-		ecs.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
-	}
+	// for i := 0; i < ALLOC_CHUNK; i++ {
+	// 	ecs.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
+	// }
 
 	return ecs
 }
