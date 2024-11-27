@@ -52,8 +52,10 @@ func (c *Component[T]) Get(entity *Entity) *T {
 
 func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, *T)) {
 	arr := c.Instances[ecs].dense
-	for i := range arr {
-		callback(arr[i].Entity, &arr[i].Data)
+	for _, b := range arr.buckets {
+		for i := range b.data {
+			callback(b.data[i].Entity, &b.data[i].Data)
+		}
 	}
 }
 

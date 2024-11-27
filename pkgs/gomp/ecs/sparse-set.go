@@ -6,74 +6,138 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "slices"
-
-const NULL_INDEX int = -1
-
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](size int) SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{
-		sparse: make([]int, 0, size),
-		dense:  make([]TData, 0, size),
-		size:   size,
+		deleted: make(map[TKey]int),
 	}
-
-	for i := 0; i < size; i++ {
-		set.sparse = append(set.sparse, NULL_INDEX)
-	}
-
 	return set
 }
 
 type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
-	sparse []int
-	dense  []TData
-	size   int
+	sparse  Collection[int]
+	dense   Collection[TData]
+	deleted map[TKey]int
 }
 
 func (s *SparseSet[TData, TKey]) Set(id TKey, data TData) *TData {
-	if int(id) >= len(s.sparse) {
-		s.sparse = append(s.sparse, slices.Repeat([]int{NULL_INDEX}, s.size)...)
+	if pos, ok := s.deleted[id]; ok {
+		delete(s.deleted, id)
+		return s.dense.Set(pos, data)
 	}
 
-	if id == 10000000 {
-
+	pos := s.sparse.Get(int(id))
+	if pos != nil {
+		return s.dense.Set(*pos, data)
 	}
-
-	if s.sparse[id] == NULL_INDEX {
-		s.sparse[id] = len(s.dense)
-		s.dense = append(s.dense, data)
-	} else {
-		s.dense[s.sparse[id]] = data
-	}
-
-	return &s.dense[s.sparse[id]]
+	idx, r := s.dense.Append(data)
+	s.sparse.Set(int(id), idx)
+	return r
 }
 
 func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {
-	if int(id) >= len(s.sparse) {
+	if s.isDeleted(id) {
 		return nil
 	}
 
-	if s.sparse[id] == NULL_INDEX {
+	idx := s.sparse.Get(int(id))
+	if idx == nil {
 		return nil
 	}
-
-	return &s.dense[s.sparse[id]]
+	return s.dense.Get(*idx)
 }
 
 func (s *SparseSet[TData, TKey]) Delete(id TKey) {
-	if int(id) >= len(s.sparse) {
+	// TODO optimize me
+	idx := s.sparse.Get(int(id))
+	if idx == nil {
 		return
 	}
+	s.deleted[id] = *idx
+}
 
-	i := s.sparse[id]
+func (s *SparseSet[TData, TKey]) isDeleted(id TKey) bool {
+	_, deleted := s.deleted[id]
+	return deleted
+}
 
-	var lastEntity = TKey(len(s.sparse) - 1)
-	s.dense[i] = s.dense[len(s.dense)]
+type Collection[T any] struct {
+	buckets []Bucket[T]
+	last    *Bucket[T]
+	count   int
+}
 
-	s.sparse[id] = NULL_INDEX
-	s.sparse[lastEntity] = i
+type Bucket[T any] struct {
+	data []T
+}
 
-	s.dense = s.dense[:len(s.dense)-1]
+func (c *Collection[T]) Append(obj T) (int, *T) {
+	if c.last == nil {
+		c.init()
+	}
+	if c.last.Cap() < 1 {
+		c.extend()
+	}
+	curr := c.count
+	r := c.last.Add(obj)
+	c.count++
+	return curr, r
+}
+
+const preallocated = 1_000_000
+
+func (c *Collection[T]) init() {
+	c.buckets = make([]Bucket[T], 1, 32)
+	c.buckets[0].data = make([]T, 0, preallocated)
+	c.last = &c.buckets[0]
+}
+
+func (c *Collection[T]) extend() {
+	c.buckets = append(c.buckets, Bucket[T]{data: make([]T, 0, preallocated)})
+	c.last = &c.buckets[len(c.buckets)-1]
+}
+
+func (c *Collection[T]) Len() (l int) {
+	return c.count
+}
+
+func (c *Collection[T]) Get(id int) *T {
+	for _, b := range c.buckets {
+		if id >= len(b.data) {
+			id -= len(b.data)
+			continue
+		}
+		return &b.data[id]
+	}
+	return nil
+}
+
+func (c *Collection[T]) Set(id int, val T) *T {
+	if id >= c.Len() {
+		idx := c.Len() - id
+		for i := 0; i < idx; i++ {
+			var t T
+			c.Append(t)
+		}
+		_, n := c.Append(val)
+		return n
+	}
+	for _, b := range c.buckets {
+		if id >= len(b.data) {
+			id -= len(b.data)
+			continue
+		}
+		b.data[id] = val
+		return &b.data[id]
+	}
+	panic("out of bounds")
+}
+
+func (b *Bucket[T]) Cap() int {
+	return cap(b.data) - len(b.data)
+}
+
+func (b *Bucket[T]) Add(t T) *T {
+	b.data = append(b.data, t)
+	return &b.data[len(b.data)-1]
 }

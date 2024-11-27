@@ -21,7 +21,6 @@ type ECS struct {
 
 	nextEntityID    EntityID
 	nextComponentID ComponentID
-	entity          Entity
 }
 
 type AnyComponentPtr interface {
@@ -73,16 +72,19 @@ func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
 }
 
 func (e *ECS) CreateEntity(title string) *Entity {
-	e.entity.ID = e.generateEntityID()
-	e.entity.Title = title
-	e.entity.ecs = e
-	if len(e.EntityComponentMask) <= int(e.entity.ID) {
+	var entity = Entity{
+		ID:    e.generateEntityID(),
+		Title: title,
+		ecs:   e,
+	}
+
+	if len(e.EntityComponentMask) <= int(entity.ID) {
 		e.EntityComponentMask = append(e.EntityComponentMask, make([]BitArray, ALLOC_CHUNK)...)
-		for i := int(e.entity.ID); i < ALLOC_CHUNK; i++ {
+		for i := int(entity.ID); i < ALLOC_CHUNK; i++ {
 			e.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
 		}
 	}
-	e.entity.ComponentsMask = e.EntityComponentMask[e.entity.ID]
+	entity.ComponentsMask = e.EntityComponentMask[entity.ID]
 
-	return e.Entities.Set(e.entity.ID, e.entity)
+	return e.Entities.Set(entity.ID, entity)
 }
