@@ -59,3 +59,45 @@ func BenchmarkEntityUpdate(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkEntityCreate(b *testing.B) {
+	var world = New("Main")
+	world.RegisterComponents(
+		&scaleComponent,
+		&transformComponent,
+	)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		tra := Transform{0, 1, 2}
+		player := world.CreateEntity("Player")
+		transformComponent.Set(player, tra)
+	}
+}
+
+func TestEntityUpdate(t *testing.T) {
+	var world = New("Main")
+	world.RegisterComponents(
+		&scaleComponent,
+		&transformComponent,
+	)
+
+	var cases []EntityID
+	for i := 0; i < 10_000_000; i++ {
+		tra := Transform{float32(i), float32(-i), 2}
+		player := world.CreateEntity("Player")
+		transformComponent.Set(player, tra)
+		cases = append(cases, player.ID)
+	}
+	// check
+	for i, id := range cases {
+		tra := Transform{float32(i), float32(-i), 2}
+		e := world.Entities.Get(id)
+		entity := transformComponent.Get(e)
+		if *entity != tra {
+			t.Errorf("want: %v, got: %v", tra, entity)
+		}
+	}
+}

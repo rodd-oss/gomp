@@ -40,13 +40,11 @@ func (c *Component[T]) Get(entity *Entity) *T {
 
 func (c *Component[T]) Each(ecs *ECS, callback func(data *T)) {
 	arr := c.Instances[ecs].dense
-	for i := range arr {
-		callback(&arr[i])
+	for _, b := range arr.buckets {
+		for i := range b.data {
+			callback(&b.data[i])
+		}
 	}
-}
-
-func (c *Component[T]) Data(ecs *ECS) []T {
-	return c.Instances[ecs].dense
 }
 
 func (c *Component[T]) register(ecs *ECS) {
