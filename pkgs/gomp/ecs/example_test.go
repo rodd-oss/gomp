@@ -29,8 +29,10 @@ type Scale struct {
 
 var scaleComponent = CreateComponent[Scale]()
 
-func TestExample(t *testing.T) {
+func BenchmarkEntityUpdate(b *testing.B) {
+	b.ReportAllocs()
 	count := 10000000
+
 	var world = New("Main")
 
 	world.RegisterComponents(
@@ -46,19 +48,14 @@ func TestExample(t *testing.T) {
 		player = world.CreateEntity("Player")
 		transformComponent.Set(player, tra)
 	}
-	t.Log("Creating", count, "entities in", time.Since(start))
+	b.Log("Creating", count, "entities in", time.Since(start))
 
-	arr := transformComponent.Instances[&world].dense
-	l := len(arr)
-	if l != count {
-		t.Fatal("Not equal", l, count)
+	b.ResetTimer()
+	for range b.N {
+		transformComponent.Each(&world, func(data *Transform) {
+			data.X += 1
+			data.Y = 0
+			data.Z += 2
+		})
 	}
-
-	start = time.Now()
-	for i := 0; i < l; i++ {
-		arr[i].X += 1
-		arr[i].Y = 0
-		arr[i].Z += 2
-	}
-	t.Log("Updating", l, "components in", time.Since(start))
 }

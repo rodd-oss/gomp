@@ -38,6 +38,17 @@ func (c *Component[T]) Get(entity *Entity) *T {
 	return c.Instances[entity.ecs].Get(entity.ID)
 }
 
+func (c *Component[T]) Each(ecs *ECS, callback func(data *T)) {
+	arr := c.Instances[ecs].dense
+	for i := range arr {
+		callback(&arr[i])
+	}
+}
+
+func (c *Component[T]) Data(ecs *ECS) []T {
+	return c.Instances[ecs].dense
+}
+
 func (c *Component[T]) register(ecs *ECS) {
 	c.IDs[ecs] = ecs.generateComponentID()
 	set := NewSparseSet[T, EntityID](1000000)
