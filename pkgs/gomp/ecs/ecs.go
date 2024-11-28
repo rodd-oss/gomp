@@ -98,7 +98,7 @@ func (e *ECS) RunSystems() {
 		e.wg.Add(len(e.Systems[i]))
 		for j := range e.Systems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.Systems[i][j], e, e.wg)
+			go runSystemAsync(e.Systems[i][j], e)
 		}
 		e.wg.Wait()
 	}

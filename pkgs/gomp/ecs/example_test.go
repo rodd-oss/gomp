@@ -12,7 +12,7 @@ import (
 
 func BenchmarkSystems(b *testing.B) {
 	b.ReportAllocs()
-	count := 10_000_000
+	count := 1_000_000
 
 	var world = New("Main")
 

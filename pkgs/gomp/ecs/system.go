@@ -6,8 +6,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "sync"
-
 type System interface {
 	Init()
 	Run(*ECS)
@@ -33,7 +31,7 @@ func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
 	return b
 }
 
-func runSystemAsync(system System, e *ECS, wg *sync.WaitGroup) {
+func runSystemAsync(system System, e *ECS) {
+	defer e.wg.Done()
 	system.Run(e)
-	wg.Done()
 }
