@@ -25,7 +25,7 @@ type ECS struct {
 
 	nextEntityID    EntityID
 	nextComponentID ComponentID
-	wg              sync.WaitGroup
+	wg              *sync.WaitGroup
 }
 
 type AnyComponentPtr interface {
@@ -65,6 +65,7 @@ func New(title string, preallocated ...int32) ECS {
 
 		nextEntityID:    0,
 		nextComponentID: 0,
+		wg:              new(sync.WaitGroup),
 	}
 
 	// for i := 0; i < ALLOC_CHUNK; i++ {
@@ -97,7 +98,7 @@ func (e *ECS) RunSystems() {
 		e.wg.Add(len(e.Systems[i]))
 		for j := range e.Systems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.Systems[i][j], e, &e.wg)
+			go runSystemAsync(e.Systems[i][j], e, e.wg)
 		}
 		e.wg.Wait()
 	}
