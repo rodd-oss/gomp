@@ -6,6 +6,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
+import "sync"
+
 type ECSID uint
 
 const (
@@ -19,9 +21,11 @@ type ECS struct {
 	Title               string
 	Entities            SparseSet[Entity, EntityID]
 	EntityComponentMask []BitArray
+	Systems             [][]System
 
 	nextEntityID    EntityID
 	nextComponentID ComponentID
+	wg              sync.WaitGroup
 }
 
 type AnyComponentPtr interface {
@@ -70,21 +74,32 @@ func New(title string, preallocated ...int32) ECS {
 	return ecs
 }
 
-func (e *ECS) generateComponentID() ComponentID {
-	id := e.nextComponentID
-	e.nextComponentID++
-	return id
-}
-
-func (e *ECS) generateEntityID() EntityID {
-	id := e.nextEntityID
-	e.nextEntityID++
-	return id
-}
-
 func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
 	for i := 0; i < len(component_ptr); i++ {
 		component_ptr[i].register(e)
+	}
+}
+
+func (e *ECS) RegisterSystems() *SystemBuilder {
+	return &SystemBuilder{
+		ecs: e,
+	}
+}
+
+func (e *ECS) RunSystems() {
+	for i := range e.Systems {
+		// If systems are sequantial, we dont spawn goroutines
+		if len(e.Systems[i]) == 1 {
+			e.Systems[i][0].Run(e)
+			continue
+		}
+
+		e.wg.Add(len(e.Systems[i]))
+		for j := range e.Systems[i] {
+			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
+			go runSystemAsync(e.Systems[i][j], e, &e.wg)
+		}
+		e.wg.Wait()
 	}
 }
 
@@ -104,4 +119,16 @@ func (e *ECS) CreateEntity(title string) *Entity {
 	// entity.ComponentsMask = e.EntityComponentMask[entity.ID]
 
 	return e.Entities.Set(entity.ID, entity)
+}
+
+func (e *ECS) generateComponentID() ComponentID {
+	id := e.nextComponentID
+	e.nextComponentID++
+	return id
+}
+
+func (e *ECS) generateEntityID() EntityID {
+	id := e.nextEntityID
+	e.nextEntityID++
+	return id
 }

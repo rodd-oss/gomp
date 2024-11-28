@@ -121,6 +121,7 @@ func (c *Collection[T]) Get(id int) *T {
 func (c *Collection[T]) Set(id int, val T) *T {
 	if id >= c.Len() {
 		idx := c.Len() - id
+		// TODO optimize so it would skip allocating intermediary buckets
 		for i := 0; i < idx; i++ {
 			var t T
 			c.Append(t)

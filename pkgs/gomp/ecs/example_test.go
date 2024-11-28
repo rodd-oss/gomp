@@ -7,33 +7,52 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"fmt"
-	"runtime"
 	"testing"
 )
 
-type Transform struct {
-	X, Y, Z float32
-}
+func BenchmarkSystems(b *testing.B) {
+	b.ReportAllocs()
+	count := 1_000_000
 
-type Rotation struct {
-	RX, RY, RZ int
-}
+	var world = New("Main")
 
-type Scale struct {
-	Value float32
-}
+	world.RegisterComponents(
+		&scaleComponent,
+		&transformComponent,
+	)
 
-var _ = CreateComponent[Rotation]()
-var transformComponent = CreateComponent[Transform]()
-var scaleComponent = CreateComponent[Scale]()
+	world.RegisterSystems().
+		Parallel(
+			new(TransformSystem),
+			new(ScaleSystem),
+		).
+		Sequential(
+			new(ScaleSystem),
+			new(TransformSystem),
+		)
+
+	tra := Transform{0, 1, 2}
+	sc := Scale{1}
+
+	var player *Entity
+	for i := 0; i < count; i++ {
+		player = world.CreateEntity("Player")
+		if i%2 == 0 {
+			transformComponent.Set(player, tra)
+		}
+		if i%10 == 0 {
+			scaleComponent.Set(player, sc)
+		}
+	}
+
+	b.ResetTimer()
+	for range b.N {
+		world.RunSystems()
+	}
+}
 
 func BenchmarkEntityUpdate(b *testing.B) {
 	b.ReportAllocs()
-	var m1, m2 runtime.MemStats
-	runtime.GC()
-	runtime.ReadMemStats(&m1)
-
 	count := 10_000_000
 
 	var world = New("Main")
@@ -42,6 +61,16 @@ func BenchmarkEntityUpdate(b *testing.B) {
 		&scaleComponent,
 		&transformComponent,
 	)
+
+	world.RegisterSystems().
+		Parallel(
+			new(TransformSystem),
+			new(ScaleSystem),
+		).
+		Parallel(
+			new(ScaleSystem),
+			new(TransformSystem),
+		)
 
 	tra := Transform{0, 1, 2}
 	sc := Scale{1}
@@ -76,10 +105,6 @@ func BenchmarkEntityUpdate(b *testing.B) {
 			tr.Z += 2
 		})
 	}
-
-	runtime.ReadMemStats(&m2)
-	fmt.Println("total:", m2.TotalAlloc-m1.TotalAlloc)
-	fmt.Println("mallocs:", m2.Mallocs-m1.Mallocs)
 }
 
 func BenchmarkCreateWorld(b *testing.B) {
