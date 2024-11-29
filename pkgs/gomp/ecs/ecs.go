@@ -26,6 +26,7 @@ type ECS struct {
 	nextEntityID    EntityID
 	nextComponentID ComponentID
 	wg              *sync.WaitGroup
+	mx              *sync.Mutex
 }
 
 type AnyComponentPtr interface {
@@ -66,6 +67,7 @@ func New(title string, preallocated ...int32) ECS {
 		nextEntityID:    0,
 		nextComponentID: 0,
 		wg:              new(sync.WaitGroup),
+		mx:              new(sync.Mutex),
 	}
 
 	// for i := 0; i < ALLOC_CHUNK; i++ {
@@ -105,10 +107,13 @@ func (e *ECS) RunSystems() {
 }
 
 func (e *ECS) CreateEntity(title string) *Entity {
+	e.mx.Lock()
+	defer e.mx.Unlock()
+
 	var entity = Entity{
-		ID:    e.generateEntityID(),
-		Title: title,
-		ecs:   e,
+		ID: e.generateEntityID(),
+		// Title: title,
+		ecs: e,
 	}
 
 	// if len(e.EntityComponentMask) <= int(entity.ID) {

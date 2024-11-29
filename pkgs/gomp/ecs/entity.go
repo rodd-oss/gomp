@@ -7,8 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type Entity struct {
-	ID             EntityID
-	Title          string
-	ComponentsMask BitArray
-	ecs            *ECS
+	ID EntityID
+	// Title          string
+	// ComponentsMask BitArray
+	ecs *ECS
 }

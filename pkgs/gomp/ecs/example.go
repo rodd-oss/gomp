@@ -14,20 +14,18 @@ type Rotation struct {
 	RX, RY, RZ int
 }
 
-type Scale struct {
-	Value float32
-}
+type BulletSpawn struct{}
 
 var _ = CreateComponent[Rotation]()
 var transformComponent = CreateComponent[Transform]()
-var scaleComponent = CreateComponent[Scale]()
+var bulletSpawnerComponent = CreateComponent[BulletSpawn]()
 
 type TransformSystem struct {
 	n int
 }
 
-func (s *TransformSystem) Init()    {}
-func (s *TransformSystem) Destroy() {}
+func (s *TransformSystem) Init(world *ECS)    {}
+func (s *TransformSystem) Destroy(world *ECS) {}
 func (s *TransformSystem) Run(world *ECS) {
 	s.n++
 	transformComponent.Each(world, func(entity *Entity, data *Transform) {
@@ -37,20 +35,42 @@ func (s *TransformSystem) Run(world *ECS) {
 	})
 }
 
-type ScaleSystem struct {
+type BulletSpawnSystem struct {
 	n int
 }
 
-func (s *ScaleSystem) Init()    {}
-func (s *ScaleSystem) Destroy() {}
-func (s *ScaleSystem) Run(world *ECS) {
+func (s *BulletSpawnSystem) Init(world *ECS)    {}
+func (s *BulletSpawnSystem) Destroy(world *ECS) {}
+func (s *BulletSpawnSystem) Run(world *ECS) {
 	s.n++
-	scaleComponent.Each(world, func(entity *Entity, data *Scale) {
+	bulletSpawnerComponent.Each(world, func(entity *Entity, data *BulletSpawn) {
 		tr := transformComponent.Get(entity)
 		if tr == nil {
 			return
 		}
 
-		data.Value += 0.1
+		bullet := world.CreateEntity("bullet")
+		transformComponent.Set(bullet, *tr)
 	})
 }
+
+type PlayerSpawnSystem struct{}
+
+func (s *PlayerSpawnSystem) Init(world *ECS) {
+	count := 50000
+	tra := Transform{0, 1, 2}
+	bs := BulletSpawn{}
+
+	var player *Entity
+	for i := 0; i < count; i++ {
+		player = world.CreateEntity("Player")
+		if i%2 == 0 {
+			transformComponent.Set(player, tra)
+		}
+		bulletSpawnerComponent.Set(player, bs)
+		if i%10 == 0 {
+		}
+	}
+}
+func (s *PlayerSpawnSystem) Destroy(world *ECS) {}
+func (s *PlayerSpawnSystem) Run(world *ECS)     {}

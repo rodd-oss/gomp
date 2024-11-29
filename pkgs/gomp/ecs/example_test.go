@@ -12,43 +12,30 @@ import (
 
 func BenchmarkSystems(b *testing.B) {
 	b.ReportAllocs()
-	count := 1_000_000
 
 	var world = New("Main")
 
 	world.RegisterComponents(
-		&scaleComponent,
+		&bulletSpawnerComponent,
 		&transformComponent,
 	)
 
 	world.RegisterSystems().
 		Parallel(
-			new(TransformSystem),
-			new(ScaleSystem),
+			new(PlayerSpawnSystem),
+			new(BulletSpawnSystem),
 		).
-		Sequential(
-			new(ScaleSystem),
+		Parallel(
 			new(TransformSystem),
 		)
 
-	tra := Transform{0, 1, 2}
-	sc := Scale{1}
-
-	var player *Entity
-	for i := 0; i < count; i++ {
-		player = world.CreateEntity("Player")
-		if i%2 == 0 {
-			transformComponent.Set(player, tra)
-		}
-		if i%10 == 0 {
-			scaleComponent.Set(player, sc)
-		}
-	}
-
 	b.ResetTimer()
+
 	for range b.N {
 		world.RunSystems()
 	}
+
+	// b.ReportMetric(float64((world.Entities.dense.Len())), "entcount")
 }
 
 func BenchmarkEntityUpdate(b *testing.B) {
@@ -58,22 +45,22 @@ func BenchmarkEntityUpdate(b *testing.B) {
 	var world = New("Main")
 
 	world.RegisterComponents(
-		&scaleComponent,
+		&bulletSpawnerComponent,
 		&transformComponent,
 	)
 
 	world.RegisterSystems().
 		Parallel(
 			new(TransformSystem),
-			new(ScaleSystem),
+			new(BulletSpawnSystem),
 		).
-		Parallel(
-			new(ScaleSystem),
+		Sequential(
+			new(BulletSpawnSystem),
 			new(TransformSystem),
 		)
 
 	tra := Transform{0, 1, 2}
-	sc := Scale{1}
+	sc := BulletSpawn{}
 
 	var player *Entity
 	for i := 0; i < count; i++ {
@@ -82,7 +69,7 @@ func BenchmarkEntityUpdate(b *testing.B) {
 			transformComponent.Set(player, tra)
 		}
 		if i%10 == 0 {
-			scaleComponent.Set(player, sc)
+			bulletSpawnerComponent.Set(player, sc)
 		}
 	}
 
@@ -94,7 +81,7 @@ func BenchmarkEntityUpdate(b *testing.B) {
 		// 	data.Z += 2
 		// })
 
-		scaleComponent.Each(&world, func(entity *Entity, data *Scale) {
+		bulletSpawnerComponent.Each(&world, func(entity *Entity, data *BulletSpawn) {
 			tr := transformComponent.Get(entity)
 			if tr == nil {
 				return
@@ -134,7 +121,7 @@ func BenchmarkCreateWorld(b *testing.B) {
 func BenchmarkEntityCreate(b *testing.B) {
 	var world = New("Main")
 	world.RegisterComponents(
-		&scaleComponent,
+		&bulletSpawnerComponent,
 		&transformComponent,
 	)
 
@@ -151,7 +138,7 @@ func BenchmarkEntityCreate(b *testing.B) {
 func TestEntityUpdate(t *testing.T) {
 	var world = New("Main")
 	world.RegisterComponents(
-		&scaleComponent,
+		&bulletSpawnerComponent,
 		&transformComponent,
 	)
 

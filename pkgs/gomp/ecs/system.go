@@ -7,9 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type System interface {
-	Init()
+	Init(*ECS)
 	Run(*ECS)
-	Destroy()
+	Destroy(*ECS)
 }
 
 type SystemBuilder struct {
@@ -18,9 +18,9 @@ type SystemBuilder struct {
 
 func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
 	for i := 0; i < len(systems); i++ {
-		system := systems[i]
+		systems[i].Init(b.ecs)
 		parallelSystems := make([]System, 0)
-		parallelSystems = append(parallelSystems, system)
+		parallelSystems = append(parallelSystems, systems[i])
 		b.ecs.Systems = append(b.ecs.Systems, parallelSystems)
 	}
 	return b
@@ -28,6 +28,9 @@ func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
 
 func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
 	b.ecs.Systems = append(b.ecs.Systems, systems)
+	for i := 0; i < len(systems); i++ {
+		systems[i].Init(b.ecs)
+	}
 	return b
 }
 
