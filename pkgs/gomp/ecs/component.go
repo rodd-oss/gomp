@@ -11,14 +11,17 @@ import (
 	"sync"
 )
 
+type AnyComponentPtr interface {
+	register(*ECS)
+	Remove(*Entity)
+}
+
 type Component[T any] struct {
 	IDs       map[*ECS]ComponentID
 	Instances map[*ECS]*SparseSet[ComponentInstance[T], EntityID]
 
-	wg            *sync.WaitGroup
-	parallelCount int
-	dataChunkLen  int
-	mx            *sync.Mutex
+	wg *sync.WaitGroup
+	mx *sync.Mutex
 }
 
 type ComponentInstance[T any] struct {
@@ -36,6 +39,25 @@ func CreateComponent[T any]() Component[T] {
 	return component
 }
 
+func (c *Component[T]) Get(entity *Entity) *T {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	if entity == nil {
+		panic("Entity is nil")
+	}
+
+	if _, ok := c.Instances[entity.ecs]; !ok {
+		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
+	}
+
+	if c.Instances[entity.ecs].Get(entity.ID) == nil {
+		return nil
+	}
+
+	return &c.Instances[entity.ecs].Get(entity.ID).Data
+}
+
 func (c *Component[T]) Set(entity *Entity, data T) *T {
 	c.mx.Lock()
 	defer c.mx.Unlock()
@@ -51,7 +73,7 @@ func (c *Component[T]) Set(entity *Entity, data T) *T {
 	return &c.Instances[entity.ecs].Set(entity.ID, instance).Data
 }
 
-func (c *Component[T]) Get(entity *Entity) *T {
+func (c *Component[T]) Remove(entity *Entity) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -59,54 +81,25 @@ func (c *Component[T]) Get(entity *Entity) *T {
 		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
 	}
 
-	if c.Instances[entity.ecs].Get(entity.ID) == nil {
-		return nil
-	}
-
-	return &c.Instances[entity.ecs].Get(entity.ID).Data
+	c.Instances[entity.ecs].Delete(entity.ID)
+	// entity.ComponentsMask.Unset(uint64(c.IDs[entity.ecs]))
 }
 
 // To use more threads we need to prespawn goroutines for each component
 // var threads = runtime.NumCPU() * 2
-const threads = 2
 
+// TODO EachParallel()
 func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, *T)) {
-	c.parallelCount = threads
-
-	arr := c.Instances[ecs].dense
-	for _, b := range arr.buckets {
-		for {
-			c.dataChunkLen = len(b.data) / c.parallelCount
-			if c.dataChunkLen != 0 {
-				break
-			}
-
-			c.parallelCount = c.parallelCount / 2
-			if c.parallelCount == 0 {
-				panic("Can't split data into chunks")
-			}
-		}
-
-		if c.parallelCount == 1 {
-			for j := 0; j < len(b.data); j++ {
-				callback(b.data[j].Entity, &b.data[j].Data)
-			}
-			continue
-		}
-
-		c.wg.Add(c.parallelCount)
-		for i := 0; i < c.parallelCount; i++ {
-			go c.parallelCallback(callback, b.data, i)
-		}
-		c.wg.Wait()
+	arr := c.Instances[ecs].dense.buckets
+	for _, b := range arr {
+		c.parallelCallback(callback, b.data)
 	}
 }
 
-func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []ComponentInstance[T], i int) {
-	for j := i * c.dataChunkLen; j < (i+1)*c.dataChunkLen; j++ {
-		callback(data[j].Entity, &data[j].Data)
+func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []DenseElement[ComponentInstance[T]]) {
+	for j := 0; j < len(data); j++ {
+		callback(data[j].value.Entity, &data[j].value.Data)
 	}
-	c.wg.Done()
 }
 
 func (c *Component[T]) register(ecs *ECS) {

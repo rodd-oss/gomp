@@ -21,13 +21,13 @@ func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
 		systems[i].Init(b.ecs)
 		parallelSystems := make([]System, 0)
 		parallelSystems = append(parallelSystems, systems[i])
-		b.ecs.Systems = append(b.ecs.Systems, parallelSystems)
+		b.ecs.systems = append(b.ecs.systems, parallelSystems)
 	}
 	return b
 }
 
 func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
-	b.ecs.Systems = append(b.ecs.Systems, systems)
+	b.ecs.systems = append(b.ecs.systems, systems)
 	for i := 0; i < len(systems); i++ {
 		systems[i].Init(b.ecs)
 	}

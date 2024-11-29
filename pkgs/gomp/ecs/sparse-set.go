@@ -6,10 +6,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
+const NULL_INDEX = -1
+
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](buckets uint32, bucketSize uint32) SparseSet[TData, TKey] {
-	set := SparseSet[TData, TKey]{
-		deleted: make(map[TKey]int),
-	}
+	set := SparseSet[TData, TKey]{}
 	set.sparse.initialBucketsCount = buckets
 	set.dense.initialBucketsCount = buckets
 	set.sparse.initialBucketSize = bucketSize
@@ -18,26 +18,35 @@ func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](buckets 
 	return set
 }
 
+type DenseElement[TData any] struct {
+	index int
+	value TData
+}
+
 type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
-	sparse  Collection[int]
-	dense   Collection[TData]
-	deleted map[TKey]int
+	sparse Collection[int]
+	dense  Collection[DenseElement[TData]]
 }
 
 func (s *SparseSet[TData, TKey]) Set(id TKey, data TData) *TData {
-	if pos, ok := s.deleted[id]; ok {
-		delete(s.deleted, id)
-		return s.dense.Set(pos, data)
+	if !s.isDeleted(id) {
+		pos := s.sparse.Get(int(id))
+		if pos != nil {
+			element := DenseElement[TData]{
+				index: *pos,
+				value: data,
+			}
+			return &s.dense.Set(*pos, element).value
+		}
 	}
 
-	pos := s.sparse.Get(int(id))
-	if pos != nil {
-		return s.dense.Set(*pos, data)
-	}
-	idx, r := s.dense.Append(data)
+	idx, r := s.dense.Append(DenseElement[TData]{})
+	r.index = idx
+	r.value = data
+
 	s.sparse.Set(int(id), idx)
-	return r
+	return &r.value
 }
 
 func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {
@@ -49,21 +58,36 @@ func (s *SparseSet[TData, TKey]) Get(id TKey) *TData {
 	if idx == nil {
 		return nil
 	}
-	return s.dense.Get(*idx)
+	return &s.dense.Get(*idx).value
 }
 
 func (s *SparseSet[TData, TKey]) Delete(id TKey) {
 	// TODO optimize me
-	idx := s.sparse.Get(int(id))
-	if idx == nil {
+	idx_ptr := s.sparse.Get(int(id))
+	if idx_ptr == nil {
 		return
 	}
-	s.deleted[id] = *idx
+
+	idx := *idx_ptr
+	if idx == NULL_INDEX {
+		return
+	}
+
+	var lastData = *s.dense.Get(s.dense.Len() - 1)
+
+	s.dense.Set(idx, lastData)
+	s.sparse.Set(int(id), NULL_INDEX)
+	s.sparse.Set(int(lastData.index), idx)
+	s.dense.Pop()
 }
 
 func (s *SparseSet[TData, TKey]) isDeleted(id TKey) bool {
-	_, deleted := s.deleted[id]
-	return deleted
+	idx := s.sparse.Get(int(id))
+	if idx == nil || *idx == NULL_INDEX {
+		return true
+	}
+
+	return false
 }
 
 type Collection[T any] struct {
@@ -138,6 +162,21 @@ func (c *Collection[T]) Set(id int, val T) *T {
 		return &b.data[id]
 	}
 	panic("out of bounds")
+}
+
+func (c *Collection[T]) Pop() T {
+	var value T
+	id := len(c.last.data) - 1
+	if id < 0 {
+		id = len(c.last.data) - 1
+	}
+	value, c.last.data = c.last.data[id], c.last.data[:id]
+	if len(c.last.data) == 0 {
+		c.buckets = c.buckets[:len(c.buckets)-1]
+		c.last = &c.buckets[len(c.buckets)-1]
+	}
+	c.count--
+	return value
 }
 
 func (b *Bucket[T]) Cap() int {

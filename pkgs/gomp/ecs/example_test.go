@@ -10,14 +10,14 @@ import (
 	"testing"
 )
 
-func BenchmarkSystems(b *testing.B) {
-	b.ReportAllocs()
+func TestSystems(b *testing.T) {
 
 	var world = New("Main")
 
 	world.RegisterComponents(
 		&bulletSpawnerComponent,
 		&transformComponent,
+		&bulletComponent,
 	)
 
 	world.RegisterSystems().
@@ -25,17 +25,15 @@ func BenchmarkSystems(b *testing.B) {
 			new(PlayerSpawnSystem),
 			new(BulletSpawnSystem),
 		).
-		Parallel(
+		Sequential(
+			new(BulletSystem),
 			new(TransformSystem),
 		)
 
-	b.ResetTimer()
-
-	for range b.N {
+	for range 100 {
 		world.RunSystems()
 	}
 
-	// b.ReportMetric(float64((world.Entities.dense.Len())), "entcount")
 }
 
 func BenchmarkEntityUpdate(b *testing.B) {

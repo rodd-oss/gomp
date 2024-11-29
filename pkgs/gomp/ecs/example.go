@@ -16,9 +16,14 @@ type Rotation struct {
 
 type BulletSpawn struct{}
 
+type Bullet struct {
+	HP int
+}
+
 var _ = CreateComponent[Rotation]()
 var transformComponent = CreateComponent[Transform]()
 var bulletSpawnerComponent = CreateComponent[BulletSpawn]()
+var bulletComponent = CreateComponent[Bullet]()
 
 type TransformSystem struct {
 	n int
@@ -51,6 +56,21 @@ func (s *BulletSpawnSystem) Run(world *ECS) {
 
 		bullet := world.CreateEntity("bullet")
 		transformComponent.Set(bullet, *tr)
+		bulletComponent.Set(bullet, Bullet{5})
+	})
+}
+
+type BulletSystem struct {
+}
+
+func (s *BulletSystem) Init(world *ECS)    {}
+func (s *BulletSystem) Destroy(world *ECS) {}
+func (s *BulletSystem) Run(world *ECS) {
+	bulletComponent.Each(world, func(entity *Entity, data *Bullet) {
+		data.HP -= 1
+		if data.HP <= 0 {
+			world.DestroyEntity(entity)
+		}
 	})
 }
 

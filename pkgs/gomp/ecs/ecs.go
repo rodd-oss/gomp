@@ -21,16 +21,14 @@ type ECS struct {
 	Title               string
 	Entities            SparseSet[Entity, EntityID]
 	EntityComponentMask []BitArray
-	Systems             [][]System
+	systems             [][]System
+	components          []AnyComponentPtr
 
+	tick            int
 	nextEntityID    EntityID
 	nextComponentID ComponentID
 	wg              *sync.WaitGroup
 	mx              *sync.Mutex
-}
-
-type AnyComponentPtr interface {
-	register(ecs *ECS)
 }
 
 var nextId ECSID = 0
@@ -66,6 +64,7 @@ func New(title string, preallocated ...int32) ECS {
 
 		nextEntityID:    0,
 		nextComponentID: 0,
+		tick:            0,
 		wg:              new(sync.WaitGroup),
 		mx:              new(sync.Mutex),
 	}
@@ -79,6 +78,7 @@ func New(title string, preallocated ...int32) ECS {
 
 func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
 	for i := 0; i < len(component_ptr); i++ {
+		e.components = append(e.components, component_ptr[i])
 		component_ptr[i].register(e)
 	}
 }
@@ -90,20 +90,32 @@ func (e *ECS) RegisterSystems() *SystemBuilder {
 }
 
 func (e *ECS) RunSystems() {
-	for i := range e.Systems {
+	for i := range e.systems {
 		// If systems are sequantial, we dont spawn goroutines
-		if len(e.Systems[i]) == 1 {
-			e.Systems[i][0].Run(e)
+		if len(e.systems[i]) == 1 {
+			e.systems[i][0].Run(e)
 			continue
 		}
 
-		e.wg.Add(len(e.Systems[i]))
-		for j := range e.Systems[i] {
+		e.wg.Add(len(e.systems[i]))
+		for j := range e.systems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.Systems[i][j], e)
+			go runSystemAsync(e.systems[i][j], e)
 		}
 		e.wg.Wait()
 	}
+
+	ents := e.Entities.dense.buckets
+	for i := range ents {
+		for j := 0; j < len(ents); j++ {
+			if ents[i].data[j].value.isDeleted {
+				e.Entities.Delete(ents[i].data[j].value.ID)
+			}
+		}
+
+	}
+
+	e.tick++
 }
 
 func (e *ECS) CreateEntity(title string) *Entity {
@@ -113,7 +125,8 @@ func (e *ECS) CreateEntity(title string) *Entity {
 	var entity = Entity{
 		ID: e.generateEntityID(),
 		// Title: title,
-		ecs: e,
+		ecs:       e,
+		isDeleted: false,
 	}
 
 	// if len(e.EntityComponentMask) <= int(entity.ID) {
@@ -125,6 +138,11 @@ func (e *ECS) CreateEntity(title string) *Entity {
 	// entity.ComponentsMask = e.EntityComponentMask[entity.ID]
 
 	return e.Entities.Set(entity.ID, entity)
+}
+
+func (e *ECS) DestroyEntity(entity *Entity) {
+	entity.isDeleted = true
+	// e.entitiesToDestroy = append(e.entitiesToDestroy, entity)
 }
 
 func (e *ECS) generateComponentID() ComponentID {
