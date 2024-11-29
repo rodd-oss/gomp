@@ -64,11 +64,10 @@ func (s *PlayerSpawnSystem) Init(world *ECS) {
 	var player *Entity
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
+		transformComponent.Set(player, tra)
+
 		if i%2 == 0 {
-			transformComponent.Set(player, tra)
-		}
-		bulletSpawnerComponent.Set(player, bs)
-		if i%10 == 0 {
+			bulletSpawnerComponent.Set(player, bs)
 		}
 	}
 }
