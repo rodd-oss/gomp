@@ -33,10 +33,12 @@ func (s *TransformSystem) Init(world *ECS)    {}
 func (s *TransformSystem) Destroy(world *ECS) {}
 func (s *TransformSystem) Run(world *ECS) {
 	s.n++
-	transformComponent.Each(world, func(entity *Entity, data *Transform) {
+	transformComponent.Each(world, func(entity *Entity, data Transform) {
 		data.X += 1
 		data.Y -= 1
 		data.Z += 2
+
+		transformComponent.Set(entity, data)
 	})
 }
 
@@ -48,15 +50,16 @@ func (s *BulletSpawnSystem) Init(world *ECS)    {}
 func (s *BulletSpawnSystem) Destroy(world *ECS) {}
 func (s *BulletSpawnSystem) Run(world *ECS) {
 	s.n++
-	bulletSpawnerComponent.Each(world, func(entity *Entity, data *BulletSpawn) {
-		tr := transformComponent.Get(entity)
-		if tr == nil {
+	bulletSpawnerComponent.Each(world, func(entity *Entity, data BulletSpawn) {
+		tr, ok := transformComponent.Get(entity)
+		if !ok {
 			return
 		}
 
 		bullet := world.CreateEntity("bullet")
-		transformComponent.Set(bullet, *tr)
-		bulletComponent.Set(bullet, Bullet{5})
+		transformComponent.Set(bullet, tr)
+		bulletData := Bullet{5}
+		bulletComponent.Set(bullet, bulletData)
 	})
 }
 
@@ -66,11 +69,12 @@ type BulletSystem struct {
 func (s *BulletSystem) Init(world *ECS)    {}
 func (s *BulletSystem) Destroy(world *ECS) {}
 func (s *BulletSystem) Run(world *ECS) {
-	bulletComponent.Each(world, func(entity *Entity, data *Bullet) {
+	bulletComponent.Each(world, func(entity *Entity, data Bullet) {
 		data.HP -= 1
 		if data.HP <= 0 {
-			world.DestroyEntity(entity)
+			world.SoftDestroyEntity(entity)
 		}
+		bulletComponent.Set(entity, data)
 	})
 }
 

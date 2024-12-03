@@ -7,7 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type Entity struct {
-	ecs       *ECS
+	ecsID     ECSID
 	ID        EntityID
 	isDeleted bool
 	// Title          string

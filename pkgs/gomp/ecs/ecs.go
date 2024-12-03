@@ -105,14 +105,9 @@ func (e *ECS) RunSystems() {
 		e.wg.Wait()
 	}
 
-	ents := e.Entities.dense.buckets
-	for i := range ents {
-		for j := 0; j < len(ents); j++ {
-			if ents[i].data[j].value.isDeleted {
-				e.Entities.Delete(ents[i].data[j].value.ID)
-			}
-		}
-
+	e.Entities.Clean()
+	for i := range e.components {
+		e.components[i].Clean(e)
 	}
 
 	e.tick++
@@ -125,7 +120,7 @@ func (e *ECS) CreateEntity(title string) *Entity {
 	var entity = Entity{
 		ID: e.generateEntityID(),
 		// Title: title,
-		ecs:       e,
+		ecsID:     e.ID,
 		isDeleted: false,
 	}
 
@@ -140,9 +135,12 @@ func (e *ECS) CreateEntity(title string) *Entity {
 	return e.Entities.Set(entity.ID, entity)
 }
 
-func (e *ECS) DestroyEntity(entity *Entity) {
-	entity.isDeleted = true
-	// e.entitiesToDestroy = append(e.entitiesToDestroy, entity)
+func (e *ECS) SoftDestroyEntity(entity *Entity) {
+	e.Entities.SoftDelete(entity.ID)
+
+	for i := range e.components {
+		e.components[i].SoftRemove(entity)
+	}
 }
 
 func (e *ECS) generateComponentID() ComponentID {

@@ -7,21 +7,22 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"fmt"
 	"sync"
 )
 
 type AnyComponentPtr interface {
 	register(*ECS)
-	Remove(*Entity)
+	SoftRemove(*Entity)
+	Clean(*ECS)
 }
 
 type Component[T any] struct {
-	IDs       map[*ECS]ComponentID
-	Instances map[*ECS]*SparseSet[ComponentInstance[T], EntityID]
+	IDs       []ComponentID
+	Instances []*SparseSet[ComponentInstance[T], EntityID]
 
-	wg *sync.WaitGroup
-	mx *sync.Mutex
+	eachBucketArr []Bucket[DenseElement[ComponentInstance[T]]]
+	wg            *sync.WaitGroup
+	mx            *sync.Mutex
 }
 
 type ComponentInstance[T any] struct {
@@ -31,68 +32,82 @@ type ComponentInstance[T any] struct {
 
 func CreateComponent[T any]() Component[T] {
 	component := Component[T]{}
-	component.IDs = make(map[*ECS]ComponentID, 1)
-	component.Instances = make(map[*ECS]*SparseSet[ComponentInstance[T], EntityID], 1)
+	component.IDs = make([]ComponentID, 0, 5)
+	component.Instances = make([]*SparseSet[ComponentInstance[T], EntityID], 0, 5)
 	component.wg = new(sync.WaitGroup)
 	component.mx = new(sync.Mutex)
 
 	return component
 }
 
-func (c *Component[T]) Get(entity *Entity) *T {
-	c.mx.Lock()
-	defer c.mx.Unlock()
+func (c *Component[T]) Get(entity *Entity) (T, bool) {
+	// if value, ok := c.Instances[entity.ecs.ID]; ok {
+	value := c.Instances[entity.ecsID]
 
-	if entity == nil {
-		panic("Entity is nil")
-	}
+	instance, ok := value.Get(entity.ID)
 
-	if _, ok := c.Instances[entity.ecs]; !ok {
-		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
-	}
+	return instance.Data, ok
+	// }
 
-	if c.Instances[entity.ecs].Get(entity.ID) == nil {
-		return nil
-	}
-
-	return &c.Instances[entity.ecs].Get(entity.ID).Data
+	// panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
 }
 
 func (c *Component[T]) Set(entity *Entity, data T) *T {
-	c.mx.Lock()
-	defer c.mx.Unlock()
-
-	if _, ok := c.Instances[entity.ecs]; !ok {
-		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
+	// if value, ok := c.Instances[entity.ecs.id]; ok {
+	value := c.Instances[entity.ecsID]
+	var instance = ComponentInstance[T]{
+		Entity: entity,
+		Data:   data,
 	}
-
 	// entity.ComponentsMask.Set(uint64(c.IDs[entity.ecs]))
-	var instance ComponentInstance[T]
-	instance.Entity = entity
-	instance.Data = data
-	return &c.Instances[entity.ecs].Set(entity.ID, instance).Data
+	var newinstance = value.Set(entity.ID, instance)
+
+	return &newinstance.Data
+	// }
+
+	// panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
 }
 
-func (c *Component[T]) Remove(entity *Entity) {
-	c.mx.Lock()
-	defer c.mx.Unlock()
+func (c *Component[T]) SoftRemove(entity *Entity) {
+	// if _, ok := c.Instances[entity.ecs.ID]; !ok {
+	// 	panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
+	// }
 
-	if _, ok := c.Instances[entity.ecs]; !ok {
-		panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
-	}
-
-	c.Instances[entity.ecs].Delete(entity.ID)
+	c.Instances[entity.ecsID].SoftDelete(entity.ID)
 	// entity.ComponentsMask.Unset(uint64(c.IDs[entity.ecs]))
+}
+
+func (c *Component[T]) Clean(ecs *ECS) {
+	c.Instances[ecs.ID].Clean()
 }
 
 // To use more threads we need to prespawn goroutines for each component
 // var threads = runtime.NumCPU() * 2
 
 // TODO EachParallel()
-func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, *T)) {
-	arr := c.Instances[ecs].dense.buckets
+func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, T)) {
+	c.eachBucketArr = c.Instances[ecs.ID].dense.buckets
+	var instance ComponentInstance[T]
+	for i := range c.eachBucketArr {
+		for j := 0; j < len(c.eachBucketArr[i].data); j++ {
+			instance = c.eachBucketArr[i].data[j].value
+			callback(instance.Entity, instance.Data)
+		}
+	}
+
+	for _, s := range c.Instances {
+		s.Clean()
+	}
+}
+
+func (c *Component[T]) EachParallel(ecs *ECS, callback func(*Entity, *T)) {
+	arr := c.Instances[ecs.ID].dense.buckets
 	for _, b := range arr {
 		c.parallelCallback(callback, b.data)
+	}
+
+	for _, s := range c.Instances {
+		s.Clean()
 	}
 }
 
@@ -103,7 +118,10 @@ func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []Dense
 }
 
 func (c *Component[T]) register(ecs *ECS) {
-	c.IDs[ecs] = ecs.generateComponentID()
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	c.IDs = append(c.IDs, ecs.generateComponentID())
 	set := NewSparseSet[ComponentInstance[T], EntityID](PREALLOC_BUCKETS, PREALLOC_BUCKETS_SIZE)
-	c.Instances[ecs] = &set
+	c.Instances = append(c.Instances, &set)
 }

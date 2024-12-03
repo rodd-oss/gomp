@@ -10,8 +10,7 @@ import (
 	"testing"
 )
 
-func TestSystems(b *testing.T) {
-
+func BenchmarkSystems(b *testing.B) {
 	var world = New("Main")
 
 	world.RegisterComponents(
@@ -30,15 +29,14 @@ func TestSystems(b *testing.T) {
 			new(TransformSystem),
 		)
 
-	for range 100 {
+	for range b.N {
 		world.RunSystems()
 	}
-
 }
 
 func BenchmarkEntityUpdate(b *testing.B) {
 	b.ReportAllocs()
-	count := 10_000_000
+	count := 1_000_000
 
 	var world = New("Main")
 
@@ -73,28 +71,18 @@ func BenchmarkEntityUpdate(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		// transformComponent.Each(&world, func(entity *Entity, data *Transform) {
-		// 	data.X += 1
-		// 	data.Y -= 1
-		// 	data.Z += 2
-		// })
-
-		bulletSpawnerComponent.Each(&world, func(entity *Entity, data *BulletSpawn) {
-			tr := transformComponent.Get(entity)
-			if tr == nil {
-				return
-			}
-
-			tr.X += 1
-			tr.Y -= 1
-			tr.Z += 2
+		transformComponent.Each(&world, func(entity *Entity, data Transform) {
+			data.X += 1
+			data.Y -= 1
+			data.Z += 2
+			transformComponent.Set(entity, data)
 		})
 	}
 }
 
 func BenchmarkCreateWorld(b *testing.B) {
 	b.ReportAllocs()
-	count := 10_000_000
+	count := 1_000_000
 
 	b.ResetTimer()
 	for range b.N {
@@ -150,10 +138,22 @@ func TestEntityUpdate(t *testing.T) {
 	// check
 	for i, id := range cases {
 		tra := Transform{float32(i), float32(-i), 2}
-		e := world.Entities.Get(id)
-		entity := transformComponent.Get(e)
-		if *entity != tra {
-			t.Errorf("want: %v, got: %v", tra, entity)
+
+		if id == 1000000 {
+			t.Log("test", id)
+		}
+		e, ok := world.Entities.Get(id)
+		if !ok {
+			t.Fatalf("not found entity with id: %v", id)
+		}
+
+		entity, ok := transformComponent.Get(&e)
+		if !ok {
+			t.Fatalf("not found component %v", id)
+		}
+
+		if entity != tra {
+			t.Fatalf("want: %v, got: %v", tra, entity)
 		}
 	}
 }
