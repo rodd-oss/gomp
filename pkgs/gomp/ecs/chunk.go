@@ -9,10 +9,10 @@ package ecs
 import "iter"
 
 type ChunkArray[T any] struct {
-	buffer               []Chunk[T]
-	first                *Chunk[T]
-	current              *Chunk[T]
-	last                 *Chunk[T]
+	buffer               []ChunkArrayElement[T]
+	first                *ChunkArrayElement[T]
+	current              *ChunkArrayElement[T]
+	last                 *ChunkArrayElement[T]
 	size                 int
 	initialChunkCapacity int
 	bufferInitialCap     int
@@ -23,7 +23,7 @@ func NewChunkArray[T any](bufferCapacity int, chunkCapacity int) (arr *ChunkArra
 	arr = new(ChunkArray[T])
 	arr.bufferInitialCap = bufferCapacity
 	arr.initialChunkCapacity = chunkCapacity
-	arr.buffer = make([]Chunk[T], bufferCapacity)
+	arr.buffer = make([]ChunkArrayElement[T], bufferCapacity)
 	arr.bufferSizeIndex = 0
 
 	chunk := arr.makeChunk(chunkCapacity)
@@ -72,10 +72,10 @@ func (a *ChunkArray[T]) Swap(i, j int) {
 
 func (a *ChunkArray[T]) extendBuffer() {
 	a.bufferInitialCap += a.bufferInitialCap
-	a.buffer = append(a.buffer, make([]Chunk[T], a.bufferInitialCap)...)
+	a.buffer = append(a.buffer, make([]ChunkArrayElement[T], a.bufferInitialCap)...)
 }
 
-func (a *ChunkArray[T]) makeChunk(cap int) *Chunk[T] {
+func (a *ChunkArray[T]) makeChunk(cap int) *ChunkArrayElement[T] {
 	if a.bufferSizeIndex >= len(a.buffer) {
 		a.extendBuffer()
 	}
@@ -110,15 +110,15 @@ func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
 // ======
 // ======
 
-type Chunk[T any] struct {
-	next   *Chunk[T]
-	prev   *Chunk[T]
+type ChunkArrayElement[T any] struct {
+	next   *ChunkArrayElement[T]
+	prev   *ChunkArrayElement[T]
 	parent *ChunkArray[T]
 	size   int
 	data   []T
 }
 
-func (c *Chunk[T]) Get(index int) (data T, ok bool) {
+func (c *ChunkArrayElement[T]) Get(index int) (data T, ok bool) {
 	if index >= c.size {
 		if c.next == nil {
 			return data, false
@@ -131,7 +131,7 @@ func (c *Chunk[T]) Get(index int) (data T, ok bool) {
 	return data, true
 }
 
-func (c *Chunk[T]) Set(index int, value T) (ok bool) {
+func (c *ChunkArrayElement[T]) Set(index int, value T) (ok bool) {
 	if index >= c.size {
 		if c.next == nil {
 			return false
@@ -144,7 +144,7 @@ func (c *Chunk[T]) Set(index int, value T) (ok bool) {
 	return true
 }
 
-func (c *Chunk[T]) Append(value T) int {
+func (c *ChunkArrayElement[T]) Append(value T) int {
 	var index = c.size
 
 	if index < len(c.data) {
@@ -170,7 +170,7 @@ func (c *Chunk[T]) Append(value T) int {
 	return c.next.Append(value)
 }
 
-func (c *Chunk[T]) SoftReduce() {
+func (c *ChunkArrayElement[T]) SoftReduce() {
 	if c.size > 0 {
 		c.size--
 		return
@@ -184,7 +184,7 @@ func (c *Chunk[T]) SoftReduce() {
 	c.prev.SoftReduce()
 }
 
-func (c *Chunk[T]) Clean() {
+func (c *ChunkArrayElement[T]) Clean() {
 	c.data = c.data[:c.size]
 
 	if len(c.data) == 0 {
