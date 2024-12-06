@@ -6,12 +6,20 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-const NULL_INDEX = -1
+import "iter"
+
+type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
+	// TODO: refactor map to a slice with using of a deletedSparseElements slice
+	sparse     *ChunkMap[int]
+	denseData  *ChunkArray[TData]
+	denseIndex *ChunkArray[int]
+}
 
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](buckets uint32, bucketSize uint32) SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{}
-	set.sparse.init(int(buckets), int(bucketSize), NULL_INDEX)
-	set.dense.init(int(buckets), int(bucketSize), DenseElement[TData]{})
+	set.sparse = NewChunkMap[int](8, 1024)
+	set.denseData = NewChunkArray[TData](8, 32)
+	set.denseIndex = NewChunkArray[int](8, 32)
 
 	return set
 }
@@ -21,57 +29,60 @@ type DenseElement[TData any] struct {
 	value TData
 }
 
-type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
-	// TODO: refactor map to a slice with using of a deletedSparseElements slice
-	sparse Collection[int]
-	dense  Collection[DenseElement[TData]]
-}
-
 func (s *SparseSet[TData, TKey]) Set(id TKey, data TData) *TData {
-	var element = DenseElement[TData]{
-		index: int(id),
-		value: data,
+	pos, ok := s.sparse.Get(int(id))
+	if ok {
+		d, _ := s.denseData.Set(pos, data)
+		return d
 	}
 
-	pos := s.sparse.Get(int(id))
-	if pos != NULL_INDEX {
-		return &s.dense.Set(pos, element).value
-	}
-
-	idx, r := s.dense.Append(element)
+	idx, r := s.denseData.Append(data)
+	s.denseIndex.Append(int(id))
 	s.sparse.Set(int(id), idx)
 
-	return &r.value
+	return r
 }
 
 func (s *SparseSet[TData, TKey]) Get(id TKey) (data TData, ok bool) {
-	index := s.sparse.Get(int(id))
+	index, ok := s.sparse.Get(int(id))
 
-	if index == NULL_INDEX {
+	if !ok {
 		return data, false
 	}
 
-	return s.dense.Get(index).value, true
+	el, ok := s.denseData.Get(index)
+	if !ok {
+		return data, false
+	}
+
+	return el, true
+}
+
+func (s *SparseSet[TData, TKey]) Iter() iter.Seq2[int, *TData] {
+	return s.denseData.Iter()
 }
 
 func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
 	idx := int(id)
 
-	indexx := s.sparse.Get(idx)
-	if indexx == NULL_INDEX {
+	indexx, ok := s.sparse.Get(idx)
+	if !ok {
 		return
 	}
 
-	lastDenseId, lastDenseElement := s.dense.Last()
-	backEntityId := lastDenseElement.index
-	s.dense.Swap(indexx, lastDenseId)
+	lastDenseId, backEntityId, ok := s.denseIndex.Last()
+	if !ok {
+		return
+	}
+
+	s.denseData.Swap(indexx, lastDenseId)
 	s.sparse.Set(backEntityId, indexx)
 
-	s.sparse.Set(idx, NULL_INDEX)
+	s.sparse.Delete(idx)
 
-	s.dense.SoftReduce()
+	s.denseData.SoftReduce()
 }
 
 func (s *SparseSet[TData, TKey]) Clean() {
-	s.dense.Clean()
+	s.denseData.Clean()
 }

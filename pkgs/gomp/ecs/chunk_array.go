@@ -44,13 +44,15 @@ func (a *ChunkArray[T]) Get(index int) (T, bool) {
 	return a.first.Get(index)
 }
 
-func (a *ChunkArray[T]) Set(index int, value T) bool {
+func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
 	return a.first.Set(index, value)
 }
 
-func (a *ChunkArray[T]) Append(value T) int {
+func (a *ChunkArray[T]) Append(value T) (int, *T) {
+	var index, result = a.current.Append(value)
+	index = a.size
 	a.size++
-	return a.current.Append(value)
+	return index, result
 }
 
 func (a *ChunkArray[T]) SoftReduce() {
@@ -68,6 +70,16 @@ func (a *ChunkArray[T]) Swap(i, j int) {
 
 	a.Set(j, x)
 	a.Set(i, y)
+}
+
+func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
+	var last = a.last
+	index = last.size
+	if index <= 0 {
+		return -1, value, false
+	}
+
+	return index, last.data[index], true
 }
 
 func (a *ChunkArray[T]) extendBuffer() {
@@ -131,32 +143,33 @@ func (c *ChunkArrayElement[T]) Get(index int) (data T, ok bool) {
 	return data, true
 }
 
-func (c *ChunkArrayElement[T]) Set(index int, value T) (ok bool) {
+func (c *ChunkArrayElement[T]) Set(index int, value T) (result *T, ok bool) {
 	if index >= c.size {
 		if c.next == nil {
-			return false
+			return result, false
 		}
 
 		return c.next.Set(index-c.size, value)
 	}
 
 	c.data[index] = value
-	return true
+	result = &c.data[index]
+	return result, true
 }
 
-func (c *ChunkArrayElement[T]) Append(value T) int {
-	var index = c.size
+func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
+	index = c.size
 
 	if index < len(c.data) {
 		c.data[index] = value
 		c.size++
-		return index
+		return index, &c.data[index]
 	}
 
 	if index < cap(c.data) {
 		c.data = append(c.data, value)
 		c.size++
-		return index
+		return index, &c.data[index]
 	}
 
 	if c.next == nil {

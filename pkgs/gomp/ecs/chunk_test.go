@@ -17,7 +17,8 @@ import (
 
 const (
 	BUFFER_SIZE    = 8
-	CHUNK_CAPACITY = 32 * 32
+	BUFFER_SIZE1   = (221>>5 | 1)
+	CHUNK_CAPACITY = 1 << 14
 )
 
 func BenchmarkChunkDelete(b *testing.B) {

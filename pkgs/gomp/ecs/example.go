@@ -72,7 +72,7 @@ func (s *BulletSystem) Run(world *ECS) {
 	bulletComponent.Each(world, func(entity *Entity, data Bullet) {
 		data.HP -= 1
 		if data.HP <= 0 {
-			world.SoftDestroyEntity(entity)
+			// world.SoftDestroyEntity(entity)
 		}
 		bulletComponent.Set(entity, data)
 	})

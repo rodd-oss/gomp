@@ -29,6 +29,7 @@ func BenchmarkSystems(b *testing.B) {
 			new(TransformSystem),
 		)
 
+	b.ResetTimer()
 	for range b.N {
 		world.RunSystems()
 	}
@@ -121,7 +122,7 @@ func BenchmarkEntityCreate(b *testing.B) {
 	}
 }
 
-func TestEntityUpdate(t *testing.T) {
+func TesEntityUpdate(t *testing.T) {
 	var world = New("Main")
 	world.RegisterComponents(
 		&bulletSpawnerComponent,
@@ -145,6 +146,10 @@ func TestEntityUpdate(t *testing.T) {
 		e, ok := world.Entities.Get(id)
 		if !ok {
 			t.Fatalf("not found entity with id: %v", id)
+		}
+
+		if e.ID != id {
+			t.Fatalf("want: %v, got: %v", id, e.ID)
 		}
 
 		entity, ok := transformComponent.Get(&e)

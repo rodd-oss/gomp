@@ -18,11 +18,10 @@ type AnyComponentPtr interface {
 
 type Component[T any] struct {
 	IDs       []ComponentID
-	Instances []*SparseSet[ComponentInstance[T], EntityID]
+	Instances map[ECSID]*SparseSet[ComponentInstance[T], EntityID]
 
-	eachBucketArr []Bucket[DenseElement[ComponentInstance[T]]]
-	wg            *sync.WaitGroup
-	mx            *sync.Mutex
+	wg *sync.WaitGroup
+	mx *sync.Mutex
 }
 
 type ComponentInstance[T any] struct {
@@ -33,7 +32,7 @@ type ComponentInstance[T any] struct {
 func CreateComponent[T any]() Component[T] {
 	component := Component[T]{}
 	component.IDs = make([]ComponentID, 0, 5)
-	component.Instances = make([]*SparseSet[ComponentInstance[T], EntityID], 0, 5)
+	component.Instances = make(map[ECSID]*SparseSet[ComponentInstance[T], EntityID], 5)
 	component.wg = new(sync.WaitGroup)
 	component.mx = new(sync.Mutex)
 
@@ -86,13 +85,9 @@ func (c *Component[T]) Clean(ecs *ECS) {
 
 // TODO EachParallel()
 func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, T)) {
-	c.eachBucketArr = c.Instances[ecs.ID].dense.buckets
-	var instance ComponentInstance[T]
-	for i := range c.eachBucketArr {
-		for j := 0; j < len(c.eachBucketArr[i].data); j++ {
-			instance = c.eachBucketArr[i].data[j].value
-			callback(instance.Entity, instance.Data)
-		}
+	ecsInstances := c.Instances[ecs.ID]
+	for _, instance := range ecsInstances.Iter() {
+		callback(instance.Entity, instance.Data)
 	}
 
 	for _, s := range c.Instances {
@@ -100,16 +95,16 @@ func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, T)) {
 	}
 }
 
-func (c *Component[T]) EachParallel(ecs *ECS, callback func(*Entity, *T)) {
-	arr := c.Instances[ecs.ID].dense.buckets
-	for _, b := range arr {
-		c.parallelCallback(callback, b.data)
-	}
+// func (c *Component[T]) EachParallel(ecs *ECS, callback func(*Entity, *T)) {
+// 	arr := c.Instances[ecs.ID].denseData.buckets
+// 	for _, b := range arr {
+// 		c.parallelCallback(callback, b.data)
+// 	}
 
-	for _, s := range c.Instances {
-		s.Clean()
-	}
-}
+// 	for _, s := range c.Instances {
+// 		s.Clean()
+// 	}
+// }
 
 func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []DenseElement[ComponentInstance[T]]) {
 	for j := 0; j < len(data); j++ {
@@ -123,5 +118,5 @@ func (c *Component[T]) register(ecs *ECS) {
 
 	c.IDs = append(c.IDs, ecs.generateComponentID())
 	set := NewSparseSet[ComponentInstance[T], EntityID](PREALLOC_BUCKETS, PREALLOC_BUCKETS_SIZE)
-	c.Instances = append(c.Instances, &set)
+	c.Instances[ecs.ID] = &set
 }
