@@ -24,18 +24,18 @@ func TestCalcIndex(t *testing.T) {
 
 func BenchmarkFastIntLog2(t *testing.B) {
 	for range t.N {
-		_ = MagicIntLog2(t.N>>10 + 1)
+		_ = MagicIntLog2(t.N/10 + 1)
 	}
 }
 
 func BenchmarkFastLog2(t *testing.B) {
 	for range t.N {
-		_ = FastIntLog2(t.N>>10 + 1)
+		_ = FastIntLog2(t.N/10 + 1)
 	}
 }
 
 func BenchmarkStdMathLog2(t *testing.B) {
 	for range t.N {
-		_ = int(math.Log2(float64(t.N>>10 + 1)))
+		_ = int(math.Log2(float64(t.N/10 + 1)))
 	}
 }

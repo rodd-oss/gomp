@@ -9,24 +9,30 @@ package ecs
 import "iter"
 
 type ChunkArray[T any] struct {
-	buffer               []ChunkArrayElement[T]
-	first                *ChunkArrayElement[T]
-	current              *ChunkArrayElement[T]
-	last                 *ChunkArrayElement[T]
-	size                 int
-	initialChunkCapacity int
-	bufferInitialCap     int
-	bufferSizeIndex      int
+	buffer           []ChunkArrayElement[T]
+	first            *ChunkArrayElement[T]
+	current          *ChunkArrayElement[T]
+	last             *ChunkArrayElement[T]
+	size             int
+	initialChunkCap  int
+	initialBufferCap int
+	chunkCapPower    int
+	bufferCapPower   int
+	bufferSizeIndex  int
 }
 
-func NewChunkArray[T any](bufferCapacity int, chunkCapacity int) (arr *ChunkArray[T]) {
+func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr *ChunkArray[T]) {
 	arr = new(ChunkArray[T])
-	arr.bufferInitialCap = bufferCapacity
-	arr.initialChunkCapacity = chunkCapacity
-	arr.buffer = make([]ChunkArrayElement[T], bufferCapacity)
+	arr.initialBufferCap = 1 << bufferCapacityPower
+	arr.initialChunkCap = 1 << chunkCapacityPower
+
+	arr.bufferCapPower = bufferCapacityPower
+	arr.chunkCapPower = chunkCapacityPower
+
+	arr.buffer = make([]ChunkArrayElement[T], 1<<bufferCapacityPower)
 	arr.bufferSizeIndex = 0
 
-	chunk := arr.makeChunk(chunkCapacity)
+	chunk := arr.makeChunk()
 	chunk.parent = arr
 
 	arr.first = chunk
@@ -41,11 +47,17 @@ func (a *ChunkArray[T]) Len() int {
 }
 
 func (a *ChunkArray[T]) Get(index int) (T, bool) {
-	return a.first.Get(index)
+	pageIndex := MagicIntLog2(index/a.initialChunkCap + 1)
+	index -= ((1<<pageIndex - 1) * a.initialChunkCap)
+
+	return a.buffer[pageIndex].Get(index)
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
-	return a.first.Set(index, value)
+	pageIndex := MagicIntLog2(index/a.initialChunkCap + 1)
+	index -= ((1<<pageIndex - 1) * a.initialChunkCap)
+
+	return a.buffer[pageIndex].Set(index, value)
 }
 
 func (a *ChunkArray[T]) Append(value T) (int, *T) {
@@ -56,7 +68,6 @@ func (a *ChunkArray[T]) Append(value T) (int, *T) {
 }
 
 func (a *ChunkArray[T]) SoftReduce() {
-	a.size--
 	a.current.SoftReduce()
 }
 
@@ -83,18 +94,19 @@ func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
 }
 
 func (a *ChunkArray[T]) extendBuffer() {
-	a.bufferInitialCap += a.bufferInitialCap
-	a.buffer = append(a.buffer, make([]ChunkArrayElement[T], a.bufferInitialCap)...)
+	a.bufferCapPower++
+	a.buffer = append(a.buffer, make([]ChunkArrayElement[T], 1<<a.bufferCapPower)...)
 }
 
-func (a *ChunkArray[T]) makeChunk(cap int) *ChunkArrayElement[T] {
+func (a *ChunkArray[T]) makeChunk() *ChunkArrayElement[T] {
 	if a.bufferSizeIndex >= len(a.buffer) {
 		a.extendBuffer()
 	}
 
 	chunk := &a.buffer[a.bufferSizeIndex]
 	chunk.parent = a
-	chunk.data = make([]T, 0, cap)
+	chunk.data = make([]T, 0, 1<<a.chunkCapPower)
+	a.chunkCapPower++
 	a.bufferSizeIndex++
 
 	a.current = chunk
@@ -107,7 +119,7 @@ func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
 	return func(yield func(int, *T) bool) {
 		for i := range a.buffer {
 			var chunk = &a.buffer[i]
-			var offset = i * a.bufferInitialCap
+			var offset = ((1<<i - 1) * a.initialChunkCap)
 
 			for j := range chunk.data {
 				if !yield(offset+j, &chunk.data[j]) {
@@ -131,30 +143,13 @@ type ChunkArrayElement[T any] struct {
 }
 
 func (c *ChunkArrayElement[T]) Get(index int) (data T, ok bool) {
-	if index >= c.size {
-		if c.next == nil {
-			return data, false
-		}
-
-		return c.next.Get(index - c.size)
-	}
-
 	data = c.data[index]
 	return data, true
 }
 
-func (c *ChunkArrayElement[T]) Set(index int, value T) (result *T, ok bool) {
-	if index >= c.size {
-		if c.next == nil {
-			return result, false
-		}
-
-		return c.next.Set(index-c.size, value)
-	}
-
+func (c *ChunkArrayElement[T]) Set(index int, value T) (*T, bool) {
 	c.data[index] = value
-	result = &c.data[index]
-	return result, true
+	return &c.data[index], true
 }
 
 func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
@@ -173,9 +168,7 @@ func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
 	}
 
 	if c.next == nil {
-		parent := c.parent
-		parent.initialChunkCapacity = parent.initialChunkCapacity * 2
-		chunk := c.parent.makeChunk(parent.initialChunkCapacity)
+		chunk := c.parent.makeChunk()
 		chunk.prev = c
 		c.next = chunk
 	}
@@ -186,6 +179,7 @@ func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
 func (c *ChunkArrayElement[T]) SoftReduce() {
 	if c.size > 0 {
 		c.size--
+		c.parent.size--
 		return
 	}
 

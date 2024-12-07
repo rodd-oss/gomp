@@ -10,15 +10,9 @@ import (
 	"testing"
 )
 
-// const (
-// 	BUFFER_SIZE    = 1
-// 	CHUNK_CAPACITY = 2
-// )
-
 const (
-	BUFFER_SIZE    = 8
-	BUFFER_SIZE1   = (221>>5 | 1)
-	CHUNK_CAPACITY = 1 << 14
+	BUFFER_SIZE    = 3
+	CHUNK_CAPACITY = 10
 )
 
 func BenchmarkChunkDelete(b *testing.B) {
@@ -88,7 +82,7 @@ func BenchmarkChunk10mil(b *testing.B) {
 	b.ResetTimer()
 	for range b.N {
 		chunk := NewChunkArray[testStruct](BUFFER_SIZE, CHUNK_CAPACITY)
-		for range 10_000_000 {
+		for range 1_000_000 {
 			test.X = float32(1)
 			test.Y = float32(2 * 2)
 			test.Z = float32(3 * 3)

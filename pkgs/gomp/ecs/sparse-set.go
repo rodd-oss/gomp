@@ -18,8 +18,8 @@ type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int](buckets uint32, bucketSize uint32) SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{}
 	set.sparse = NewChunkMap[int](8, 1024)
-	set.denseData = NewChunkArray[TData](8, 32)
-	set.denseIndex = NewChunkArray[int](8, 32)
+	set.denseData = NewChunkArray[TData](3, 2)
+	set.denseIndex = NewChunkArray[int](3, 2)
 
 	return set
 }

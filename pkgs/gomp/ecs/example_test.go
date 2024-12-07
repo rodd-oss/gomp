@@ -122,7 +122,7 @@ func BenchmarkEntityCreate(b *testing.B) {
 	}
 }
 
-func TesEntityUpdate(t *testing.T) {
+func TestEntityUpdate(t *testing.T) {
 	var world = New("Main")
 	world.RegisterComponents(
 		&bulletSpawnerComponent,
