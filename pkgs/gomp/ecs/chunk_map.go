@@ -7,30 +7,37 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type ChunkMap[T any] struct {
-	buffer           []ChunkMapElement[T]
-	pageSize         int
-	bufferInitialCap int
+	buffer []ChunkMapElement[T]
+
+	initialChunkCapPower int
+	initialBufferCap     int
+	chunkCapPower        int
+	bufferCapPower       int
 }
 
-func NewChunkMap[T any](bufferCapacity int, pageSize int) (arr *ChunkMap[T]) {
+// const a = 1<<12 | 1<<13 | 1<<14
+
+func NewChunkMap[T any](bufferCapacityPower int, chunkCapacityPower int) (arr *ChunkMap[T]) {
 	arr = new(ChunkMap[T])
-	arr.bufferInitialCap = bufferCapacity
-	arr.pageSize = pageSize
-	arr.buffer = make([]ChunkMapElement[T], bufferCapacity)
+
+	arr.bufferCapPower = bufferCapacityPower
+	arr.initialBufferCap = 1 << bufferCapacityPower
+	arr.chunkCapPower = chunkCapacityPower
+	arr.initialChunkCapPower = chunkCapacityPower
+
+	arr.buffer = make([]ChunkMapElement[T], 1<<bufferCapacityPower)
 
 	return arr
 }
 
 func (cm *ChunkMap[T]) Get(index int) (value T, ok bool) {
-	pageId := index / cm.pageSize
-	bufferLen := len(cm.buffer)
-	if pageId >= bufferLen {
+	pageId := FastIntLog2(index>>cm.initialChunkCapPower + 1)
+	if pageId >= len(cm.buffer) {
 		return value, false
 	}
-
 	page := cm.buffer[pageId]
 
-	index %= cm.pageSize
+	index -= ((1<<pageId - 1) << cm.initialChunkCapPower)
 	if index >= len(page.data) {
 		return value, false
 	}
@@ -46,22 +53,22 @@ func (cm *ChunkMap[T]) Get(index int) (value T, ok bool) {
 func (cm *ChunkMap[T]) Set(index int, value T) {
 	var page *ChunkMapElement[T]
 
-	pageId := index / cm.pageSize
+	pageId := FastIntLog2(index>>cm.initialChunkCapPower + 1)
 	bufferLastIndex := len(cm.buffer) - 1
 	if pageId > bufferLastIndex {
 		delta := pageId - bufferLastIndex
-		if delta < cm.bufferInitialCap {
-			cm.buffer = append(cm.buffer, make([]ChunkMapElement[T], cm.bufferInitialCap)...)
-			cm.bufferInitialCap += cm.bufferInitialCap
+		if delta < 1<<cm.bufferCapPower {
+			cm.buffer = append(cm.buffer, make([]ChunkMapElement[T], 1<<cm.bufferCapPower)...)
+			cm.bufferCapPower++
 		} else {
 			cm.buffer = append(cm.buffer, make([]ChunkMapElement[T], delta)...)
 		}
 	}
 	page = &cm.buffer[pageId]
 
-	index %= cm.pageSize
+	index -= ((1<<pageId - 1) << cm.initialChunkCapPower)
 	if index >= len(page.data) {
-		page.data = make([]ChunkMapElementData[T], cm.pageSize)
+		page.data = make([]ChunkMapElementData[T], 1<<(cm.chunkCapPower+pageId))
 	}
 
 	data := &page.data[index]
@@ -72,14 +79,13 @@ func (cm *ChunkMap[T]) Set(index int, value T) {
 func (cm *ChunkMap[T]) Delete(index int) {
 	var page *ChunkMapElement[T]
 
-	pageId := index / cm.pageSize
-	if pageId >= len(cm.buffer)-1 {
+	pageId := FastIntLog2(index>>cm.initialChunkCapPower + 1)
+	if pageId >= len(cm.buffer) {
 		return
 	}
-
 	page = &cm.buffer[pageId]
 
-	index %= cm.pageSize
+	index -= ((1<<pageId - 1) << cm.initialChunkCapPower)
 	if index >= len(page.data) {
 		return
 	}

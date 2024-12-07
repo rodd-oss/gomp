@@ -19,7 +19,7 @@ const (
 type ECS struct {
 	ID                  ECSID
 	Title               string
-	Entities            SparseSet[Entity, EntityID]
+	Entities            *SparseSet[Entity, EntityID]
 	EntityComponentMask []BitArray
 	systems             [][]System
 	components          []AnyComponentPtr
@@ -39,27 +39,13 @@ func generateECSID() ECSID {
 	return id
 }
 
-func New(title string, preallocated ...int32) ECS {
-	var buckets, size uint32
-
-	switch len(preallocated) {
-	case 0:
-		buckets = PREALLOC_BUCKETS
-		size = PREALLOC_BUCKETS_SIZE
-	case 1:
-		buckets = uint32(preallocated[0])
-		size = PREALLOC_BUCKETS_SIZE
-	case 2:
-		buckets = uint32(preallocated[0])
-		size = uint32(preallocated[1])
-	default:
-		panic("Too many parameters")
-	}
+func New(title string) ECS {
+	set := NewSparseSet[Entity, EntityID]()
 
 	ecs := ECS{
 		ID:       generateECSID(),
 		Title:    title,
-		Entities: NewSparseSet[Entity, EntityID](buckets, size),
+		Entities: &set,
 		// EntityComponentMask: make([]BitArray, ALLOC_BUCKETS_SIZE),
 
 		nextEntityID:    0,

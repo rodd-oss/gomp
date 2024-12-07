@@ -9,22 +9,22 @@ package ecs
 import "iter"
 
 type ChunkArray[T any] struct {
-	buffer           []ChunkArrayElement[T]
-	first            *ChunkArrayElement[T]
-	current          *ChunkArrayElement[T]
-	last             *ChunkArrayElement[T]
-	size             int
-	initialChunkCap  int
-	initialBufferCap int
-	chunkCapPower    int
-	bufferCapPower   int
-	bufferSizeIndex  int
+	buffer               []ChunkArrayElement[T]
+	first                *ChunkArrayElement[T]
+	current              *ChunkArrayElement[T]
+	last                 *ChunkArrayElement[T]
+	size                 int
+	initialChunkCapPower int
+	initialBufferCap     int
+	chunkCapPower        int
+	bufferCapPower       int
+	bufferSizeIndex      int
 }
 
 func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr *ChunkArray[T]) {
 	arr = new(ChunkArray[T])
 	arr.initialBufferCap = 1 << bufferCapacityPower
-	arr.initialChunkCap = 1 << chunkCapacityPower
+	arr.initialChunkCapPower = chunkCapacityPower
 
 	arr.bufferCapPower = bufferCapacityPower
 	arr.chunkCapPower = chunkCapacityPower
@@ -47,17 +47,20 @@ func (a *ChunkArray[T]) Len() int {
 }
 
 func (a *ChunkArray[T]) Get(index int) (T, bool) {
-	pageIndex := MagicIntLog2(index/a.initialChunkCap + 1)
-	index -= ((1<<pageIndex - 1) * a.initialChunkCap)
+	pageIndex := FastIntLog2(index>>a.initialChunkCapPower + 1)
+	index -= ((1<<pageIndex - 1) << a.initialChunkCapPower)
 
-	return a.buffer[pageIndex].Get(index)
+	return a.buffer[pageIndex].data[index], true
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
-	pageIndex := MagicIntLog2(index/a.initialChunkCap + 1)
-	index -= ((1<<pageIndex - 1) * a.initialChunkCap)
+	pageIndex := FastIntLog2(index>>a.initialChunkCapPower + 1)
+	index -= ((1<<pageIndex - 1) << a.initialChunkCapPower)
 
-	return a.buffer[pageIndex].Set(index, value)
+	page := a.buffer[pageIndex]
+	page.data[index] = value
+
+	return &page.data[index], true
 }
 
 func (a *ChunkArray[T]) Append(value T) (int, *T) {
@@ -119,7 +122,7 @@ func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
 	return func(yield func(int, *T) bool) {
 		for i := range a.buffer {
 			var chunk = &a.buffer[i]
-			var offset = ((1<<i - 1) * a.initialChunkCap)
+			var offset = ((1<<i - 1) << a.initialChunkCapPower)
 
 			for j := range chunk.data {
 				if !yield(offset+j, &chunk.data[j]) {

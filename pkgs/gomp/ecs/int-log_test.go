@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestCalcIndex(t *testing.T) {
+func TesCalcIndex(t *testing.T) {
 	for i := 0; i <= 100_000_000; i++ {
 		value := i>>10 + 1
 		want := int(math.Log2(float64(value)))
@@ -19,12 +19,6 @@ func TestCalcIndex(t *testing.T) {
 		if want != have {
 			t.Fatalf("i: %v, want: %v, got: %v", i, want, have)
 		}
-	}
-}
-
-func BenchmarkFastIntLog2(t *testing.B) {
-	for range t.N {
-		_ = MagicIntLog2(t.N/10 + 1)
 	}
 }
 

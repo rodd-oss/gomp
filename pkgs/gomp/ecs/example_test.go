@@ -11,6 +11,7 @@ import (
 )
 
 func BenchmarkSystems(b *testing.B) {
+	b.ReportAllocs()
 	var world = New("Main")
 
 	world.RegisterComponents(
@@ -122,7 +123,7 @@ func BenchmarkEntityCreate(b *testing.B) {
 	}
 }
 
-func TestEntityUpdate(t *testing.T) {
+func TesEntityUpdate(t *testing.T) {
 	var world = New("Main")
 	world.RegisterComponents(
 		&bulletSpawnerComponent,

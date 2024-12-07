@@ -18,7 +18,7 @@ type AnyComponentPtr interface {
 
 type Component[T any] struct {
 	IDs       []ComponentID
-	Instances map[ECSID]*SparseSet[ComponentInstance[T], EntityID]
+	Instances *ChunkMap[SparseSet[ComponentInstance[T], EntityID]]
 
 	wg *sync.WaitGroup
 	mx *sync.Mutex
@@ -32,7 +32,7 @@ type ComponentInstance[T any] struct {
 func CreateComponent[T any]() Component[T] {
 	component := Component[T]{}
 	component.IDs = make([]ComponentID, 0, 5)
-	component.Instances = make(map[ECSID]*SparseSet[ComponentInstance[T], EntityID], 5)
+	component.Instances = NewChunkMap[SparseSet[ComponentInstance[T], EntityID]](2, 5)
 	component.wg = new(sync.WaitGroup)
 	component.mx = new(sync.Mutex)
 
@@ -41,7 +41,7 @@ func CreateComponent[T any]() Component[T] {
 
 func (c *Component[T]) Get(entity *Entity) (T, bool) {
 	// if value, ok := c.Instances[entity.ecs.ID]; ok {
-	value := c.Instances[entity.ecsID]
+	value, _ := c.Instances.Get(int(entity.ecsID))
 
 	instance, ok := value.Get(entity.ID)
 
@@ -53,7 +53,7 @@ func (c *Component[T]) Get(entity *Entity) (T, bool) {
 
 func (c *Component[T]) Set(entity *Entity, data T) *T {
 	// if value, ok := c.Instances[entity.ecs.id]; ok {
-	value := c.Instances[entity.ecsID]
+	value, _ := c.Instances.Get(int(entity.ecsID))
 	var instance = ComponentInstance[T]{
 		Entity: entity,
 		Data:   data,
@@ -71,13 +71,15 @@ func (c *Component[T]) SoftRemove(entity *Entity) {
 	// if _, ok := c.Instances[entity.ecs.ID]; !ok {
 	// 	panic(fmt.Sprintf("Component <%T> is not registered in <%s> world for <%d> entity", c, entity.ecs.Title, entity.ID))
 	// }
+	value, _ := c.Instances.Get(int(entity.ecsID))
 
-	c.Instances[entity.ecsID].SoftDelete(entity.ID)
+	value.SoftDelete(entity.ID)
 	// entity.ComponentsMask.Unset(uint64(c.IDs[entity.ecs]))
 }
 
 func (c *Component[T]) Clean(ecs *ECS) {
-	c.Instances[ecs.ID].Clean()
+	value, _ := c.Instances.Get(int(ecs.ID))
+	value.Clean()
 }
 
 // To use more threads we need to prespawn goroutines for each component
@@ -85,14 +87,15 @@ func (c *Component[T]) Clean(ecs *ECS) {
 
 // TODO EachParallel()
 func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, T)) {
-	ecsInstances := c.Instances[ecs.ID]
+	ecsInstances, _ := c.Instances.Get(int(ecs.ID))
+
 	for _, instance := range ecsInstances.Iter() {
 		callback(instance.Entity, instance.Data)
 	}
 
-	for _, s := range c.Instances {
-		s.Clean()
-	}
+	// for _, s := range c.Instances {
+	// 	s.Clean()
+	// }
 }
 
 // func (c *Component[T]) EachParallel(ecs *ECS, callback func(*Entity, *T)) {
@@ -106,9 +109,9 @@ func (c *Component[T]) Each(ecs *ECS, callback func(*Entity, T)) {
 // 	}
 // }
 
-func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []DenseElement[ComponentInstance[T]]) {
+func (c *Component[T]) parallelCallback(callback func(*Entity, *T), data []ComponentInstance[T]) {
 	for j := 0; j < len(data); j++ {
-		callback(data[j].value.Entity, &data[j].value.Data)
+		callback(data[j].Entity, &data[j].Data)
 	}
 }
 
@@ -117,6 +120,6 @@ func (c *Component[T]) register(ecs *ECS) {
 	defer c.mx.Unlock()
 
 	c.IDs = append(c.IDs, ecs.generateComponentID())
-	set := NewSparseSet[ComponentInstance[T], EntityID](PREALLOC_BUCKETS, PREALLOC_BUCKETS_SIZE)
-	c.Instances[ecs.ID] = &set
+	set := NewSparseSet[ComponentInstance[T], EntityID]()
+	c.Instances.Set(int(ecs.ID), set)
 }
