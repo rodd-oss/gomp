@@ -6,11 +6,13 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "iter"
+import (
+	"iter"
+	"math/bits"
+)
 
 type ChunkArray[T any] struct {
 	buffer               []ChunkArrayElement[T]
-	first                *ChunkArrayElement[T]
 	current              *ChunkArrayElement[T]
 	last                 *ChunkArrayElement[T]
 	size                 int
@@ -35,7 +37,6 @@ func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr 
 	chunk := arr.makeChunk()
 	chunk.parent = arr
 
-	arr.first = chunk
 	arr.current = chunk
 	arr.last = chunk
 
@@ -46,18 +47,21 @@ func (a *ChunkArray[T]) Len() int {
 	return a.size
 }
 
-func (a *ChunkArray[T]) Get(index int) (T, bool) {
-	pageIndex := FastIntLog2(index>>a.initialChunkCapPower + 1)
-	index -= ((1<<pageIndex - 1) << a.initialChunkCapPower)
+func (a *ChunkArray[T]) Get(index int) *T {
+	pageIndex := a.getPageIdByIndex(index)
+	page := &a.buffer[pageIndex]
 
-	return a.buffer[pageIndex].data[index], true
+	index -= page.startingIndex
+
+	return &(page.data[index])
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
-	pageIndex := FastIntLog2(index>>a.initialChunkCapPower + 1)
-	index -= ((1<<pageIndex - 1) << a.initialChunkCapPower)
-
+	pageIndex := a.getPageIdByIndex(index)
 	page := a.buffer[pageIndex]
+
+	index -= page.startingIndex
+
 	page.data[index] = value
 
 	return &page.data[index], true
@@ -79,8 +83,8 @@ func (a *ChunkArray[T]) Clean() {
 }
 
 func (a *ChunkArray[T]) Swap(i, j int) {
-	x, _ := a.Get(i)
-	y, _ := a.Get(j)
+	x := *a.Get(i)
+	y := *a.Get(j)
 
 	a.Set(j, x)
 	a.Set(i, y)
@@ -88,12 +92,17 @@ func (a *ChunkArray[T]) Swap(i, j int) {
 
 func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
 	var last = a.last
-	index = last.size
-	if index <= 0 {
+	index = last.size - 1
+	if index < 0 {
+		if a.last.prev != nil {
+			a.last = a.last.prev
+			return a.Last()
+		}
+
 		return -1, value, false
 	}
 
-	return index, last.data[index], true
+	return index + last.startingIndex, last.data[index], true
 }
 
 func (a *ChunkArray[T]) extendBuffer() {
@@ -109,6 +118,7 @@ func (a *ChunkArray[T]) makeChunk() *ChunkArrayElement[T] {
 	chunk := &a.buffer[a.bufferSizeIndex]
 	chunk.parent = a
 	chunk.data = make([]T, 0, 1<<a.chunkCapPower)
+	chunk.startingIndex = ((1<<a.bufferSizeIndex - 1) << a.initialChunkCapPower)
 	a.chunkCapPower++
 	a.bufferSizeIndex++
 
@@ -116,6 +126,10 @@ func (a *ChunkArray[T]) makeChunk() *ChunkArrayElement[T] {
 	a.last = chunk
 
 	return chunk
+}
+
+func (a *ChunkArray[T]) getPageIdByIndex(index int) int {
+	return bits.Len64(uint64(index>>a.initialChunkCapPower+1)) - 1
 }
 
 func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
@@ -138,11 +152,12 @@ func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
 // ======
 
 type ChunkArrayElement[T any] struct {
-	next   *ChunkArrayElement[T]
-	prev   *ChunkArrayElement[T]
-	parent *ChunkArray[T]
-	size   int
-	data   []T
+	data          []T
+	next          *ChunkArrayElement[T]
+	prev          *ChunkArrayElement[T]
+	parent        *ChunkArray[T]
+	startingIndex int
+	size          int
 }
 
 func (c *ChunkArrayElement[T]) Get(index int) (data T, ok bool) {

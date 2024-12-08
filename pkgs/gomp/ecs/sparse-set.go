@@ -45,12 +45,21 @@ func (s *SparseSet[TData, TKey]) Get(id TKey) (data TData, ok bool) {
 		return data, false
 	}
 
-	el, ok := s.denseData.Get(index)
-	if !ok {
+	el := s.denseData.Get(index)
+	if el == nil {
 		return data, false
 	}
 
-	return el, true
+	return *el, true
+}
+
+func (s *SparseSet[TData, TKey]) GetPtr(id TKey) *TData {
+	index, ok := s.sparse.Get(int(id))
+	if !ok {
+		return nil
+	}
+
+	return s.denseData.Get(index)
 }
 
 func (s *SparseSet[TData, TKey]) Iter() iter.Seq2[int, *TData] {
@@ -71,13 +80,17 @@ func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
 	}
 
 	s.denseData.Swap(indexx, lastDenseId)
+	s.denseIndex.Swap(indexx, lastDenseId)
+
 	s.sparse.Set(backEntityId, indexx)
 
 	s.sparse.Delete(idx)
 
 	s.denseData.SoftReduce()
+	s.denseIndex.SoftReduce()
 }
 
 func (s *SparseSet[TData, TKey]) Clean() {
 	s.denseData.Clean()
+	s.denseIndex.Clean()
 }
