@@ -47,13 +47,22 @@ func (a *ChunkArray[T]) Len() int {
 	return a.size
 }
 
-func (a *ChunkArray[T]) Get(index int) *T {
+func (a *ChunkArray[T]) GetPtr(index int) *T {
 	pageIndex := a.getPageIdByIndex(index)
 	page := &a.buffer[pageIndex]
 
 	index -= page.startingIndex
 
 	return &(page.data[index])
+}
+
+func (a *ChunkArray[T]) Get(index int) T {
+	pageIndex := a.getPageIdByIndex(index)
+	page := &a.buffer[pageIndex]
+
+	index -= page.startingIndex
+
+	return page.data[index]
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
@@ -83,8 +92,8 @@ func (a *ChunkArray[T]) Clean() {
 }
 
 func (a *ChunkArray[T]) Swap(i, j int) {
-	x := *a.Get(i)
-	y := *a.Get(j)
+	x := *a.GetPtr(i)
+	y := *a.GetPtr(j)
 
 	a.Set(j, x)
 	a.Set(i, y)
@@ -132,16 +141,34 @@ func (a *ChunkArray[T]) getPageIdByIndex(index int) int {
 	return bits.Len64(uint64(index>>a.initialChunkCapPower+1)) - 1
 }
 
-func (a *ChunkArray[T]) Iter() iter.Seq2[int, *T] {
-	return func(yield func(int, *T) bool) {
-		for i := range a.buffer {
-			var chunk = &a.buffer[i]
-			var offset = ((1<<i - 1) << a.initialChunkCapPower)
+type ChunkArrayIndex struct {
+	local        int
+	globalOffset int
+	page         int
+}
 
-			for j := range chunk.data {
-				if !yield(offset+j, &chunk.data[j]) {
-					return
-				}
+func (a *ChunkArray[T]) All() iter.Seq2[ChunkArrayIndex, *T] {
+	return a.yielderAll
+}
+
+func (a *ChunkArray[T]) yielderAll(yield func(ChunkArrayIndex, *T) bool) {
+	var chunk *ChunkArrayElement[T]
+	var data []T
+	var index ChunkArrayIndex
+
+	buffer := a.buffer
+
+	for i := range buffer {
+		chunk = &buffer[i]
+		index.globalOffset = chunk.startingIndex
+		index.page = i
+
+		data = chunk.data
+		dataLen := len(data)
+		for j := 0; j < dataLen; j++ {
+			index.local = j
+			if !yield(index, &data[j]) {
+				return
 			}
 		}
 	}

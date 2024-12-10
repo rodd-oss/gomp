@@ -12,14 +12,14 @@ type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
 	sparse     *ChunkMap[int]
 	denseData  *ChunkArray[TData]
-	denseIndex *ChunkArray[int]
+	denseIndex *ChunkArray[TKey]
 }
 
 func NewSparseSet[TData any, TKey EntityID | ComponentID | ECSID | int]() SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{}
 	set.sparse = NewChunkMap[int](5, 10)
 	set.denseData = NewChunkArray[TData](5, 10)
-	set.denseIndex = NewChunkArray[int](5, 10)
+	set.denseIndex = NewChunkArray[TKey](5, 10)
 
 	return set
 }
@@ -32,7 +32,7 @@ func (s *SparseSet[TData, TKey]) Set(id TKey, data TData) *TData {
 	}
 
 	idx, r := s.denseData.Append(data)
-	s.denseIndex.Append(int(id))
+	s.denseIndex.Append(id)
 	s.sparse.Set(int(id), idx)
 
 	return r
@@ -45,7 +45,7 @@ func (s *SparseSet[TData, TKey]) Get(id TKey) (data TData, ok bool) {
 		return data, false
 	}
 
-	el := s.denseData.Get(index)
+	el := s.denseData.GetPtr(index)
 	if el == nil {
 		return data, false
 	}
@@ -59,11 +59,22 @@ func (s *SparseSet[TData, TKey]) GetPtr(id TKey) *TData {
 		return nil
 	}
 
-	return s.denseData.Get(index)
+	return s.denseData.GetPtr(index)
 }
 
-func (s *SparseSet[TData, TKey]) Iter() iter.Seq2[int, *TData] {
-	return s.denseData.Iter()
+func (s *SparseSet[TData, TKey]) All() iter.Seq2[TKey, *TData] {
+	return s.yielderAll
+}
+
+func (s *SparseSet[TData, TKey]) yielderAll(yield func(TKey, *TData) bool) {
+	var indexBuffer = s.denseIndex.buffer
+	var denseData = s.denseData
+
+	for i, v := range denseData.All() {
+		if !yield(indexBuffer[i.page].data[i.local], v) {
+			return
+		}
+	}
 }
 
 func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
@@ -82,7 +93,7 @@ func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
 	s.denseData.Swap(indexx, lastDenseId)
 	s.denseIndex.Swap(indexx, lastDenseId)
 
-	s.sparse.Set(backEntityId, indexx)
+	s.sparse.Set(int(backEntityId), indexx)
 
 	s.sparse.Delete(idx)
 

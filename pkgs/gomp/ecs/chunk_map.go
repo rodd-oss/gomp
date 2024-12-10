@@ -16,8 +16,6 @@ type ChunkMap[T any] struct {
 	bufferCapPower       int
 }
 
-// const a = 1<<12 | 1<<13 | 1<<14
-
 func NewChunkMap[T any](bufferCapacityPower int, chunkCapacityPower int) (arr *ChunkMap[T]) {
 	arr = new(ChunkMap[T])
 

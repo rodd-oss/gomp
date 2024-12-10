@@ -73,12 +73,13 @@ func BenchmarkEntityUpdate(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		transformComponent.Each(&world, func(entity *Entity, data Transform) {
-			data.X += 1
-			data.Y -= 1
-			data.Z += 2
-			transformComponent.Set(entity, data)
-		})
+		transform := transformComponent.Instances(&world)
+
+		for _, v := range transform.All() {
+			v.X += 1
+			v.Y -= 1
+			v.Z += 2
+		}
 	}
 }
 
@@ -115,15 +116,18 @@ func BenchmarkEntityCreate(b *testing.B) {
 
 	b.ResetTimer()
 	b.ReportAllocs()
+	var tra Transform
 
 	for i := 0; i < b.N; i++ {
-		tra := Transform{0, 1, 2}
+		tra.X = float32(i)
+		tra.Y = float32(i + 1)
+		tra.Z = float32(i + 4)
 		player := world.CreateEntity("Player")
 		transformComponent.Set(player, tra)
 	}
 }
 
-func TesEntityUpdate(t *testing.T) {
+func TestEntityUpdate(t *testing.T) {
 	var world = New("Main")
 	world.RegisterComponents(
 		&bulletSpawnerComponent,
