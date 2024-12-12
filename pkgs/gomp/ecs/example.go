@@ -84,10 +84,11 @@ func (s *BulletSystem) Destroy(world *ECS) {}
 func (s *BulletSystem) Run(world *ECS) {
 	s.bullet = bulletComponent.Instances(world)
 
-	for _, b := range s.bullet.All() {
+	for entId, b := range s.bullet.All() {
 		b.HP -= 1
 		if b.HP <= 0 {
 			// world.SoftDestroyEntity(entity)
+			s.bullet.SoftDelete(entId)
 		}
 	}
 }

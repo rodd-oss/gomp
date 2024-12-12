@@ -133,12 +133,14 @@ func TestSparseSetEach(t *testing.T) {
 		t.Logf("done 100k with %v", time.Since(started))
 
 		// check
-		for i := 0; i < 100_000; i++ {
+		var z int
+		for i := 100_000 - 1; i >= 0; i-- {
 			v := sp.GetPtr(i)
 			require.NotNil(t, v)
 			require.Equal(t, 1, v.X)
-			require.Equal(t, i, v.Y)
-			require.Equal(t, -i, v.Z)
+			require.Equal(t, z, v.Y)
+			require.Equal(t, -z, v.Z)
+			z++
 		}
 	})
 	t.Run("1_000_000", func(t *testing.T) {
@@ -161,12 +163,14 @@ func TestSparseSetEach(t *testing.T) {
 		t.Logf("done 1m with %v", time.Since(started))
 
 		// check
-		for i := 0; i < 1_000_000; i++ {
+		var z int
+		for i := 1_000_000 - 1; i >= 0; i-- {
 			v := sp.GetPtr(i)
 			require.NotNil(t, v)
 			require.Equal(t, 1, v.X)
-			require.Equal(t, i, v.Y)
-			require.Equal(t, -i, v.Z)
+			require.Equal(t, z, v.Y)
+			require.Equal(t, -z, v.Z)
+			z++
 		}
 	})
 	t.Run("16_000_000", func(t *testing.T) {

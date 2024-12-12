@@ -158,14 +158,13 @@ func (a *ChunkArray[T]) yielderAll(yield func(ChunkArrayIndex, *T) bool) {
 
 	buffer := a.buffer
 
-	for i := range buffer {
+	for i := len(buffer) - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		index.globalOffset = chunk.startingIndex
 		index.page = i
 
 		data = chunk.data
-		dataLen := len(data)
-		for j := 0; j < dataLen; j++ {
+		for j := len(data) - 1; j >= 0; j-- {
 			index.local = j
 			if !yield(index, &data[j]) {
 				return
