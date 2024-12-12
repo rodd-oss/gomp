@@ -84,19 +84,37 @@ func (a *ChunkArray[T]) Append(value T) (int, *T) {
 }
 
 func (a *ChunkArray[T]) SoftReduce() {
-	a.current.SoftReduce()
+	// a.current.SoftReduce()
+	if a.current.size > 0 {
+		a.current.size--
+		a.size--
+		return
+	}
+
+	prev := a.current.prev
+
+	if prev == nil {
+		return
+	}
+
+	a.current = prev
+	a.SoftReduce()
 }
 
 func (a *ChunkArray[T]) Clean() {
 	a.last.Clean()
 }
 
-func (a *ChunkArray[T]) Swap(i, j int) {
-	x := *a.GetPtr(i)
-	y := *a.GetPtr(j)
+func (a *ChunkArray[T]) Copy(fromIndex, toIndex int) {
+	from := a.GetPtr(fromIndex)
+	to := a.GetPtr(toIndex)
+	*to = *from
+}
 
-	a.Set(j, x)
-	a.Set(i, y)
+func (a *ChunkArray[T]) Swap(i, j int) {
+	x := a.GetPtr(i)
+	y := a.GetPtr(j)
+	*x, *y = *y, *x
 }
 
 func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {

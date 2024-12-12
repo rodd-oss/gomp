@@ -91,10 +91,10 @@ func (e *ECS) RunSystems() {
 		e.wg.Wait()
 	}
 
-	e.Entities.Clean()
-	for i := range e.components {
-		e.components[i].Clean(e)
-	}
+	// e.Entities.Clean()
+	// for i := range e.components {
+	// 	e.components[i].Clean(e)
+	// }
 
 	e.tick++
 }

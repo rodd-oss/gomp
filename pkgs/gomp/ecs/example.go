@@ -30,17 +30,16 @@ type TransformSystem struct {
 	transform SparseSet[Transform, EntityID]
 }
 
-func (s *TransformSystem) Init(world *ECS)    {}
+func (s *TransformSystem) Init(world *ECS) {
+	s.transform = transformComponent.Instances(world)
+}
 func (s *TransformSystem) Destroy(world *ECS) {}
 func (s *TransformSystem) Run(world *ECS) {
-	s.transform = transformComponent.Instances(world)
-
 	s.n++
 	for _, t := range s.transform.All() {
 		t.X += 1
 		t.Y -= 1
 		t.Z += 2
-
 	}
 }
 
@@ -51,13 +50,13 @@ type BulletSpawnSystem struct {
 	bullet        SparseSet[Bullet, EntityID]
 }
 
-func (s *BulletSpawnSystem) Init(world *ECS)    {}
-func (s *BulletSpawnSystem) Destroy(world *ECS) {}
-func (s *BulletSpawnSystem) Run(world *ECS) {
+func (s *BulletSpawnSystem) Init(world *ECS) {
 	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
 	s.transform = transformComponent.Instances(world)
 	s.bullet = bulletComponent.Instances(world)
-
+}
+func (s *BulletSpawnSystem) Destroy(world *ECS) {}
+func (s *BulletSpawnSystem) Run(world *ECS) {
 	s.n++
 
 	var bulletData Bullet
@@ -79,11 +78,11 @@ type BulletSystem struct {
 	bullet SparseSet[Bullet, EntityID]
 }
 
-func (s *BulletSystem) Init(world *ECS)    {}
+func (s *BulletSystem) Init(world *ECS) {
+	s.bullet = bulletComponent.Instances(world)
+}
 func (s *BulletSystem) Destroy(world *ECS) {}
 func (s *BulletSystem) Run(world *ECS) {
-	s.bullet = bulletComponent.Instances(world)
-
 	for entId, b := range s.bullet.All() {
 		b.HP -= 1
 		if b.HP <= 0 {
@@ -102,7 +101,7 @@ func (s *PlayerSpawnSystem) Init(world *ECS) {
 	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
 	s.transform = transformComponent.Instances(world)
 
-	count := 50_000
+	count := 100_000
 	tra := Transform{0, 1, 2}
 	bs := BulletSpawn{}
 

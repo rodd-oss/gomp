@@ -90,8 +90,8 @@ func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
 		return
 	}
 
-	s.denseData.Swap(indexx, lastDenseId)
-	s.denseIndex.Swap(indexx, lastDenseId)
+	s.denseData.Copy(lastDenseId, indexx)
+	s.denseIndex.Copy(lastDenseId, indexx)
 
 	s.sparse.Set(int(backEntityId), indexx)
 

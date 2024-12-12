@@ -43,13 +43,9 @@ func (cm *ChunkMap[T]) Get(index int) (value T, ok bool) {
 	if index >= len(page.data) {
 		return value, false
 	}
-	data := page.data[index]
+	data := &page.data[index]
 
-	if !data.exists {
-		return value, false
-	}
-
-	return data.value, true
+	return data.value, data.exists
 }
 
 func (cm *ChunkMap[T]) Set(index int, value T) {
