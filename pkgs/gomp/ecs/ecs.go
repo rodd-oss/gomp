@@ -6,7 +6,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type ECSID uint
 
@@ -17,18 +20,18 @@ const (
 )
 
 type ECS struct {
-	ID                  ECSID
+	ID    ECSID
+	Title string
+
+	tick         int
+	nextEntityID EntityID
+
+	systems             [][]System
+	components          []AnyComponentInstancesPtr
+	deletedEntityIDs    []EntityID
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
-
-	systems    [][]System
-	components []AnyComponentInstancesPtr
-	Title      string
-	wg         *sync.WaitGroup
-	mx         *sync.Mutex
-
-	tick            int
-	nextEntityID    EntityID
-	nextComponentID ComponentID
+	wg                  *sync.WaitGroup
+	mx                  *sync.Mutex
 }
 
 var nextId ECSID = 0
@@ -40,18 +43,16 @@ func generateECSID() ECSID {
 }
 
 func New(title string) ECS {
+	id := generateECSID()
 	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
 
 	ecs := ECS{
-		ID:                  generateECSID(),
+		ID:                  id,
 		Title:               title,
+		wg:                  new(sync.WaitGroup),
+		mx:                  new(sync.Mutex),
+		deletedEntityIDs:    make([]EntityID, 0, 1<<10),
 		entityComponentMask: &maskSet,
-
-		nextEntityID:    0,
-		nextComponentID: 0,
-		tick:            0,
-		wg:              new(sync.WaitGroup),
-		mx:              new(sync.Mutex),
 	}
 
 	return ecs
@@ -97,19 +98,35 @@ func (e *ECS) CreateEntity(title string) EntityID {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
-	id := e.generateEntityID()
-	e.entityComponentMask.Set(id, ComponentBitArray256{})
+	var newId EntityID
 
-	return id
+	if len(e.deletedEntityIDs) == 0 {
+		newId = e.generateEntityID()
+	} else {
+		newId = e.deletedEntityIDs[len(e.deletedEntityIDs)-1]
+		e.deletedEntityIDs = e.deletedEntityIDs[:len(e.deletedEntityIDs)-1]
+	}
+
+	e.entityComponentMask.Set(newId, ComponentBitArray256{})
+
+	return newId
 }
 
 func (e *ECS) SoftDestroyEntity(entityId EntityID) {
+	e.mx.Lock()
+	defer e.mx.Unlock()
+
 	mask := e.entityComponentMask.GetPtr(entityId)
+	if mask == nil {
+		panic(fmt.Sprintf("Entity %d does not exist", entityId))
+	}
+
 	for i := range mask.AllSet {
 		e.components[i].SoftRemove(entityId)
 	}
 
 	e.entityComponentMask.SoftDelete(entityId)
+	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
 }
 
 func (e *ECS) generateEntityID() EntityID {
