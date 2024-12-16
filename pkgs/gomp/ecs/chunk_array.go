@@ -7,7 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"iter"
 	"math/bits"
 )
 
@@ -165,11 +164,11 @@ type ChunkArrayIndex struct {
 	page         int
 }
 
-func (a *ChunkArray[T]) All() iter.Seq2[ChunkArrayIndex, *T] {
-	return a.yielderAll
-}
+// func (a *ChunkArray[T]) All() iter.Seq2[ChunkArrayIndex, *T] {
+// 	return a.yielderAll
+// }
 
-func (a *ChunkArray[T]) yielderAll(yield func(ChunkArrayIndex, *T) bool) {
+func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 	var chunk *ChunkArrayElement[T]
 	var data []T
 	var index ChunkArrayIndex

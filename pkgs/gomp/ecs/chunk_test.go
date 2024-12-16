@@ -63,7 +63,7 @@ func BenchmarkChunkUpdate(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for _, v := range chunk.All() {
+	for _, v := range chunk.All {
 		v.X = 0
 		v.Y = 0
 		v.Z = 0

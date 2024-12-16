@@ -11,12 +11,11 @@ import (
 )
 
 func BenchmarkSystems(b *testing.B) {
-	b.ReportAllocs()
 	var world = New("Main")
 
 	world.RegisterComponents(
-		&bulletSpawnerComponent,
 		&transformComponent,
+		&bulletSpawnerComponent,
 		&bulletComponent,
 	)
 
@@ -30,6 +29,7 @@ func BenchmarkSystems(b *testing.B) {
 			new(TransformSystem),
 		)
 
+	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		world.RunSystems()

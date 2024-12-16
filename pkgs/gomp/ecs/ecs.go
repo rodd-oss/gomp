@@ -18,10 +18,10 @@ const (
 
 type ECS struct {
 	ID                  ECSID
-	EntityComponentMask *SparseSet[ComponentBitArray256, EntityID]
+	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
 
 	systems    [][]System
-	components []AnyComponentTypePtr
+	components []AnyComponentInstancesPtr
 	Title      string
 	wg         *sync.WaitGroup
 	mx         *sync.Mutex
@@ -45,7 +45,7 @@ func New(title string) ECS {
 	ecs := ECS{
 		ID:                  generateECSID(),
 		Title:               title,
-		EntityComponentMask: &maskSet,
+		entityComponentMask: &maskSet,
 
 		nextEntityID:    0,
 		nextComponentID: 0,
@@ -59,8 +59,7 @@ func New(title string) ECS {
 
 func (e *ECS) RegisterComponents(component_ptr ...AnyComponentTypePtr) {
 	for i := 0; i < len(component_ptr); i++ {
-		e.components = append(e.components, component_ptr[i])
-		component_ptr[i].register(e, ComponentID(i))
+		e.components = append(e.components, component_ptr[i].register(e, ComponentID(i)))
 	}
 }
 
@@ -99,18 +98,18 @@ func (e *ECS) CreateEntity(title string) EntityID {
 	defer e.mx.Unlock()
 
 	id := e.generateEntityID()
-	e.EntityComponentMask.Set(id, ComponentBitArray256{})
+	e.entityComponentMask.Set(id, ComponentBitArray256{})
 
 	return id
 }
 
 func (e *ECS) SoftDestroyEntity(entityId EntityID) {
-	mask := e.EntityComponentMask.GetPtr(entityId)
+	mask := e.entityComponentMask.GetPtr(entityId)
 	for i := range mask.AllSet {
-		e.components[i].SoftRemove(e, entityId)
+		e.components[i].SoftRemove(entityId)
 	}
 
-	e.EntityComponentMask.SoftDelete(entityId)
+	e.entityComponentMask.SoftDelete(entityId)
 }
 
 func (e *ECS) generateEntityID() EntityID {

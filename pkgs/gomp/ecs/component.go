@@ -13,9 +13,11 @@ import (
 )
 
 type AnyComponentTypePtr interface {
-	register(*ECS, ComponentID)
-	SoftRemove(*ECS, EntityID)
-	// Clean(*ECS)
+	register(*ECS, ComponentID) AnyComponentInstancesPtr
+}
+
+type AnyComponentInstancesPtr interface {
+	SoftRemove(EntityID)
 }
 
 type ComponentType[T any] struct {
@@ -42,14 +44,18 @@ func (c *ComponentType[T]) Instances(ecs *ECS) WorldComponents[T] {
 	panic(fmt.Sprintf("Component <%T> is not registered in <%s> world", c, ecs.Title))
 }
 
-func (c *ComponentType[T]) register(ecs *ECS, id ComponentID) {
+func (c *ComponentType[T]) register(ecs *ECS, id ComponentID) AnyComponentInstancesPtr {
 	newInstances := NewSparseSet[T, EntityID]()
 
-	c.worldComponents[ecs] = WorldComponents[T]{
+	newComponents := WorldComponents[T]{
 		ID:            id,
-		maskComponent: ecs.EntityComponentMask,
+		maskComponent: ecs.entityComponentMask,
 		instances:     &newInstances,
 	}
+
+	c.worldComponents[ecs] = newComponents
+
+	return &newComponents
 }
 
 func (c *ComponentType[T]) SoftRemove(ecs *ECS, entityID EntityID) {

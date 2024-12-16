@@ -64,7 +64,7 @@ func (s *SparseSet[TData, TKey]) All(yield func(TKey, *TData) bool) {
 	var indexBuffer = s.denseIndex.buffer
 	var denseData = s.denseData
 
-	for i, v := range denseData.All() {
+	for i, v := range denseData.All {
 		if !yield(indexBuffer[i.page].data[i.local], v) {
 			return
 		}

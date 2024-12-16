@@ -73,17 +73,15 @@ func (b *ComponentBitArray256) IsSet(index ComponentID) bool {
 
 func (b *ComponentBitArray256) AllSet(yield func(ComponentID) bool) {
 	var id ComponentID
-	bLen := uint(len(b))
-	var bitsSize uint
-	// TODO: optimize this loop by using bits.Len and bits.OnesCount
-	for i := uint(0); i < bLen; i++ {
-		bitsSize = uint(bits.Len(b[i]))
-		for j := uint(0); j < bitsSize; j++ {
-			if b[i]&(1<<j) != 0 {
-				id = ComponentID(i*bitsSize + j)
-				if !yield(id) {
-					return
-				}
+	var raisedBitsCount int
+	for i, v := range b {
+		raisedBitsCount = bits.OnesCount(v)
+		for range raisedBitsCount {
+			index := bits.Len(v) - 1
+			v &^= 1 << index
+			id = ComponentID(i*bits.UintSize + index)
+			if !yield(id) {
+				return
 			}
 		}
 	}
