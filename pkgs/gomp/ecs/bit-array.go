@@ -75,6 +75,7 @@ func (b *ComponentBitArray256) AllSet(yield func(ComponentID) bool) {
 	var id ComponentID
 	bLen := uint(len(b))
 	var bitsSize uint
+	// TODO: optimize this loop by using bits.Len and bits.OnesCount
 	for i := uint(0); i < bLen; i++ {
 		bitsSize = uint(bits.Len(b[i]))
 		for j := uint(0); j < bitsSize; j++ {
