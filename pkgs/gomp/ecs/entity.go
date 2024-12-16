@@ -7,9 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type Entity struct {
-	ecsID     ECSID
-	ID        EntityID
-	isDeleted bool
-	// Title          string
-	// ComponentsMask BitArray
+	// ecsID ECSID
+	// ID EntityID
 }

@@ -8,5 +8,5 @@ package ecs
 
 type Mask uint64
 type EntityID int32
-type ComponentID uint64
+type ComponentID uint8
 type ComponentInstanceID uint64

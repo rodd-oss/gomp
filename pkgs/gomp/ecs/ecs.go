@@ -18,17 +18,17 @@ const (
 
 type ECS struct {
 	ID                  ECSID
-	Title               string
-	Entities            *SparseSet[Entity, EntityID]
-	EntityComponentMask []BitArray
-	systems             [][]System
-	components          []AnyComponentPtr
+	EntityComponentMask *SparseSet[ComponentBitArray256, EntityID]
+
+	systems    [][]System
+	components []AnyComponentTypePtr
+	Title      string
+	wg         *sync.WaitGroup
+	mx         *sync.Mutex
 
 	tick            int
 	nextEntityID    EntityID
 	nextComponentID ComponentID
-	wg              *sync.WaitGroup
-	mx              *sync.Mutex
 }
 
 var nextId ECSID = 0
@@ -40,13 +40,12 @@ func generateECSID() ECSID {
 }
 
 func New(title string) ECS {
-	set := NewSparseSet[Entity, EntityID]()
+	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
 
 	ecs := ECS{
-		ID:       generateECSID(),
-		Title:    title,
-		Entities: &set,
-		// EntityComponentMask: make([]BitArray, ALLOC_BUCKETS_SIZE),
+		ID:                  generateECSID(),
+		Title:               title,
+		EntityComponentMask: &maskSet,
 
 		nextEntityID:    0,
 		nextComponentID: 0,
@@ -55,17 +54,13 @@ func New(title string) ECS {
 		mx:              new(sync.Mutex),
 	}
 
-	// for i := 0; i < ALLOC_CHUNK; i++ {
-	// 	ecs.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
-	// }
-
 	return ecs
 }
 
-func (e *ECS) RegisterComponents(component_ptr ...AnyComponentPtr) {
+func (e *ECS) RegisterComponents(component_ptr ...AnyComponentTypePtr) {
 	for i := 0; i < len(component_ptr); i++ {
 		e.components = append(e.components, component_ptr[i])
-		component_ptr[i].register(e)
+		component_ptr[i].register(e, ComponentID(i))
 	}
 }
 
@@ -99,40 +94,23 @@ func (e *ECS) RunSystems() {
 	e.tick++
 }
 
-func (e *ECS) CreateEntity(title string) *Entity {
+func (e *ECS) CreateEntity(title string) EntityID {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
-	var entity = Entity{
-		ID: e.generateEntityID(),
-		// Title: title,
-		ecsID:     e.ID,
-		isDeleted: false,
-	}
+	id := e.generateEntityID()
+	e.EntityComponentMask.Set(id, ComponentBitArray256{})
 
-	// if len(e.EntityComponentMask) <= int(entity.ID) {
-	// 	e.EntityComponentMask = append(e.EntityComponentMask, make([]BitArray, ALLOC_CHUNK)...)
-	// 	for i := int(entity.ID); i < ALLOC_CHUNK; i++ {
-	// 		e.EntityComponentMask[i] = NewBitArray(MAX_COMPONENTS)
-	// 	}
-	// }
-	// entity.ComponentsMask = e.EntityComponentMask[entity.ID]
-
-	return e.Entities.Set(entity.ID, entity)
-}
-
-func (e *ECS) SoftDestroyEntity(entity *Entity) {
-	e.Entities.SoftDelete(entity.ID)
-
-	for i := range e.components {
-		e.components[i].SoftRemove(entity)
-	}
-}
-
-func (e *ECS) generateComponentID() ComponentID {
-	id := e.nextComponentID
-	e.nextComponentID++
 	return id
+}
+
+func (e *ECS) SoftDestroyEntity(entityId EntityID) {
+	mask := e.EntityComponentMask.GetPtr(entityId)
+	for i := range mask.AllSet {
+		e.components[i].SoftRemove(e, entityId)
+	}
+
+	e.EntityComponentMask.SoftDelete(entityId)
 }
 
 func (e *ECS) generateEntityID() EntityID {

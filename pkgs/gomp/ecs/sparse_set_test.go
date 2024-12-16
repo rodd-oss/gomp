@@ -124,7 +124,7 @@ func TestSparseSetEach(t *testing.T) {
 
 		started := time.Now()
 		var y int
-		for _, val := range sp.All() {
+		for _, val := range sp.All {
 			val.X = 1
 			val.Y = y
 			val.Z = -y
@@ -154,7 +154,7 @@ func TestSparseSetEach(t *testing.T) {
 
 		started := time.Now()
 		var y int
-		for _, val := range sp.All() {
+		for _, val := range sp.All {
 			val.X = 1
 			val.Y = y
 			val.Z = -y
@@ -184,7 +184,7 @@ func TestSparseSetEach(t *testing.T) {
 
 		started := time.Now()
 		var y int
-		for _, val := range sp.All() {
+		for _, val := range sp.All {
 			val.X = 1
 			val.Y = y
 			val.Z = -y
@@ -242,7 +242,7 @@ func BenchmarkSparseSetEach(b *testing.B) {
 		}
 		b.ReportAllocs()
 		b.ResetTimer()
-		for _, val := range sp.All() {
+		for _, val := range sp.All {
 			*val = *val + 12
 		}
 
@@ -256,7 +256,7 @@ func BenchmarkSparseSetEach(b *testing.B) {
 		b.ResetTimer()
 		var left = b.N
 		for left > 0 {
-			for _, val := range sp.All() {
+			for _, val := range sp.All {
 				left--
 				*val = *val + 12
 				if left > 0 {
@@ -277,7 +277,7 @@ func BenchmarkSparseSetEach18m(b *testing.B) {
 		b.ReportAllocs()
 		var left = b.N
 		for left > 0 {
-			for _, val := range sp.All() {
+			for _, val := range sp.All {
 				left--
 				*val = *val + 12
 				if left > 0 {

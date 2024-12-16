@@ -6,8 +6,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import "iter"
-
 type SparseSet[TData any, TKey EntityID | ComponentID | ECSID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
 	sparse     *ChunkMap[int]
@@ -62,11 +60,7 @@ func (s *SparseSet[TData, TKey]) GetPtr(id TKey) *TData {
 	return s.denseData.GetPtr(index)
 }
 
-func (s *SparseSet[TData, TKey]) All() iter.Seq2[TKey, *TData] {
-	return s.yielderAll
-}
-
-func (s *SparseSet[TData, TKey]) yielderAll(yield func(TKey, *TData) bool) {
+func (s *SparseSet[TData, TKey]) All(yield func(TKey, *TData) bool) {
 	var indexBuffer = s.denseIndex.buffer
 	var denseData = s.denseData
 

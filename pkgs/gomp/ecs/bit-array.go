@@ -6,64 +6,84 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-// BitArray is a structure to manage an array of uint64 values as a bit array.
-type BitArray []uint64
+import (
+	"math/bits"
+)
 
-// New creates a new BitArray with the given number of bits.
-func NewBitArray(size uint64) BitArray {
-	words := (size + 63) / 64
-	return make(BitArray, words)
+// type BitArray []uint64
+
+// // New creates a new BitArray with the given number of bits.
+// func NewBitArray(size uint64) BitArray {
+// 	words := (size + 63) / 64
+// 	return make(BitArray, words)
+// }
+
+// // ensureIndex ensures the given bit index is accessible, resizing the array if necessary.
+// func (b *BitArray) ensureIndex(index uint64) {
+// 	wordsNeeded := (index / 64) + 1
+// 	if uint64(len(*b)) < wordsNeeded {
+// 		newData := make(BitArray, wordsNeeded)
+// 		copy(newData, *b)
+// 		*b = newData
+// 	}
+// }
+
+// // Resize adjusts the BitArray size to accommodate a specific number of bits.
+// // Shrinks the underlying array if the new size is smaller.
+// func (b *BitArray) Resize(newSize uint64) {
+// 	newWords := (newSize + 63) / 64
+// 	currentWords := uint64(len(*b))
+// 	if newWords > currentWords {
+// 		newData := make(BitArray, newWords)
+// 		copy(newData, *b)
+// 		*b = newData
+// 	} else if newWords < currentWords {
+// 		*b = (*b)[:newWords]
+// 	}
+// }
+// // Size calculates the total number of bits in the BitArray.
+// func (b BitArray) Size() uint64 {
+// 	return uint64(len(b)) * 64
+// }
+
+// ComponentBitArray256 is a structure to manage an array of uint64 values as a bit array.
+const bit_array_size = 256 / bits.UintSize
+
+type ComponentBitArray256 [bit_array_size]uint
+
+// Set sets the bit at the given index to 1.
+func (b *ComponentBitArray256) Set(index ComponentID) {
+	b[index/bits.UintSize] |= 1 << (index % bits.UintSize)
 }
 
-// ensureIndex ensures the given bit index is accessible, resizing the array if necessary.
-func (b *BitArray) ensureIndex(index uint64) {
-	wordsNeeded := (index / 64) + 1
-	if uint64(len(*b)) < wordsNeeded {
-		newData := make(BitArray, wordsNeeded)
-		copy(newData, *b)
-		*b = newData
-	}
+// Unset clears the bit at the given index (sets it to 0).
+func (b *ComponentBitArray256) Unset(index ComponentID) {
+	b[index/bits.UintSize] &^= 1 << (index % bits.UintSize)
 }
 
-// Size calculates the total number of bits in the BitArray.
-func (b BitArray) Size() uint64 {
-	return uint64(len(b)) * 64
-}
-
-// Set sets the bit at the given index to 1, resizing if necessary.
-func (b *BitArray) Set(index uint64) {
-	b.ensureIndex(index)
-	(*b)[index/64] |= 1 << (index % 64)
-}
-
-// Clear clears the bit at the given index (sets it to 0), resizing if necessary.
-func (b *BitArray) Clear(index uint64) {
-	b.ensureIndex(index)
-	(*b)[index/64] &^= 1 << (index % 64)
-}
-
-// Toggle toggles the bit at the given index, resizing if necessary.
-func (b *BitArray) Toggle(index uint64) {
-	b.ensureIndex(index)
-	(*b)[index/64] ^= 1 << (index % 64)
+// Toggle toggles the bit at the given index.
+func (b *ComponentBitArray256) Toggle(index ComponentID) {
+	b[index/bits.UintSize] ^= 1 << (index % bits.UintSize)
 }
 
 // IsSet checks if the bit at the given index is set (1). Automatically resizes if the index is out of bounds.
-func (b *BitArray) IsSet(index uint64) bool {
-	b.ensureIndex(index)
-	return ((*b)[index/64] & (1 << (index % 64))) != 0
+func (b *ComponentBitArray256) IsSet(index ComponentID) bool {
+	return (b[index/bits.UintSize] & (1 << (index % bits.UintSize))) != 0
 }
 
-// Resize adjusts the BitArray size to accommodate a specific number of bits.
-// Shrinks the underlying array if the new size is smaller.
-func (b *BitArray) Resize(newSize uint64) {
-	newWords := (newSize + 63) / 64
-	currentWords := uint64(len(*b))
-	if newWords > currentWords {
-		newData := make(BitArray, newWords)
-		copy(newData, *b)
-		*b = newData
-	} else if newWords < currentWords {
-		*b = (*b)[:newWords]
+func (b *ComponentBitArray256) AllSet(yield func(ComponentID) bool) {
+	var id ComponentID
+	bLen := uint(len(b))
+	var bitsSize uint
+	for i := uint(0); i < bLen; i++ {
+		bitsSize = uint(bits.Len(b[i]))
+		for j := uint(0); j < bitsSize; j++ {
+			if b[i]&(1<<j) != 0 {
+				id = ComponentID(i*bitsSize + j)
+				if !yield(id) {
+					return
+				}
+			}
+		}
 	}
 }

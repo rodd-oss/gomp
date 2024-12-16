@@ -27,7 +27,7 @@ var bulletComponent = CreateComponent[Bullet]()
 
 type TransformSystem struct {
 	n         int
-	transform SparseSet[Transform, EntityID]
+	transform WorldComponents[Transform]
 }
 
 func (s *TransformSystem) Init(world *ECS) {
@@ -45,9 +45,9 @@ func (s *TransformSystem) Run(world *ECS) {
 
 type BulletSpawnSystem struct {
 	n             int
-	bulletSpawner SparseSet[BulletSpawn, EntityID]
-	transform     SparseSet[Transform, EntityID]
-	bullet        SparseSet[Bullet, EntityID]
+	bulletSpawner WorldComponents[BulletSpawn]
+	transform     WorldComponents[Transform]
+	bullet        WorldComponents[Bullet]
 }
 
 func (s *BulletSpawnSystem) Init(world *ECS) {
@@ -68,14 +68,14 @@ func (s *BulletSpawnSystem) Run(world *ECS) {
 		}
 
 		newBullet := world.CreateEntity("bullet")
-		s.transform.Set(newBullet.ID, tr)
+		s.transform.Set(newBullet, tr)
 		bulletData.HP = 5
-		s.bullet.Set(newBullet.ID, bulletData)
+		s.bullet.Set(newBullet, bulletData)
 	}
 }
 
 type BulletSystem struct {
-	bullet SparseSet[Bullet, EntityID]
+	bullet WorldComponents[Bullet]
 }
 
 func (s *BulletSystem) Init(world *ECS) {
@@ -86,15 +86,14 @@ func (s *BulletSystem) Run(world *ECS) {
 	for entId, b := range s.bullet.All() {
 		b.HP -= 1
 		if b.HP <= 0 {
-			// world.SoftDestroyEntity(entity)
-			s.bullet.SoftDelete(entId)
+			world.SoftDestroyEntity(entId)
 		}
 	}
 }
 
 type PlayerSpawnSystem struct {
-	bulletSpawner SparseSet[BulletSpawn, EntityID]
-	transform     SparseSet[Transform, EntityID]
+	bulletSpawner WorldComponents[BulletSpawn]
+	transform     WorldComponents[Transform]
 }
 
 func (s *PlayerSpawnSystem) Init(world *ECS) {
@@ -105,13 +104,13 @@ func (s *PlayerSpawnSystem) Init(world *ECS) {
 	tra := Transform{0, 1, 2}
 	bs := BulletSpawn{}
 
-	var player *Entity
+	var player EntityID
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
-		s.transform.Set(player.ID, tra)
+		s.transform.Set(player, tra)
 
 		if i%2 == 0 {
-			s.bulletSpawner.Set(player.ID, bs)
+			s.bulletSpawner.Set(player, bs)
 		}
 	}
 }
