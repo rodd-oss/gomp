@@ -25,6 +25,7 @@ type pixel struct {
 	x      int
 	y      int
 	breath bool
+	hp     int
 	color  color.RGBA
 }
 
@@ -42,13 +43,17 @@ func (s *pixelSystem) Init(world *ecs.World) {
 			newPixel := world.CreateEntity("Pixel")
 
 			randomGreen := uint8(135 / (rand.Intn(10) + 1))
+			randomBlue := uint8(135 / (rand.Intn(10) + 1))
+
 			randomColor := color.RGBA{
 				G: randomGreen,
+				B: randomBlue,
 				A: 255,
 			}
 			s.pixelComponent.Set(newPixel, pixel{
-				x:     i,
-				y:     j,
+				x:     j,
+				y:     i,
+				hp:    100,
 				color: randomColor,
 			})
 		}
@@ -58,16 +63,35 @@ func (s *pixelSystem) Init(world *ecs.World) {
 func (s *pixelSystem) Run(world *ecs.World) {
 	for _, pixel := range s.pixelComponent.All() {
 		color := &pixel.color
-		if color.G == 0 {
-			pixel.breath = true
-		} else if color.G == 135 {
-			pixel.breath = false
-		}
 
 		if pixel.breath {
-			color.G++
+			if color.G < 135 {
+				color.G++
+			} else {
+				pixel.hp++
+			}
+			if color.B < 135 {
+				color.B++
+			} else {
+				pixel.hp++
+			}
 		} else {
-			color.G--
+			if color.G > 0 {
+				color.G--
+			} else {
+				pixel.hp--
+			}
+			if color.B > 0 {
+				color.B--
+			} else {
+				pixel.hp--
+			}
+		}
+
+		if pixel.hp <= 0 {
+			pixel.breath = true
+		} else if pixel.hp >= 100 {
+			pixel.breath = false
 		}
 	}
 }
@@ -78,6 +102,7 @@ type game struct {
 	world           *ecs.World
 	pixelComponents ecs.WorldComponents[pixel]
 
+	imageBuffer  *ebiten.Image
 	screenBuffer []byte
 }
 
@@ -87,6 +112,7 @@ func (g *game) Update() error {
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
 	for _, pixel := range g.pixelComponents.All() {
 		index := (pixel.x + pixel.y*1080) * 4
 		color := &pixel.color
@@ -97,7 +123,9 @@ func (g *game) Draw(screen *ebiten.Image) {
 		g.screenBuffer[index+3] = color.A
 	}
 
-	screen.WritePixels(g.screenBuffer)
+	g.imageBuffer.WritePixels(g.screenBuffer)
+
+	screen.DrawImage(g.imageBuffer, op)
 
 	var debugInfo = make([]string, 0)
 
@@ -140,6 +168,7 @@ func main() {
 	newGame := game{
 		world:           &world,
 		pixelComponents: pixelComponentType.Instances(&world),
+		imageBuffer:     ebiten.NewImage(1080, 1080),
 	}
 
 	newGame.screenBuffer = make([]byte, 4*1080*1080)
