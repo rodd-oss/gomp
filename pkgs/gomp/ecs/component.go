@@ -13,7 +13,7 @@ import (
 )
 
 type AnyComponentTypePtr interface {
-	register(*ECS, ComponentID) AnyComponentInstancesPtr
+	register(*World, ComponentID) AnyComponentInstancesPtr
 }
 
 type AnyComponentInstancesPtr interface {
@@ -21,7 +21,7 @@ type AnyComponentInstancesPtr interface {
 }
 
 type ComponentType[T any] struct {
-	worldComponents map[*ECS]WorldComponents[T]
+	worldComponents map[*World]WorldComponents[T]
 
 	wg *sync.WaitGroup
 	mx *sync.Mutex
@@ -29,14 +29,14 @@ type ComponentType[T any] struct {
 
 func CreateComponent[T any]() ComponentType[T] {
 	component := ComponentType[T]{}
-	component.worldComponents = make(map[*ECS]WorldComponents[T])
+	component.worldComponents = make(map[*World]WorldComponents[T])
 	component.wg = new(sync.WaitGroup)
 	component.mx = new(sync.Mutex)
 
 	return component
 }
 
-func (c *ComponentType[T]) Instances(ecs *ECS) WorldComponents[T] {
+func (c *ComponentType[T]) Instances(ecs *World) WorldComponents[T] {
 	if value, ok := c.worldComponents[ecs]; ok {
 		return value
 	}
@@ -44,7 +44,7 @@ func (c *ComponentType[T]) Instances(ecs *ECS) WorldComponents[T] {
 	panic(fmt.Sprintf("Component <%T> is not registered in <%s> world", c, ecs.Title))
 }
 
-func (c *ComponentType[T]) register(ecs *ECS, id ComponentID) AnyComponentInstancesPtr {
+func (c *ComponentType[T]) register(ecs *World, id ComponentID) AnyComponentInstancesPtr {
 	newInstances := NewSparseSet[T, EntityID]()
 
 	newComponents := WorldComponents[T]{
@@ -58,7 +58,7 @@ func (c *ComponentType[T]) register(ecs *ECS, id ComponentID) AnyComponentInstan
 	return &newComponents
 }
 
-func (c *ComponentType[T]) SoftRemove(ecs *ECS, entityID EntityID) {
+func (c *ComponentType[T]) SoftRemove(ecs *World, entityID EntityID) {
 	worldComp := c.worldComponents[ecs]
 	worldComp.instances.SoftDelete(entityID)
 	mask := worldComp.maskComponent.GetPtr(entityID)
@@ -96,7 +96,7 @@ func (c *WorldComponents[T]) SoftRemove(entityID EntityID) {
 	mask.Unset(c.ID)
 }
 
-func (c *WorldComponents[T]) Clean(ecs *ECS) {
+func (c *WorldComponents[T]) Clean(ecs *World) {
 	// value, _ := c.worldFactory.Get(int(ecs.ID))
 	// value.Clean()
 }

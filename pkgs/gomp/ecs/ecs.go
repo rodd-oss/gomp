@@ -14,12 +14,10 @@ import (
 type ECSID uint
 
 const (
-	MAX_COMPONENTS               = 128
-	PREALLOC_BUCKETS      uint32 = 32
-	PREALLOC_BUCKETS_SIZE uint32 = 1_000_000
+	PREALLOC_DELETED_ENTITIES uint32 = 1 << 10
 )
 
-type ECS struct {
+type World struct {
 	ID    ECSID
 	Title string
 
@@ -42,35 +40,35 @@ func generateECSID() ECSID {
 	return id
 }
 
-func New(title string) ECS {
+func New(title string) World {
 	id := generateECSID()
 	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
 
-	ecs := ECS{
+	ecs := World{
 		ID:                  id,
 		Title:               title,
 		wg:                  new(sync.WaitGroup),
 		mx:                  new(sync.Mutex),
-		deletedEntityIDs:    make([]EntityID, 0, 1<<10),
+		deletedEntityIDs:    make([]EntityID, 0, PREALLOC_DELETED_ENTITIES),
 		entityComponentMask: &maskSet,
 	}
 
 	return ecs
 }
 
-func (e *ECS) RegisterComponents(component_ptr ...AnyComponentTypePtr) {
+func (e *World) RegisterComponentTypes(component_ptr ...AnyComponentTypePtr) {
 	for i := 0; i < len(component_ptr); i++ {
 		e.components = append(e.components, component_ptr[i].register(e, ComponentID(i)))
 	}
 }
 
-func (e *ECS) RegisterSystems() *SystemBuilder {
+func (e *World) RegisterSystems() *SystemBuilder {
 	return &SystemBuilder{
 		ecs: e,
 	}
 }
 
-func (e *ECS) RunSystems() {
+func (e *World) RunSystems() {
 	for i := range e.systems {
 		// If systems are sequantial, we dont spawn goroutines
 		if len(e.systems[i]) == 1 {
@@ -94,7 +92,7 @@ func (e *ECS) RunSystems() {
 	e.tick++
 }
 
-func (e *ECS) CreateEntity(title string) EntityID {
+func (e *World) CreateEntity(title string) EntityID {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
@@ -112,7 +110,7 @@ func (e *ECS) CreateEntity(title string) EntityID {
 	return newId
 }
 
-func (e *ECS) SoftDestroyEntity(entityId EntityID) {
+func (e *World) SoftDestroyEntity(entityId EntityID) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
@@ -129,7 +127,7 @@ func (e *ECS) SoftDestroyEntity(entityId EntityID) {
 	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
 }
 
-func (e *ECS) generateEntityID() EntityID {
+func (e *World) generateEntityID() EntityID {
 	id := e.nextEntityID
 	e.nextEntityID++
 	return id

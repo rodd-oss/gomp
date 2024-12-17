@@ -13,7 +13,7 @@ import (
 func BenchmarkSystems(b *testing.B) {
 	var world = New("Main")
 
-	world.RegisterComponents(
+	world.RegisterComponentTypes(
 		&transformComponent,
 		&bulletSpawnerComponent,
 		&bulletComponent,

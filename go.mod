@@ -22,15 +22,20 @@ require (
 require (
 	github.com/colega/zeropool v0.0.0-20230505084239-6fb4a4f75381 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20231223183121-56fa3ac82ce7 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/hajimehoshi/ebiten v1.12.12 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8 // indirect
+	golang.org/x/exp/shiny v0.0.0-20241215155358-4a5509556b9e // indirect
+	golang.org/x/image v0.18.0 // indirect
+	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

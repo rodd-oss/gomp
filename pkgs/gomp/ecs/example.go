@@ -30,11 +30,11 @@ type TransformSystem struct {
 	transform WorldComponents[Transform]
 }
 
-func (s *TransformSystem) Init(world *ECS) {
+func (s *TransformSystem) Init(world *World) {
 	s.transform = transformComponent.Instances(world)
 }
-func (s *TransformSystem) Destroy(world *ECS) {}
-func (s *TransformSystem) Run(world *ECS) {
+func (s *TransformSystem) Destroy(world *World) {}
+func (s *TransformSystem) Run(world *World) {
 	s.n++
 	for _, t := range s.transform.All() {
 		t.X += 1
@@ -50,13 +50,13 @@ type BulletSpawnSystem struct {
 	bullet        WorldComponents[Bullet]
 }
 
-func (s *BulletSpawnSystem) Init(world *ECS) {
+func (s *BulletSpawnSystem) Init(world *World) {
 	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
 	s.transform = transformComponent.Instances(world)
 	s.bullet = bulletComponent.Instances(world)
 }
-func (s *BulletSpawnSystem) Destroy(world *ECS) {}
-func (s *BulletSpawnSystem) Run(world *ECS) {
+func (s *BulletSpawnSystem) Destroy(world *World) {}
+func (s *BulletSpawnSystem) Run(world *World) {
 	s.n++
 
 	var bulletData Bullet
@@ -78,11 +78,11 @@ type BulletSystem struct {
 	bullet WorldComponents[Bullet]
 }
 
-func (s *BulletSystem) Init(world *ECS) {
+func (s *BulletSystem) Init(world *World) {
 	s.bullet = bulletComponent.Instances(world)
 }
-func (s *BulletSystem) Destroy(world *ECS) {}
-func (s *BulletSystem) Run(world *ECS) {
+func (s *BulletSystem) Destroy(world *World) {}
+func (s *BulletSystem) Run(world *World) {
 	for entId, b := range s.bullet.All() {
 		b.HP -= 1
 		if b.HP <= 0 {
@@ -96,7 +96,7 @@ type PlayerSpawnSystem struct {
 	transform     WorldComponents[Transform]
 }
 
-func (s *PlayerSpawnSystem) Init(world *ECS) {
+func (s *PlayerSpawnSystem) Init(world *World) {
 	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
 	s.transform = transformComponent.Instances(world)
 
@@ -114,5 +114,5 @@ func (s *PlayerSpawnSystem) Init(world *ECS) {
 		}
 	}
 }
-func (s *PlayerSpawnSystem) Destroy(world *ECS) {}
-func (s *PlayerSpawnSystem) Run(world *ECS)     {}
+func (s *PlayerSpawnSystem) Destroy(world *World) {}
+func (s *PlayerSpawnSystem) Run(world *World)     {}

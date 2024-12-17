@@ -7,13 +7,13 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 type System interface {
-	Init(*ECS)
-	Run(*ECS)
-	Destroy(*ECS)
+	Init(*World)
+	Run(*World)
+	Destroy(*World)
 }
 
 type SystemBuilder struct {
-	ecs *ECS
+	ecs *World
 }
 
 func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
@@ -34,7 +34,7 @@ func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
 	return b
 }
 
-func runSystemAsync(system System, e *ECS) {
+func runSystemAsync(system System, e *World) {
 	defer e.wg.Done()
 	system.Run(e)
 }
