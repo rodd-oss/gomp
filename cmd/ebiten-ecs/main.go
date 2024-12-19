@@ -16,17 +16,18 @@ import (
 	"os"
 	"runtime/pprof"
 	"strings"
+	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type pixel struct {
-	x      int
-	y      int
-	breath bool
-	hp     int
+	x      int32
+	y      int32
+	hp     int32
 	color  color.RGBA
+	breath bool
 }
 
 var pixelComponentType = ecs.CreateComponent[pixel]()
@@ -51,8 +52,8 @@ func (s *pixelSystem) Init(world *ecs.World) {
 				A: 255,
 			}
 			s.pixelComponent.Set(newPixel, pixel{
-				x:     j,
-				y:     i,
+				x:     int32(j),
+				y:     int32(i),
 				hp:    100,
 				color: randomColor,
 			})
@@ -61,7 +62,7 @@ func (s *pixelSystem) Init(world *ecs.World) {
 }
 
 func (s *pixelSystem) Run(world *ecs.World) {
-	for _, pixel := range s.pixelComponent.All() {
+	s.pixelComponent.AllData()(func(pixel *pixel) bool {
 		color := &pixel.color
 
 		if pixel.breath {
@@ -93,7 +94,8 @@ func (s *pixelSystem) Run(world *ecs.World) {
 		} else if pixel.hp >= 100 {
 			pixel.breath = false
 		}
-	}
+		return true
+	})
 }
 
 func (s *pixelSystem) Destroy(world *ecs.World) {}
@@ -113,15 +115,11 @@ func (g *game) Update() error {
 
 func (g *game) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	for _, pixel := range g.pixelComponents.All() {
+	g.pixelComponents.AllData()(func(pixel *pixel) bool {
 		index := (pixel.x + pixel.y*1080) * 4
-		color := &pixel.color
-
-		g.screenBuffer[index+0] = color.R
-		g.screenBuffer[index+1] = color.G
-		g.screenBuffer[index+2] = color.B
-		g.screenBuffer[index+3] = color.A
-	}
+		*(*[4]byte)(unsafe.Pointer(&g.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(&pixel.color))
+		return true
+	})
 
 	g.imageBuffer.WritePixels(g.screenBuffer)
 

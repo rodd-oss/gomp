@@ -105,6 +105,10 @@ func (c *WorldComponents[T]) All() iter.Seq2[EntityID, *T] {
 	return c.instances.All
 }
 
+func (c *WorldComponents[T]) AllData() iter.Seq[*T] {
+	return c.instances.AllData
+}
+
 // To use more threads we need to prespawn goroutines for each component
 // var threads = runtime.NumCPU() * 2
 
