@@ -122,7 +122,7 @@ func (s *pixelSystemDirectCall) Init(world *World) {
 func (s *pixelSystemDirectCall) Destroy(world *World) {}
 
 func (s *pixelSystemDirectCall) Run(world *World) {
-	s.pixelComponent.AllData()(func(pixel *pixel) bool {
+	s.pixelComponent.AllDataParallel(func(pixel *pixel) bool {
 		color := &pixel.color
 
 		if pixel.breath {

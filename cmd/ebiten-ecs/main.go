@@ -30,6 +30,12 @@ type pixel struct {
 	breath bool
 }
 
+const (
+	width  = 1000
+	height = 1000
+	scale  = float64(4)
+)
+
 var pixelComponentType = ecs.CreateComponent[pixel]()
 
 type pixelSystem struct {
@@ -39,8 +45,8 @@ type pixelSystem struct {
 func (s *pixelSystem) Init(world *ecs.World) {
 	s.pixelComponent = pixelComponentType.Instances(world)
 
-	for i := range 1000 {
-		for j := range 1000 {
+	for i := range height {
+		for j := range width {
 			newPixel := world.CreateEntity("Pixel")
 
 			randomGreen := uint8(135 / (rand.Intn(10) + 1))
@@ -62,7 +68,7 @@ func (s *pixelSystem) Init(world *ecs.World) {
 }
 
 func (s *pixelSystem) Run(world *ecs.World) {
-	s.pixelComponent.AllData()(func(pixel *pixel) bool {
+	s.pixelComponent.AllDataParallel(func(pixel *pixel) bool {
 		color := &pixel.color
 
 		if pixel.breath {
@@ -115,13 +121,14 @@ func (g *game) Update() error {
 
 func (g *game) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	g.pixelComponents.AllData()(func(pixel *pixel) bool {
-		index := (pixel.x + pixel.y*1080) * 4
+	g.pixelComponents.AllDataParallel(func(pixel *pixel) bool {
+		index := (pixel.x + pixel.y*width) * 4
 		*(*[4]byte)(unsafe.Pointer(&g.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(&pixel.color))
 		return true
 	})
 
 	g.imageBuffer.WritePixels(g.screenBuffer)
+	op.GeoM.Scale(scale, scale)
 
 	screen.DrawImage(g.imageBuffer, op)
 
@@ -150,7 +157,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetWindowSize(1080, 1080)
+	ebiten.SetWindowSize(1000, 1000)
 	ebiten.SetWindowTitle("1 mil pixel ecs")
 
 	world := ecs.New("1 mil pixel")
@@ -166,10 +173,10 @@ func main() {
 	newGame := game{
 		world:           &world,
 		pixelComponents: pixelComponentType.Instances(&world),
-		imageBuffer:     ebiten.NewImage(1080, 1080),
+		imageBuffer:     ebiten.NewImage(width, height),
 	}
 
-	newGame.screenBuffer = make([]byte, 4*1080*1080)
+	newGame.screenBuffer = make([]byte, 4*width*height)
 
 	if err := ebiten.RunGame(&newGame); err != nil {
 		panic(err)

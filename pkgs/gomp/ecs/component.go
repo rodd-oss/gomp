@@ -105,8 +105,16 @@ func (c *WorldComponents[T]) All() iter.Seq2[EntityID, *T] {
 	return c.instances.All
 }
 
+func (c *WorldComponents[T]) AllParallel() iter.Seq2[EntityID, *T] {
+	return c.instances.AllParallel
+}
+
 func (c *WorldComponents[T]) AllData() iter.Seq[*T] {
 	return c.instances.AllData
+}
+
+func (c *WorldComponents[T]) AllDataParallel(yield func(*T) bool) {
+	c.instances.AllDataParallel(yield)
 }
 
 // To use more threads we need to prespawn goroutines for each component

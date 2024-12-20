@@ -63,11 +63,12 @@ func BenchmarkChunkUpdate(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for _, v := range chunk.All {
-		v.X = 0
-		v.Y = 0
-		v.Z = 0
-	}
+	chunk.All(func(_ ChunkArrayIndex, ts *testStruct) bool {
+		ts.X = 0
+		ts.Y = 0
+		ts.Z = 0
+		return true
+	})
 }
 
 func BenchmarkChunk10mil(b *testing.B) {

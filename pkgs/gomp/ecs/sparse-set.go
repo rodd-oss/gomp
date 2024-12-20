@@ -43,7 +43,7 @@ func (s *SparseSet[TData, TKey]) Get(id TKey) (data TData, ok bool) {
 		return data, false
 	}
 
-	el := s.denseData.GetPtr(index)
+	el := s.denseData.Get(index)
 	if el == nil {
 		return data, false
 	}
@@ -57,24 +57,39 @@ func (s *SparseSet[TData, TKey]) GetPtr(id TKey) *TData {
 		return nil
 	}
 
-	return s.denseData.GetPtr(index)
+	return s.denseData.Get(index)
 }
 
 func (s *SparseSet[TData, TKey]) All(yield func(TKey, *TData) bool) {
 	var indexBuffer = s.denseIndex.buffer
 	var denseData = s.denseData
 
-	for i, value := range denseData.All {
+	denseData.All(func(i ChunkArrayIndex, value *TData) bool {
 		key := indexBuffer[i.page].data[i.local]
-		if !yield(key, value) {
-			return
-		}
-	}
+		return yield(key, value)
+	})
+}
+
+func (s *SparseSet[TData, TKey]) AllParallel(yield func(TKey, *TData) bool) {
+	var indexBuffer = s.denseIndex.buffer
+	var denseData = s.denseData
+
+	denseData.AllParallel(func(i ChunkArrayIndex, value *TData) bool {
+		key := indexBuffer[i.page].data[i.local]
+		return yield(key, value)
+	})
 }
 
 func (s *SparseSet[TData, TKey]) AllData(yield func(*TData) bool) {
 	var denseData = s.denseData
 	denseData.All(func(i ChunkArrayIndex, value *TData) bool {
+		return yield(value)
+	})
+}
+
+func (s *SparseSet[TData, TKey]) AllDataParallel(yield func(*TData) bool) {
+	var denseData = s.denseData
+	denseData.AllParallel(func(i ChunkArrayIndex, value *TData) bool {
 		return yield(value)
 	})
 }

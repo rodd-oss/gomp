@@ -8,6 +8,8 @@ package ecs
 
 import (
 	"math/bits"
+	"runtime"
+	"sync"
 )
 
 type ChunkArray[T any] struct {
@@ -20,6 +22,7 @@ type ChunkArray[T any] struct {
 	chunkCapPower        int
 	bufferCapPower       int
 	bufferSizeIndex      int
+	parallelCount        uint
 }
 
 func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr *ChunkArray[T]) {
@@ -38,6 +41,7 @@ func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr 
 
 	arr.current = chunk
 	arr.last = chunk
+	arr.parallelCount = uint(runtime.NumCPU())
 
 	return arr
 }
@@ -46,22 +50,13 @@ func (a *ChunkArray[T]) Len() int {
 	return a.size
 }
 
-func (a *ChunkArray[T]) GetPtr(index int) *T {
+func (a *ChunkArray[T]) Get(index int) *T {
 	pageIndex := a.getPageIdByIndex(index)
 	page := &a.buffer[pageIndex]
 
 	index -= page.startingIndex
 
 	return &(page.data[index])
-}
-
-func (a *ChunkArray[T]) Get(index int) T {
-	pageIndex := a.getPageIdByIndex(index)
-	page := &a.buffer[pageIndex]
-
-	index -= page.startingIndex
-
-	return page.data[index]
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
@@ -105,14 +100,14 @@ func (a *ChunkArray[T]) Clean() {
 }
 
 func (a *ChunkArray[T]) Copy(fromIndex, toIndex int) {
-	from := a.GetPtr(fromIndex)
-	to := a.GetPtr(toIndex)
+	from := a.Get(fromIndex)
+	to := a.Get(toIndex)
 	*to = *from
 }
 
 func (a *ChunkArray[T]) Swap(i, j int) {
-	x := a.GetPtr(i)
-	y := a.GetPtr(j)
+	x := a.Get(i)
+	y := a.Get(j)
 	*x, *y = *y, *x
 }
 
@@ -188,6 +183,62 @@ func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 			}
 		}
 	}
+}
+
+func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
+	var chunk *ChunkArrayElement[T]
+	var index ChunkArrayIndex
+	var wg = new(sync.WaitGroup)
+	var shouldReturn = false
+
+	buffer := a.buffer
+
+	parallelChunks := bits.Len(uint(a.parallelCount)) - 1
+	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
+		chunk = &buffer[i]
+		data := chunk.data
+		index.globalOffset = chunk.startingIndex
+		index.page = i
+
+		if parallelChunks == 0 {
+			for j := len(data) - 1; j >= 0; j-- {
+				if shouldReturn {
+					return
+				}
+				index.local = j
+				if !yield(index, &data[j]) {
+					shouldReturn = true
+					return
+				}
+			}
+		} else {
+			parallelSubChunks := 1 << (parallelChunks - 1)
+			subchunkSize := cap(data) >> (parallelChunks - 1)
+			wg.Add(parallelSubChunks)
+			for p := 0; p < parallelSubChunks; p++ {
+				startIndex := p * subchunkSize
+				endIndex := startIndex + subchunkSize
+				if endIndex >= len(data)-1 {
+					endIndex = len(data)
+				}
+				go func(wg *sync.WaitGroup, stop *bool, data []T, index ChunkArrayIndex, startIndex int, endIndex int, localyield func(ChunkArrayIndex, *T) bool) {
+					defer wg.Done()
+					for j := startIndex; j < endIndex; j++ {
+						if *stop {
+							return
+						}
+						index.local = j
+						if !localyield(index, &data[j]) {
+							*stop = true
+							return
+						}
+					}
+				}(wg, &shouldReturn, data, index, startIndex, endIndex, yield)
+			}
+			parallelChunks--
+		}
+	}
+	wg.Wait()
 }
 
 // ======
