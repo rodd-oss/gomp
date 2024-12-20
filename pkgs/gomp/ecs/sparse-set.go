@@ -89,9 +89,7 @@ func (s *SparseSet[TData, TKey]) AllData(yield func(*TData) bool) {
 
 func (s *SparseSet[TData, TKey]) AllDataParallel(yield func(*TData) bool) {
 	var denseData = s.denseData
-	denseData.AllParallel(func(i ChunkArrayIndex, value *TData) bool {
-		return yield(value)
-	})
+	denseData.AllDataParallel(yield)
 }
 
 func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {

@@ -34,8 +34,8 @@ type pixel struct {
 }
 
 const (
-	width  = 1000
-	height = 1000
+	width  = 2000
+	height = 2000
 )
 
 var pixelComponentType = ecs.CreateComponent[pixel]()
@@ -122,6 +122,7 @@ type game struct {
 	pixelComponents ecs.WorldComponents[pixel]
 
 	imageBuffer  *ebiten.Image
+	debugImage   *ebiten.Image
 	screenBuffer []byte
 	scale        float64
 }
@@ -139,17 +140,12 @@ func (g *game) Update() error {
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
 	g.pixelComponents.AllDataParallel(func(pixel *pixel) bool {
 		index := (pixel.x + pixel.y*width) * 4
 		*(*[4]byte)(unsafe.Pointer(&g.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(&pixel.color))
 		return true
 	})
-
 	g.imageBuffer.WritePixels(g.screenBuffer)
-	op.GeoM.Scale(g.scale, g.scale)
-
-	screen.DrawImage(g.imageBuffer, op)
 
 	var debugInfo = make([]string, 0)
 	p := message.NewPrinter(language.Russian)
@@ -158,8 +154,16 @@ func (g *game) Draw(screen *ebiten.Image) {
 	debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", ebiten.ActualFPS()))
 	debugInfo = append(debugInfo, fmt.Sprintf("Scale %0.2f", g.scale))
 	debugInfo = append(debugInfo, p.Sprintf("Entity count %d", width*height))
+	ebitenutil.DebugPrint(g.debugImage, strings.Join(debugInfo, "\n"))
+	defer g.debugImage.Clear()
 
-	ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
+	op := new(ebiten.DrawImageOptions)
+	op.GeoM.Scale(g.scale, g.scale)
+	screen.DrawImage(g.imageBuffer, op)
+
+	op.GeoM.Reset()
+	op.GeoM.Scale(2, 2)
+	screen.DrawImage(g.debugImage, op)
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -196,6 +200,7 @@ func main() {
 		world:           &world,
 		pixelComponents: pixelComponentType.Instances(&world),
 		imageBuffer:     ebiten.NewImage(width, height),
+		debugImage:      ebiten.NewImage(250, 250),
 		scale:           1,
 	}
 

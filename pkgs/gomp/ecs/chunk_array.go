@@ -185,6 +185,59 @@ func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 	}
 }
 
+func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
+	var chunk *ChunkArrayElement[T]
+	var wg = new(sync.WaitGroup)
+	var shouldReturn = false
+
+	buffer := a.buffer
+
+	parallelChunks := bits.Len(uint(a.parallelCount)) - 1
+	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
+		chunk = &buffer[i]
+		data := chunk.data
+
+		if parallelChunks == 0 {
+			for j := len(data) - 1; j >= 0; j-- {
+				if shouldReturn {
+					return
+				}
+				element := &data[j]
+				if !yield(element) {
+					shouldReturn = true
+					return
+				}
+			}
+		} else {
+			parallelSubChunks := 1 << (parallelChunks - 1)
+			subchunkSize := cap(data) >> (parallelChunks - 1)
+			wg.Add(parallelSubChunks)
+			for p := 0; p < parallelSubChunks; p++ {
+				startIndex := p * subchunkSize
+				endIndex := startIndex + subchunkSize
+				if endIndex >= len(data)-1 {
+					endIndex = len(data)
+				}
+				go func(wg *sync.WaitGroup, stop *bool, data []T, startIndex int, endIndex int, localyield func(*T) bool) {
+					defer wg.Done()
+					for j := startIndex; j < endIndex; j++ {
+						if *stop {
+							return
+						}
+						element := &data[j]
+						if !localyield(element) {
+							*stop = true
+							return
+						}
+					}
+				}(wg, &shouldReturn, data, startIndex, endIndex, yield)
+			}
+			parallelChunks--
+		}
+	}
+	wg.Wait()
+}
+
 func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
 	var chunk *ChunkArrayElement[T]
 	var index ChunkArrayIndex
