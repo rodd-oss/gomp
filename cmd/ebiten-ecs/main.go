@@ -20,12 +20,15 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 type pixel struct {
 	x      int32
 	y      int32
 	hp     int32
+	maxHp  int32
 	color  color.RGBA
 	breath bool
 }
@@ -33,7 +36,6 @@ type pixel struct {
 const (
 	width  = 1000
 	height = 1000
-	scale  = float64(4)
 )
 
 var pixelComponentType = ecs.CreateComponent[pixel]()
@@ -51,6 +53,13 @@ func (s *pixelSystem) Init(world *ecs.World) {
 
 			randomGreen := uint8(135 / (rand.Intn(10) + 1))
 			randomBlue := uint8(135 / (rand.Intn(10) + 1))
+			hp := rand.Intn(250)
+			maxHp := rand.Intn(250)
+			b := rand.Intn(2)
+			breath := true
+			if b == 0 {
+				breath = false
+			}
 
 			randomColor := color.RGBA{
 				G: randomGreen,
@@ -58,10 +67,12 @@ func (s *pixelSystem) Init(world *ecs.World) {
 				A: 255,
 			}
 			s.pixelComponent.Set(newPixel, pixel{
-				x:     int32(j),
-				y:     int32(i),
-				hp:    100,
-				color: randomColor,
+				x:      int32(j),
+				y:      int32(i),
+				hp:     int32(hp),
+				maxHp:  int32(maxHp),
+				color:  randomColor,
+				breath: breath,
 			})
 		}
 	}
@@ -112,9 +123,17 @@ type game struct {
 
 	imageBuffer  *ebiten.Image
 	screenBuffer []byte
+	scale        float64
 }
 
 func (g *game) Update() error {
+	_, dy := ebiten.Wheel()
+	g.scale += float64(dy)
+	if g.scale < 0.1 {
+		g.scale = 0.1
+	} else if g.scale > 100 {
+		g.scale = 100
+	}
 	g.world.RunSystems()
 	return nil
 }
@@ -128,14 +147,17 @@ func (g *game) Draw(screen *ebiten.Image) {
 	})
 
 	g.imageBuffer.WritePixels(g.screenBuffer)
-	op.GeoM.Scale(scale, scale)
+	op.GeoM.Scale(g.scale, g.scale)
 
 	screen.DrawImage(g.imageBuffer, op)
 
 	var debugInfo = make([]string, 0)
+	p := message.NewPrinter(language.Russian)
 
 	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", ebiten.ActualTPS()))
 	debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", ebiten.ActualFPS()))
+	debugInfo = append(debugInfo, fmt.Sprintf("Scale %0.2f", g.scale))
+	debugInfo = append(debugInfo, p.Sprintf("Entity count %d", width*height))
 
 	ebitenutil.DebugPrint(screen, strings.Join(debugInfo, "\n"))
 }
@@ -174,6 +196,7 @@ func main() {
 		world:           &world,
 		pixelComponents: pixelComponentType.Instances(&world),
 		imageBuffer:     ebiten.NewImage(width, height),
+		scale:           1,
 	}
 
 	newGame.screenBuffer = make([]byte, 4*width*height)
