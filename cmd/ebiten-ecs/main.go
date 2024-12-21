@@ -12,10 +12,10 @@ import (
 	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
 	"log"
-	"math/rand"
 	"os"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,102 +24,16 @@ import (
 	"golang.org/x/text/message"
 )
 
-type pixel struct {
-	x      int32
-	y      int32
-	hp     int32
-	maxHp  int32
-	color  color.RGBA
-	breath bool
-}
-
 const (
 	width  = 2000
 	height = 2000
 )
 
-var pixelComponentType = ecs.CreateComponent[pixel]()
-
-type pixelSystem struct {
-	pixelComponent ecs.WorldComponents[pixel]
-}
-
-func (s *pixelSystem) Init(world *ecs.World) {
-	s.pixelComponent = pixelComponentType.Instances(world)
-
-	for i := range height {
-		for j := range width {
-			newPixel := world.CreateEntity("Pixel")
-
-			randomGreen := uint8(135 / (rand.Intn(10) + 1))
-			randomBlue := uint8(135 / (rand.Intn(10) + 1))
-			hp := rand.Intn(250)
-			maxHp := rand.Intn(250)
-			b := rand.Intn(2)
-			breath := true
-			if b == 0 {
-				breath = false
-			}
-
-			randomColor := color.RGBA{
-				G: randomGreen,
-				B: randomBlue,
-				A: 255,
-			}
-			s.pixelComponent.Set(newPixel, pixel{
-				x:      int32(j),
-				y:      int32(i),
-				hp:     int32(hp),
-				maxHp:  int32(maxHp),
-				color:  randomColor,
-				breath: breath,
-			})
-		}
-	}
-}
-
-func (s *pixelSystem) Run(world *ecs.World) {
-	s.pixelComponent.AllDataParallel(func(pixel *pixel) bool {
-		color := &pixel.color
-
-		if pixel.breath {
-			if color.G < 135 {
-				color.G++
-			} else {
-				pixel.hp++
-			}
-			if color.B < 135 {
-				color.B++
-			} else {
-				pixel.hp++
-			}
-		} else {
-			if color.G > 0 {
-				color.G--
-			} else {
-				pixel.hp--
-			}
-			if color.B > 0 {
-				color.B--
-			} else {
-				pixel.hp--
-			}
-		}
-
-		if pixel.hp <= 0 {
-			pixel.breath = true
-		} else if pixel.hp >= 100 {
-			pixel.breath = false
-		}
-		return true
-	})
-}
-
-func (s *pixelSystem) Destroy(world *ecs.World) {}
-
 type game struct {
-	world           *ecs.World
-	pixelComponents ecs.WorldComponents[pixel]
+	mx                  *sync.Mutex
+	world               *ecs.World
+	colorComponents     ecs.WorldComponents[color.RGBA]
+	transformComponents ecs.WorldComponents[transform]
 
 	imageBuffer  *ebiten.Image
 	debugImage   *ebiten.Image
@@ -128,6 +42,9 @@ type game struct {
 }
 
 func (g *game) Update() error {
+	g.mx.Lock()
+	defer g.mx.Unlock()
+
 	_, dy := ebiten.Wheel()
 	g.scale += float64(dy)
 	if g.scale < 0.1 {
@@ -136,15 +53,40 @@ func (g *game) Update() error {
 		g.scale = 100
 	}
 	g.world.RunSystems()
+
+	g.screenBuffer = make([]byte, 4*width*height)
+	g.colorComponents.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
+		if color == nil {
+			return true
+		}
+
+		transform := g.transformComponents.GetPtr(entity)
+		if transform == nil {
+			return true
+		}
+
+		index := (transform.x + transform.y*width) * 4
+		*(*[4]byte)(unsafe.Pointer(&g.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(color))
+		return true
+	})
+
 	return nil
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
-	g.pixelComponents.AllDataParallel(func(pixel *pixel) bool {
-		index := (pixel.x + pixel.y*width) * 4
-		*(*[4]byte)(unsafe.Pointer(&g.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(&pixel.color))
-		return true
+	g.mx.Lock()
+	defer g.mx.Unlock()
+
+	screen.Clear()
+	screen.Fill(color.RGBA{
+		R: 49,
+		G: 49,
+		B: 49,
+		A: 255,
 	})
+	g.debugImage.Clear()
+	g.imageBuffer.Clear()
+
 	g.imageBuffer.WritePixels(g.screenBuffer)
 
 	var debugInfo = make([]string, 0)
@@ -153,9 +95,8 @@ func (g *game) Draw(screen *ebiten.Image) {
 	debugInfo = append(debugInfo, fmt.Sprintf("TPS %0.2f", ebiten.ActualTPS()))
 	debugInfo = append(debugInfo, fmt.Sprintf("FPS %0.2f", ebiten.ActualFPS()))
 	debugInfo = append(debugInfo, fmt.Sprintf("Scale %0.2f", g.scale))
-	debugInfo = append(debugInfo, p.Sprintf("Entity count %d", width*height))
+	debugInfo = append(debugInfo, p.Sprintf("Entity count %d", entityCount))
 	ebitenutil.DebugPrint(g.debugImage, strings.Join(debugInfo, "\n"))
-	defer g.debugImage.Clear()
 
 	op := new(ebiten.DrawImageOptions)
 	op.GeoM.Scale(g.scale, g.scale)
@@ -189,19 +130,34 @@ func main() {
 	world := ecs.New("1 mil pixel")
 
 	world.RegisterComponentTypes(
-		&pixelComponentType,
+		&transformComponentType,
+		&healthComponentType,
+		&colorComponentType,
+		&movementComponentType,
 	)
 
-	world.RegisterSystems().Parallel(
-		new(pixelSystem),
-	)
+	world.RegisterSystems().
+		Parallel(
+			new(spawnSystem),
+		).
+		Parallel(
+			new(hpSystem),
+		).
+		Parallel(
+			new(colorSystem),
+		).
+		Parallel(
+			new(destroySystem),
+		)
 
 	newGame := game{
-		world:           &world,
-		pixelComponents: pixelComponentType.Instances(&world),
-		imageBuffer:     ebiten.NewImage(width, height),
-		debugImage:      ebiten.NewImage(250, 250),
-		scale:           1,
+		mx:                  new(sync.Mutex),
+		world:               &world,
+		colorComponents:     colorComponentType.Instances(&world),
+		transformComponents: transformComponentType.Instances(&world),
+		imageBuffer:         ebiten.NewImage(width, height),
+		debugImage:          ebiten.NewImage(250, 250),
+		scale:               1,
 	}
 
 	newGame.screenBuffer = make([]byte, 4*width*height)
