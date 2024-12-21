@@ -170,13 +170,13 @@ func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 
 	buffer := a.buffer
 
-	for i := len(buffer) - 1; i >= 0; i-- {
+	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		index.globalOffset = chunk.startingIndex
 		index.page = i
 
 		data = chunk.data
-		for j := len(data) - 1; j >= 0; j-- {
+		for j := chunk.size - 1; j >= 0; j-- {
 			index.local = j
 			if !yield(index, &data[j]) {
 				return
@@ -198,9 +198,12 @@ func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
 		data := chunk.data
 
 		if parallelChunks == 0 {
-			for j := len(data) - 1; j >= 0; j-- {
+			for j := chunk.size - 1; j >= 0; j-- {
 				if shouldReturn {
 					return
+				}
+				if j >= len(data) {
+					continue
 				}
 				element := &data[j]
 				if !yield(element) {
@@ -215,8 +218,8 @@ func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
 			for p := 0; p < parallelSubChunks; p++ {
 				startIndex := p * subchunkSize
 				endIndex := startIndex + subchunkSize
-				if endIndex >= len(data)-1 {
-					endIndex = len(data)
+				if endIndex >= chunk.size-1 {
+					endIndex = chunk.size
 				}
 				go func(wg *sync.WaitGroup, stop *bool, data []T, startIndex int, endIndex int, localyield func(*T) bool) {
 					defer wg.Done()
@@ -225,6 +228,9 @@ func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
 							return
 						}
 						element := &data[j]
+						if j >= len(data) {
+							continue
+						}
 						if !localyield(element) {
 							*stop = true
 							return
@@ -254,9 +260,12 @@ func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
 		index.page = i
 
 		if parallelChunks == 0 {
-			for j := len(data) - 1; j >= 0; j-- {
+			for j := chunk.size - 1; j >= 0; j-- {
 				if shouldReturn {
 					return
+				}
+				if j >= len(data) {
+					continue
 				}
 				index.local = j
 				if !yield(index, &data[j]) {
@@ -271,14 +280,14 @@ func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
 			for p := 0; p < parallelSubChunks; p++ {
 				startIndex := p * subchunkSize
 				endIndex := startIndex + subchunkSize
-				if endIndex >= len(data)-1 {
-					endIndex = len(data)
-				}
 				go func(wg *sync.WaitGroup, stop *bool, data []T, index ChunkArrayIndex, startIndex int, endIndex int, localyield func(ChunkArrayIndex, *T) bool) {
 					defer wg.Done()
 					for j := startIndex; j < endIndex; j++ {
 						if *stop {
 							return
+						}
+						if j >= len(data) {
+							continue
 						}
 						index.local = j
 						if !localyield(index, &data[j]) {

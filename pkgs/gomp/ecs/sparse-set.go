@@ -61,22 +61,26 @@ func (s *SparseSet[TData, TKey]) GetPtr(id TKey) *TData {
 }
 
 func (s *SparseSet[TData, TKey]) All(yield func(TKey, *TData) bool) {
-	var indexBuffer = s.denseIndex.buffer
 	var denseData = s.denseData
 
 	denseData.All(func(i ChunkArrayIndex, value *TData) bool {
-		key := indexBuffer[i.page].data[i.local]
-		return yield(key, value)
+		key := s.denseIndex.Get(i.globalOffset + i.local)
+		if key == nil || value == nil {
+			return true
+		}
+		return yield(*key, value)
 	})
 }
 
 func (s *SparseSet[TData, TKey]) AllParallel(yield func(TKey, *TData) bool) {
-	var indexBuffer = s.denseIndex.buffer
 	var denseData = s.denseData
 
 	denseData.AllParallel(func(i ChunkArrayIndex, value *TData) bool {
-		key := indexBuffer[i.page].data[i.local]
-		return yield(key, value)
+		key := s.denseIndex.Get(i.globalOffset + i.local)
+		if key == nil || value == nil {
+			return true
+		}
+		return yield(*key, value)
 	})
 }
 

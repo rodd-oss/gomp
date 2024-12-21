@@ -8,7 +8,6 @@ package ecs
 
 import (
 	"fmt"
-	"iter"
 	"sync"
 )
 
@@ -96,21 +95,22 @@ func (c *WorldComponents[T]) SoftRemove(entityID EntityID) {
 	mask.Unset(c.ID)
 }
 
-func (c *WorldComponents[T]) Clean(ecs *World) {
+func (c *WorldComponents[T]) Clean() {
+	c.instances.Clean()
 	// value, _ := c.worldFactory.Get(int(ecs.ID))
 	// value.Clean()
 }
 
-func (c *WorldComponents[T]) All() iter.Seq2[EntityID, *T] {
-	return c.instances.All
+func (c *WorldComponents[T]) All(yield func(EntityID, *T) bool) {
+	c.instances.All(yield)
 }
 
-func (c *WorldComponents[T]) AllParallel() iter.Seq2[EntityID, *T] {
-	return c.instances.AllParallel
+func (c *WorldComponents[T]) AllParallel(yield func(EntityID, *T) bool) {
+	c.instances.AllParallel(yield)
 }
 
-func (c *WorldComponents[T]) AllData() iter.Seq[*T] {
-	return c.instances.AllData
+func (c *WorldComponents[T]) AllData(yield func(*T) bool) {
+	c.instances.AllData(yield)
 }
 
 func (c *WorldComponents[T]) AllDataParallel(yield func(*T) bool) {

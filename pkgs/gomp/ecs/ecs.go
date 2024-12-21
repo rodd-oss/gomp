@@ -7,7 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -114,16 +113,16 @@ func (e *World) SoftDestroyEntity(entityId EntityID) {
 	e.mx.Lock()
 	defer e.mx.Unlock()
 
-	mask := e.entityComponentMask.GetPtr(entityId)
-	if mask == nil {
-		panic(fmt.Sprintf("Entity %d does not exist", entityId))
-	}
+	// mask := e.entityComponentMask.GetPtr(entityId)
+	// if mask == nil {
+	// 	panic(fmt.Sprintf("Entity %d does not exist", entityId))
+	// }
 
-	for i := range mask.AllSet {
-		e.components[i].SoftRemove(entityId)
-	}
+	// for i := range mask.AllSet {
+	// 	e.components[i].SoftRemove(entityId)
+	// }
 
-	e.entityComponentMask.SoftDelete(entityId)
+	// e.entityComponentMask.SoftDelete(entityId)
 	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
 }
 

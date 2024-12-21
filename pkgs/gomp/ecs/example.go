@@ -36,7 +36,7 @@ func (s *TransformSystem) Init(world *World) {
 func (s *TransformSystem) Destroy(world *World) {}
 func (s *TransformSystem) Run(world *World) {
 	s.n++
-	for _, t := range s.transform.All() {
+	for _, t := range s.transform.All {
 		t.X += 1
 		t.Y -= 1
 		t.Z += 2
@@ -61,7 +61,7 @@ func (s *BulletSpawnSystem) Run(world *World) {
 
 	var bulletData Bullet
 
-	for id := range s.bulletSpawner.All() {
+	for id := range s.bulletSpawner.All {
 		tr, ok := s.transform.Get(id)
 		if !ok {
 			continue
@@ -83,7 +83,7 @@ func (s *BulletSystem) Init(world *World) {
 }
 func (s *BulletSystem) Destroy(world *World) {}
 func (s *BulletSystem) Run(world *World) {
-	for entId, b := range s.bullet.All() {
+	for entId, b := range s.bullet.All {
 		b.HP -= 1
 		if b.HP <= 0 {
 			world.SoftDestroyEntity(entId)

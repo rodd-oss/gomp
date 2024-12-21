@@ -73,7 +73,7 @@ func (s *pixelSystem) Init(world *World) {
 func (s *pixelSystem) Destroy(world *World) {}
 
 func (s *pixelSystem) Run(world *World) {
-	for pixel := range s.pixelComponent.AllData() {
+	for pixel := range s.pixelComponent.AllData {
 		// Note: was not extracted to separate function to simulate
 		// real-world interaction between range loop and inner code.
 		color := &pixel.color
