@@ -90,6 +90,7 @@ func (s *cameraSystem) Run(world *ecs.World) {
 	mainCamera.mainLayer.image.Clear()
 	mainCamera.debugLayer.image.Clear()
 
+	mainCameraCurrentZoom := mainCamera.mainLayer.zoom
 	mainCamera.mainLayer.zoom += float64(dy)
 	mainCamera.mainLayer.image.WritePixels(s.screenBuffer)
 	clear(s.screenBuffer)
@@ -100,20 +101,20 @@ func (s *cameraSystem) Run(world *ecs.World) {
 		mainCamera.mainLayer.zoom = 100
 	}
 
+	currentMouseX, currentMouseY := ebiten.CursorPosition()
 	isMouseButtonPressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
 	if isMouseButtonPressed {
-		currentMouseX, currentMouseY := ebiten.CursorPosition()
-
-		if s.cursorPositionX != 0 || s.cursorPositionY != 0 {
-			mainCamera.mainLayer.translateX += float64(currentMouseX - s.cursorPositionX)
-			mainCamera.mainLayer.translateY += float64(currentMouseY - s.cursorPositionY)
-		}
-		s.cursorPositionX = currentMouseX
-		s.cursorPositionY = currentMouseY
-	} else {
-		s.cursorPositionX, s.cursorPositionY = 0, 0
+		mainCamera.mainLayer.translateX += float64(currentMouseX - s.cursorPositionX)
+		mainCamera.mainLayer.translateY += float64(currentMouseY - s.cursorPositionY)
 	}
+
+	s.cursorPositionX = currentMouseX
+	s.cursorPositionY = currentMouseY
+
+	ratio := 1 - mainCamera.mainLayer.zoom/mainCameraCurrentZoom
+	mainCamera.mainLayer.translateX += (float64(s.cursorPositionX) - mainCamera.mainLayer.translateX) * ratio
+	mainCamera.mainLayer.translateY += (float64(s.cursorPositionY) - mainCamera.mainLayer.translateY) * ratio
 
 	s.debugInfo = append(s.debugInfo, fmt.Sprintf("TPS %0.2f", ebiten.ActualTPS()))
 	s.debugInfo = append(s.debugInfo, fmt.Sprintf("FPS %0.2f", ebiten.ActualFPS()))
