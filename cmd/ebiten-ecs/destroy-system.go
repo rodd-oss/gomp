@@ -16,6 +16,9 @@ type destroySystem struct {
 	healthComponent    ecs.WorldComponents[health]
 	colorComponent     ecs.WorldComponents[color.RGBA]
 	movementComponent  ecs.WorldComponents[movement]
+	destroyComponent   ecs.WorldComponents[empty]
+
+	n int
 }
 
 func (s *destroySystem) Init(world *ecs.World) {
@@ -23,26 +26,18 @@ func (s *destroySystem) Init(world *ecs.World) {
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
 	s.movementComponent = movementComponentType.Instances(world)
+	s.destroyComponent = destroyComponentType.Instances(world)
+
 }
 func (s *destroySystem) Run(world *ecs.World) {
-	s.healthComponent.All(func(e ecs.EntityID, h *health) bool {
-		if h.hp > 0 {
-			return true
-		}
-
-		s.transformComponent.SoftRemove(e)
-		s.colorComponent.SoftRemove(e)
-		s.movementComponent.SoftRemove(e)
-		s.healthComponent.SoftRemove(e)
+	s.n = 0
+	s.destroyComponent.All(func(e ecs.EntityID, h *empty) bool {
 		world.SoftDestroyEntity(e)
 		entityCount--
 
 		return true
 	})
 
-	s.transformComponent.Clean()
-	// s.colorComponent.Clean()
-	s.movementComponent.Clean()
-	s.healthComponent.Clean()
+	world.Clean()
 }
 func (s *destroySystem) Destroy(world *ecs.World) {}

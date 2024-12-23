@@ -7,7 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
+	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 type ECSID uint
@@ -21,7 +23,7 @@ type World struct {
 	Title string
 
 	tick         int
-	nextEntityID EntityID
+	lastEntityID EntityID
 
 	systems             [][]System
 	components          []AnyComponentInstancesPtr
@@ -67,7 +69,7 @@ func (e *World) RegisterSystems() *SystemBuilder {
 	}
 }
 
-func (e *World) RunSystems() {
+func (e *World) RunSystems() error {
 	for i := range e.systems {
 		// If systems are sequantial, we dont spawn goroutines
 		if len(e.systems[i]) == 1 {
@@ -83,26 +85,13 @@ func (e *World) RunSystems() {
 		e.wg.Wait()
 	}
 
-	// e.Entities.Clean()
-	// for i := range e.components {
-	// 	e.components[i].Clean(e)
-	// }
-
 	e.tick++
+
+	return nil
 }
 
 func (e *World) CreateEntity(title string) EntityID {
-	e.mx.Lock()
-	defer e.mx.Unlock()
-
-	var newId EntityID
-
-	if len(e.deletedEntityIDs) == 0 {
-		newId = e.generateEntityID()
-	} else {
-		newId = e.deletedEntityIDs[len(e.deletedEntityIDs)-1]
-		e.deletedEntityIDs = e.deletedEntityIDs[:len(e.deletedEntityIDs)-1]
-	}
+	var newId = e.generateEntityID()
 
 	e.entityComponentMask.Set(newId, ComponentBitArray256{})
 
@@ -110,24 +99,31 @@ func (e *World) CreateEntity(title string) EntityID {
 }
 
 func (e *World) SoftDestroyEntity(entityId EntityID) {
-	e.mx.Lock()
-	defer e.mx.Unlock()
+	mask := e.entityComponentMask.GetPtr(entityId)
+	if mask == nil {
+		panic(fmt.Sprintf("Entity %d does not exist", entityId))
+	}
 
-	// mask := e.entityComponentMask.GetPtr(entityId)
-	// if mask == nil {
-	// 	panic(fmt.Sprintf("Entity %d does not exist", entityId))
-	// }
+	for i := range mask.AllSet {
+		e.components[i].SoftRemove(entityId)
+	}
 
-	// for i := range mask.AllSet {
-	// 	e.components[i].SoftRemove(entityId)
-	// }
-
-	// e.entityComponentMask.SoftDelete(entityId)
+	e.entityComponentMask.SoftDelete(entityId)
 	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
 }
 
-func (e *World) generateEntityID() EntityID {
-	id := e.nextEntityID
-	e.nextEntityID++
-	return id
+func (e *World) Clean() {
+	for i := range e.components {
+		e.components[i].Clean()
+	}
+}
+
+func (e *World) generateEntityID() (newId EntityID) {
+	if len(e.deletedEntityIDs) == 0 {
+		newId = EntityID(atomic.AddInt32((*int32)(&e.lastEntityID), 1))
+	} else {
+		newId = e.deletedEntityIDs[len(e.deletedEntityIDs)-1]
+		e.deletedEntityIDs = e.deletedEntityIDs[:len(e.deletedEntityIDs)-1]
+	}
+	return newId
 }

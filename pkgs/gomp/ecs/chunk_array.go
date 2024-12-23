@@ -8,14 +8,12 @@ package ecs
 
 import (
 	"math/bits"
-	"runtime"
 	"sync"
 )
 
 type ChunkArray[T any] struct {
 	buffer               []ChunkArrayElement[T]
 	current              *ChunkArrayElement[T]
-	last                 *ChunkArrayElement[T]
 	size                 int
 	initialChunkCapPower int
 	initialBufferCap     int
@@ -40,8 +38,7 @@ func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr 
 	chunk.parent = arr
 
 	arr.current = chunk
-	arr.last = chunk
-	arr.parallelCount = uint(runtime.NumCPU())
+	arr.parallelCount = 2
 
 	return arr
 }
@@ -51,6 +48,10 @@ func (a *ChunkArray[T]) Len() int {
 }
 
 func (a *ChunkArray[T]) Get(index int) *T {
+	if index >= a.size {
+		return nil
+	}
+
 	pageIndex := a.getPageIdByIndex(index)
 	page := &a.buffer[pageIndex]
 
@@ -60,6 +61,10 @@ func (a *ChunkArray[T]) Get(index int) *T {
 }
 
 func (a *ChunkArray[T]) Set(index int, value T) (result *T, ok bool) {
+	if index >= a.size {
+		return nil, false
+	}
+
 	pageIndex := a.getPageIdByIndex(index)
 	page := a.buffer[pageIndex]
 
@@ -78,25 +83,29 @@ func (a *ChunkArray[T]) Append(value T) (int, *T) {
 }
 
 func (a *ChunkArray[T]) SoftReduce() {
-	// a.current.SoftReduce()
 	if a.current.size > 0 {
 		a.current.size--
 		a.size--
 		return
 	}
 
-	prev := a.current.prev
-
-	if prev == nil {
-		return
+	if a.current.prev == nil {
+		panic("nothing to reduce")
 	}
 
-	a.current = prev
+	a.current = a.current.prev
 	a.SoftReduce()
 }
 
 func (a *ChunkArray[T]) Clean() {
-	a.last.Clean()
+	for i := len(a.buffer) - 1; i >= 0; i-- {
+		chunk := &a.buffer[i]
+		if chunk.size == len(chunk.data) {
+			continue
+		}
+
+		chunk.Clean()
+	}
 }
 
 func (a *ChunkArray[T]) Copy(fromIndex, toIndex int) {
@@ -111,19 +120,28 @@ func (a *ChunkArray[T]) Swap(i, j int) {
 	*x, *y = *y, *x
 }
 
-func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
-	var last = a.last
-	index = last.size - 1
-	if index < 0 {
-		if a.last.prev != nil {
-			a.last = a.last.prev
-			return a.Last()
-		}
+// func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
+// 	var last = a.last
+// 	index = last.size - 1
+// 	if index < 0 {
+// 		if a.last.prev != nil {
+// 			a.last = a.last.prev
+// 			return a.Last()
+// 		}
 
+// 		return -1, value, false
+// 	}
+
+// 	return index + last.startingIndex, last.data[index], true
+// }
+
+func (a *ChunkArray[T]) Last() (index int, value T, ok bool) {
+	index = a.size - 1
+	if index < 0 {
 		return -1, value, false
 	}
 
-	return index + last.startingIndex, last.data[index], true
+	return index, *a.Get(index), true
 }
 
 func (a *ChunkArray[T]) extendBuffer() {
@@ -144,7 +162,6 @@ func (a *ChunkArray[T]) makeChunk() *ChunkArrayElement[T] {
 	a.bufferSizeIndex++
 
 	a.current = chunk
-	a.last = chunk
 
 	return chunk
 }
@@ -159,10 +176,6 @@ type ChunkArrayIndex struct {
 	page         int
 }
 
-// func (a *ChunkArray[T]) All() iter.Seq2[ChunkArrayIndex, *T] {
-// 	return a.yielderAll
-// }
-
 func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 	var chunk *ChunkArrayElement[T]
 	var data []T
@@ -176,6 +189,9 @@ func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 		index.page = i
 
 		data = chunk.data
+		if data == nil {
+			continue
+		}
 		for j := chunk.size - 1; j >= 0; j-- {
 			index.local = j
 			if !yield(index, &data[j]) {
@@ -196,6 +212,9 @@ func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
 	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		data := chunk.data
+		if data == nil {
+			continue
+		}
 
 		if parallelChunks == 0 {
 			for j := chunk.size - 1; j >= 0; j-- {
@@ -256,6 +275,10 @@ func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
 	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		data := chunk.data
+		if data == nil {
+			continue
+		}
+
 		index.globalOffset = chunk.startingIndex
 		index.page = i
 
@@ -346,8 +369,10 @@ func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
 		chunk.prev = c
 		c.next = chunk
 	}
+	c.parent.current = c.next
+	c.next.Append(value)
 
-	return c.next.Append(value)
+	return
 }
 
 func (c *ChunkArrayElement[T]) SoftReduce() {
@@ -362,20 +387,8 @@ func (c *ChunkArrayElement[T]) SoftReduce() {
 	}
 
 	c.parent.current = c.prev
-	c.prev.SoftReduce()
 }
 
 func (c *ChunkArrayElement[T]) Clean() {
 	c.data = c.data[:c.size]
-
-	if len(c.data) == 0 {
-		if c.next != nil {
-			c.parent.last = c
-			c.next = nil
-		}
-
-		if c.prev != nil {
-			c.prev.Clean()
-		}
-	}
 }

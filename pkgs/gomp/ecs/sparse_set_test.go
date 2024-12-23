@@ -27,18 +27,21 @@ func TestSparseSet(t *testing.T) {
 	sp.Set(78, "grault")
 
 	sp.SoftDelete(23)
+	sp.Clean()
 
 	sp.Set(1, "garply")
 	sp.Set(44, "waldo")
 	sp.Set(51, "fred")
 
 	sp.SoftDelete(10)
+	sp.Clean()
 
 	sp.Set(0, "plugh")
 	sp.Set(88, "xyzzy")
 	sp.Set(91, "thud")
 
 	sp.SoftDelete(88)
+	sp.Clean()
 
 	require.Equal(t, "fred", *sp.GetPtr(51))
 	require.Equal(t, "baz", *sp.GetPtr(25))
@@ -46,6 +49,7 @@ func TestSparseSet(t *testing.T) {
 	require.Equal(t, "thud", *sp.GetPtr(91))
 
 	sp.SoftDelete(91)
+	sp.Clean()
 
 	require.Nil(t, sp.GetPtr(10))
 	require.Nil(t, sp.GetPtr(23))
@@ -79,6 +83,7 @@ func TestSparseSetMass(t *testing.T) {
 		}
 		sp.SoftDelete(n)
 	}
+	sp.Clean()
 
 	// replace all fifths
 	for n := 5; n < count; n += 5 {
@@ -219,6 +224,7 @@ func BenchmarkSparseSet(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			sp.SoftDelete(i)
 		}
+		sp.Clean()
 	})
 }
 
@@ -232,6 +238,7 @@ func BenchmarkSparseSetDelete(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		sp.SoftDelete(i)
 	}
+	sp.Clean()
 }
 
 func BenchmarkSparseSetEach(b *testing.B) {

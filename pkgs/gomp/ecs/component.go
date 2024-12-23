@@ -17,6 +17,7 @@ type AnyComponentTypePtr interface {
 
 type AnyComponentInstancesPtr interface {
 	SoftRemove(EntityID)
+	Clean()
 }
 
 type ComponentType[T any] struct {
@@ -47,6 +48,7 @@ func (c *ComponentType[T]) register(ecs *World, id ComponentID) AnyComponentInst
 	newInstances := NewSparseSet[T, EntityID]()
 
 	newComponents := WorldComponents[T]{
+		mx:            new(sync.Mutex),
 		ID:            id,
 		maskComponent: ecs.entityComponentMask,
 		instances:     &newInstances,
@@ -57,14 +59,8 @@ func (c *ComponentType[T]) register(ecs *World, id ComponentID) AnyComponentInst
 	return &newComponents
 }
 
-func (c *ComponentType[T]) SoftRemove(ecs *World, entityID EntityID) {
-	worldComp := c.worldComponents[ecs]
-	worldComp.instances.SoftDelete(entityID)
-	mask := worldComp.maskComponent.GetPtr(entityID)
-	mask.Unset(worldComp.ID)
-}
-
 type WorldComponents[T any] struct {
+	mx            *sync.Mutex
 	ID            ComponentID
 	maskComponent *SparseSet[ComponentBitArray256, EntityID]
 	instances     *SparseSet[T, EntityID]
@@ -76,11 +72,15 @@ func (c *WorldComponents[T]) Get(entity EntityID) (T, bool) {
 	return instance, ok
 }
 
-func (c *WorldComponents[T]) GetPtr(entity EntityID) *T {
-	return c.instances.GetPtr(entity)
+func (c *WorldComponents[T]) GetPtr(entity EntityID) (value *T) {
+	value = c.instances.GetPtr(entity)
+	return value
 }
 
 func (c *WorldComponents[T]) Set(entityID EntityID, data T) *T {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
 	var newinstance = c.instances.Set(entityID, data)
 
 	mask := c.maskComponent.GetPtr(entityID)
@@ -97,8 +97,7 @@ func (c *WorldComponents[T]) SoftRemove(entityID EntityID) {
 
 func (c *WorldComponents[T]) Clean() {
 	c.instances.Clean()
-	// value, _ := c.worldFactory.Get(int(ecs.ID))
-	// value.Clean()
+	c.maskComponent.Clean()
 }
 
 func (c *WorldComponents[T]) All(yield func(EntityID, *T) bool) {
@@ -115,6 +114,9 @@ func (c *WorldComponents[T]) AllData(yield func(*T) bool) {
 
 func (c *WorldComponents[T]) AllDataParallel(yield func(*T) bool) {
 	c.instances.AllDataParallel(yield)
+}
+func (c *WorldComponents[T]) Len() int {
+	return c.instances.Len()
 }
 
 // To use more threads we need to prespawn goroutines for each component

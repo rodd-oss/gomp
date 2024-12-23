@@ -16,6 +16,7 @@ type hpSystem struct {
 	healthComponent    ecs.WorldComponents[health]
 	colorComponent     ecs.WorldComponents[color.RGBA]
 	movementComponent  ecs.WorldComponents[movement]
+	destroyComponent   ecs.WorldComponents[empty]
 }
 
 func (s *hpSystem) Init(world *ecs.World) {
@@ -23,10 +24,15 @@ func (s *hpSystem) Init(world *ecs.World) {
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
 	s.movementComponent = movementComponentType.Instances(world)
+	s.destroyComponent = destroyComponentType.Instances(world)
 }
 func (s *hpSystem) Run(world *ecs.World) {
-	s.healthComponent.AllDataParallel(func(h *health) bool {
+	s.healthComponent.AllParallel(func(entity ecs.EntityID, h *health) bool {
 		h.hp--
+
+		if h.hp <= 0 {
+			s.destroyComponent.Set(entity, struct{}{})
+		}
 
 		return true
 	})

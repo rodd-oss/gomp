@@ -48,6 +48,28 @@ func (cm *ChunkMap[T]) Get(index int) (value T, ok bool) {
 	return data.value, data.exists
 }
 
+func (cm *ChunkMap[T]) getElement(index int) (value *ChunkMapElementData[T]) {
+	pageId := cm.getPageIdByIndex(index)
+	if pageId >= len(cm.buffer) {
+		panic("out of range")
+	}
+	page := &cm.buffer[pageId]
+
+	index -= page.startingIndex
+	if index >= len(page.data) {
+		panic("out of range")
+	}
+	data := &page.data[index]
+	return data
+}
+
+func (cm *ChunkMap[T]) SwapData(i, j int) {
+	iElement := cm.getElement(i)
+	jElement := cm.getElement(j)
+
+	iElement.value, jElement.value = jElement.value, iElement.value
+}
+
 func (cm *ChunkMap[T]) Set(index int, value T) {
 	var page *ChunkMapElement[T]
 

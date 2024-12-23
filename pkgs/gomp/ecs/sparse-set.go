@@ -97,24 +97,22 @@ func (s *SparseSet[TData, TKey]) AllDataParallel(yield func(*TData) bool) {
 }
 
 func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
-	idx := int(id)
-
-	indexx, ok := s.sparse.Get(idx)
+	//Get dense array index of the element to be deleted
+	dataIndex, ok := s.sparse.Get(int(id))
 	if !ok {
 		return
 	}
 
-	lastDenseId, backEntityId, ok := s.denseIndex.Last()
+	// Get the last dense id
+	lastDenseId, backSparseId, ok := s.denseIndex.Last()
 	if !ok {
 		return
 	}
 
-	s.denseData.Copy(lastDenseId, indexx)
-	s.denseIndex.Copy(lastDenseId, indexx)
-
-	s.sparse.Set(int(backEntityId), indexx)
-
-	s.sparse.Delete(idx)
+	s.denseData.Swap(lastDenseId, dataIndex)
+	s.denseIndex.Swap(lastDenseId, dataIndex)
+	s.sparse.SwapData(int(backSparseId), int(id))
+	s.sparse.Delete(int(id))
 
 	s.denseData.SoftReduce()
 	s.denseIndex.SoftReduce()
@@ -123,4 +121,8 @@ func (s *SparseSet[TData, TKey]) SoftDelete(id TKey) {
 func (s *SparseSet[TData, TKey]) Clean() {
 	s.denseData.Clean()
 	s.denseIndex.Clean()
+}
+
+func (s *SparseSet[TData, TKey]) Len() int {
+	return s.denseData.Len()
 }

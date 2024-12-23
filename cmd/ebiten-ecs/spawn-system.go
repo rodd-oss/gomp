@@ -7,9 +7,16 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package main
 
 import (
+	"fmt"
 	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
+	"log"
 	"math/rand"
+	"os"
+	"runtime/pprof"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type spawnSystem struct {
@@ -26,6 +33,7 @@ const (
 )
 
 var entityCount = 0
+var pprofEnabled = false
 
 func (s *spawnSystem) Init(world *ecs.World) {
 	s.transformComponent = transformComponentType.Instances(world)
@@ -34,44 +42,64 @@ func (s *spawnSystem) Init(world *ecs.World) {
 	s.movementComponent = movementComponentType.Instances(world)
 }
 func (s *spawnSystem) Run(world *ecs.World) {
-	for range rand.Intn(1000) {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		for range rand.Intn(10000) {
 
-		newCreature := world.CreateEntity("Creature")
+			newCreature := world.CreateEntity("Creature")
 
-		t := transform{
-			x: rand.Int31n(1000),
-			y: rand.Int31n(1000),
+			t := transform{
+				x: rand.Int31n(1000),
+				y: rand.Int31n(1000),
+			}
+
+			s.transformComponent.Set(newCreature, t)
+
+			maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
+			hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
+
+			h := health{
+				hp:    hp,
+				maxHp: maxHp,
+			}
+
+			s.healthComponent.Set(newCreature, h)
+
+			c := color.RGBA{
+				R: 0,
+				G: 0,
+				B: 0,
+				A: 0,
+			}
+
+			s.colorComponent.Set(newCreature, c)
+
+			m := movement{
+				goToX: t.x,
+				goToY: t.y,
+			}
+
+			s.movementComponent.Set(newCreature, m)
+
+			entityCount++
 		}
+	}
 
-		s.transformComponent.Set(newCreature, t)
+	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
+		if *cpuprofile != "" {
+			if pprofEnabled {
+				pprof.StopCPUProfile()
+				fmt.Println("CPU Profile Stopped")
+			} else {
+				f, err := os.Create(*cpuprofile)
+				if err != nil {
+					log.Fatal(err)
+				}
+				pprof.StartCPUProfile(f)
+				fmt.Println("CPU Profile Started")
+			}
 
-		maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
-		hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
-
-		h := health{
-			hp:    hp,
-			maxHp: maxHp,
+			pprofEnabled = !pprofEnabled
 		}
-
-		s.healthComponent.Set(newCreature, h)
-
-		c := color.RGBA{
-			R: 0,
-			G: 0,
-			B: 0,
-			A: 0,
-		}
-
-		s.colorComponent.Set(newCreature, c)
-
-		m := movement{
-			goToX: t.x,
-			goToY: t.y,
-		}
-
-		s.movementComponent.Set(newCreature, m)
-
-		entityCount++
 	}
 }
 func (s *spawnSystem) Destroy(world *ecs.World) {}
