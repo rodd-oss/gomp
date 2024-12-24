@@ -32,12 +32,10 @@ func (s *destroySystem) Init(world *ecs.World) {
 func (s *destroySystem) Run(world *ecs.World) {
 	s.n = 0
 	s.destroyComponent.All(func(e ecs.EntityID, h *empty) bool {
-		world.SoftDestroyEntity(e)
+		world.DestroyEntity(e)
 		entityCount--
 
 		return true
 	})
-
-	world.Clean()
 }
 func (s *destroySystem) Destroy(world *ecs.World) {}

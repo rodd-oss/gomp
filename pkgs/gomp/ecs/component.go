@@ -16,7 +16,7 @@ type AnyComponentTypePtr interface {
 }
 
 type AnyComponentInstancesPtr interface {
-	SoftRemove(EntityID)
+	Remove(EntityID)
 	Clean()
 }
 
@@ -89,7 +89,7 @@ func (c *WorldComponents[T]) Set(entityID EntityID, data T) *T {
 	return newinstance
 }
 
-func (c *WorldComponents[T]) SoftRemove(entityID EntityID) {
+func (c *WorldComponents[T]) Remove(entityID EntityID) {
 	c.instances.SoftDelete(entityID)
 	mask := c.maskComponent.GetPtr(entityID)
 	mask.Unset(c.ID)

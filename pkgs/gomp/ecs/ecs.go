@@ -86,6 +86,7 @@ func (e *World) RunSystems() error {
 	}
 
 	e.tick++
+	e.Clean()
 
 	return nil
 }
@@ -98,14 +99,14 @@ func (e *World) CreateEntity(title string) EntityID {
 	return newId
 }
 
-func (e *World) SoftDestroyEntity(entityId EntityID) {
+func (e *World) DestroyEntity(entityId EntityID) {
 	mask := e.entityComponentMask.GetPtr(entityId)
 	if mask == nil {
 		panic(fmt.Sprintf("Entity %d does not exist", entityId))
 	}
 
 	for i := range mask.AllSet {
-		e.components[i].SoftRemove(entityId)
+		e.components[i].Remove(entityId)
 	}
 
 	e.entityComponentMask.SoftDelete(entityId)

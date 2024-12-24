@@ -8,6 +8,7 @@ package ecs
 
 import (
 	"math/bits"
+	"runtime"
 	"sync"
 )
 
@@ -15,11 +16,12 @@ type ChunkArray[T any] struct {
 	buffer               []ChunkArrayElement[T]
 	current              *ChunkArrayElement[T]
 	size                 int
+	bufferSize           int
 	initialChunkCapPower int
 	initialBufferCap     int
 	chunkCapPower        int
 	bufferCapPower       int
-	bufferSizeIndex      int
+	numBufferAllocations int
 	parallelCount        uint
 }
 
@@ -32,13 +34,14 @@ func NewChunkArray[T any](bufferCapacityPower int, chunkCapacityPower int) (arr 
 	arr.chunkCapPower = chunkCapacityPower
 
 	arr.buffer = make([]ChunkArrayElement[T], 1<<bufferCapacityPower)
-	arr.bufferSizeIndex = 0
+	arr.numBufferAllocations = 0
+	arr.bufferSize = 1
 
 	chunk := arr.makeChunk()
 	chunk.parent = arr
 
 	arr.current = chunk
-	arr.parallelCount = 2
+	arr.parallelCount = uint(runtime.NumCPU()) / 2
 
 	return arr
 }
@@ -89,10 +92,7 @@ func (a *ChunkArray[T]) SoftReduce() {
 		return
 	}
 
-	if a.current.prev == nil {
-		panic("nothing to reduce")
-	}
-
+	a.bufferSize--
 	a.current = a.current.prev
 	a.SoftReduce()
 }
@@ -150,16 +150,16 @@ func (a *ChunkArray[T]) extendBuffer() {
 }
 
 func (a *ChunkArray[T]) makeChunk() *ChunkArrayElement[T] {
-	if a.bufferSizeIndex >= len(a.buffer) {
+	if a.numBufferAllocations >= len(a.buffer) {
 		a.extendBuffer()
 	}
 
-	chunk := &a.buffer[a.bufferSizeIndex]
+	chunk := &a.buffer[a.numBufferAllocations]
 	chunk.parent = a
 	chunk.data = make([]T, 0, 1<<a.chunkCapPower)
-	chunk.startingIndex = ((1<<a.bufferSizeIndex - 1) << a.initialChunkCapPower)
+	chunk.startingIndex = ((1<<a.numBufferAllocations - 1) << a.initialChunkCapPower)
 	a.chunkCapPower++
-	a.bufferSizeIndex++
+	a.numBufferAllocations++
 
 	a.current = chunk
 
@@ -183,7 +183,7 @@ func (a *ChunkArray[T]) All(yield func(ChunkArrayIndex, *T) bool) {
 
 	buffer := a.buffer
 
-	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
+	for i := a.bufferSize - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		index.globalOffset = chunk.startingIndex
 		index.page = i
@@ -209,7 +209,7 @@ func (a *ChunkArray[T]) AllDataParallel(yield func(*T) bool) {
 	buffer := a.buffer
 
 	parallelChunks := bits.Len(uint(a.parallelCount)) - 1
-	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
+	for i := a.bufferSize - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		data := chunk.data
 		if data == nil {
@@ -272,7 +272,7 @@ func (a *ChunkArray[T]) AllParallel(yield func(ChunkArrayIndex, *T) bool) {
 	buffer := a.buffer
 
 	parallelChunks := bits.Len(uint(a.parallelCount)) - 1
-	for i := a.bufferSizeIndex - 1; i >= 0; i-- {
+	for i := a.bufferSize - 1; i >= 0; i-- {
 		chunk = &buffer[i]
 		data := chunk.data
 		if data == nil {
@@ -369,6 +369,7 @@ func (c *ChunkArrayElement[T]) Append(value T) (index int, result *T) {
 		chunk.prev = c
 		c.next = chunk
 	}
+	c.parent.bufferSize++
 	c.parent.current = c.next
 	c.next.Append(value)
 
@@ -385,7 +386,7 @@ func (c *ChunkArrayElement[T]) SoftReduce() {
 	if c.prev == nil {
 		return
 	}
-
+	c.parent.bufferSize--
 	c.parent.current = c.prev
 }
 

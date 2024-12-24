@@ -69,10 +69,11 @@ func (s *cameraSystem) Run(world *ecs.World) {
 			return true
 		}
 
-		transform := s.transformComponent.GetPtr(entity)
-		if transform == nil {
+		transform, ok := s.transformComponent.Get(entity)
+		if !ok {
 			return true
 		}
+
 		s.buffer.SetRGBA(int(transform.x), int(transform.y), *color)
 		return true
 	})

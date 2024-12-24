@@ -86,7 +86,7 @@ func (s *BulletSystem) Run(world *World) {
 	for entId, b := range s.bullet.All {
 		b.HP -= 1
 		if b.HP <= 0 {
-			world.SoftDestroyEntity(entId)
+			world.DestroyEntity(entId)
 		}
 	}
 }
