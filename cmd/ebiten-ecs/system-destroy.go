@@ -8,34 +8,18 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 )
 
 type systemDestroyRemovedEntities struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
-	destroyComponent   ecs.WorldComponents[empty]
-
 	n int
 }
 
-func (s *systemDestroyRemovedEntities) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-	s.destroyComponent = destroyComponentType.Instances(world)
-
-}
-func (s *systemDestroyRemovedEntities) Run(world *ecs.World) {
+func (s *systemDestroyRemovedEntities) Init(world *ClientWorld) {}
+func (s *systemDestroyRemovedEntities) Run(world *ClientWorld) {
 	s.n = 0
-	s.destroyComponent.All(func(e ecs.EntityID, h *empty) bool {
+	world.Components.destroy.All(func(e ecs.EntityID, h *destroy) bool {
 		world.DestroyEntity(e)
-		entityCount--
-
 		return true
 	})
 }
-func (s *systemDestroyRemovedEntities) Destroy(world *ecs.World) {}
+func (s *systemDestroyRemovedEntities) Destroy(world *ClientWorld) {}

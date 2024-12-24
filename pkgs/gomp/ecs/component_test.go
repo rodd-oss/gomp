@@ -23,8 +23,8 @@ type pixel struct {
 var pixelComponentType = CreateComponent[pixel]()
 
 // Commonly used functions in both benchmarks.
-func PrepareWorld(description string, system System) *World {
-	world := New(description)
+func PrepareWorld(description string, system AnyUpdateSystem[World]) *World {
+	world := CreateWorld(description)
 
 	world.RegisterComponentTypes(
 		&pixelComponentType,

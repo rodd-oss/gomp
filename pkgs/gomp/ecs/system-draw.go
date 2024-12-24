@@ -6,36 +6,33 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-type System interface {
-	Init(*World)
-	Run(*World)
-	Destroy(*World)
+import "github.com/hajimehoshi/ebiten/v2"
+
+type AnyDrawSystem[W any] interface {
+	Init(*W)
+	Run(*W, *ebiten.Image)
+	Destroy(*W)
 }
 
-type SystemBuilder struct {
-	ecs     *World
-	systems *[][]System
+type DrawSystemBuilder[W any] struct {
+	ecs     *W
+	systems *[][]AnyDrawSystem[W]
 }
 
-func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
+func (b *DrawSystemBuilder[W]) Sequential(systems ...AnyDrawSystem[W]) *DrawSystemBuilder[W] {
 	for i := 0; i < len(systems); i++ {
 		systems[i].Init(b.ecs)
-		parallelSystems := make([]System, 0)
+		parallelSystems := make([]AnyDrawSystem[W], 0)
 		parallelSystems = append(parallelSystems, systems[i])
 		*b.systems = append(*b.systems, parallelSystems)
 	}
 	return b
 }
 
-func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
+func (b *DrawSystemBuilder[W]) Parallel(systems ...AnyDrawSystem[W]) *DrawSystemBuilder[W] {
 	*b.systems = append(*b.systems, systems)
 	for i := 0; i < len(systems); i++ {
 		systems[i].Init(b.ecs)
 	}
 	return b
-}
-
-func runSystemAsync(system System, e *World) {
-	defer e.wg.Done()
-	system.Run(e)
 }

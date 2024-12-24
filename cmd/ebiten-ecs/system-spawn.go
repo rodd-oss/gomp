@@ -8,7 +8,6 @@ package main
 
 import (
 	"fmt"
-	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
 	"log"
 	"math/rand"
@@ -20,10 +19,7 @@ import (
 )
 
 type systemSpawn struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
+	pprofEnabled bool
 }
 
 const (
@@ -32,18 +28,10 @@ const (
 	maxMaxHp        = 2000
 )
 
-var entityCount = 0
-var pprofEnabled = false
-
-func (s *systemSpawn) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-}
-func (s *systemSpawn) Run(world *ecs.World) {
+func (s *systemSpawn) Init(world *ClientWorld) {}
+func (s *systemSpawn) Run(world *ClientWorld) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		for range rand.Intn(10000) {
+		for range rand.Intn(1000) {
 
 			newCreature := world.CreateEntity("Creature")
 
@@ -52,7 +40,7 @@ func (s *systemSpawn) Run(world *ecs.World) {
 				y: rand.Int31n(1000),
 			}
 
-			s.transformComponent.Set(newCreature, t)
+			world.Components.transform.Create(newCreature, t)
 
 			maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
 			hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
@@ -62,7 +50,7 @@ func (s *systemSpawn) Run(world *ecs.World) {
 				maxHp: maxHp,
 			}
 
-			s.healthComponent.Set(newCreature, h)
+			world.Components.health.Create(newCreature, h)
 
 			c := color.RGBA{
 				R: 0,
@@ -71,22 +59,13 @@ func (s *systemSpawn) Run(world *ecs.World) {
 				A: 0,
 			}
 
-			s.colorComponent.Set(newCreature, c)
-
-			m := movement{
-				goToX: t.x,
-				goToY: t.y,
-			}
-
-			s.movementComponent.Set(newCreature, m)
-
-			entityCount++
+			world.Components.color.Create(newCreature, c)
 		}
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
 		if *cpuprofile != "" {
-			if pprofEnabled {
+			if s.pprofEnabled {
 				pprof.StopCPUProfile()
 				fmt.Println("CPU Profile Stopped")
 			} else {
@@ -98,8 +77,8 @@ func (s *systemSpawn) Run(world *ecs.World) {
 				fmt.Println("CPU Profile Started")
 			}
 
-			pprofEnabled = !pprofEnabled
+			s.pprofEnabled = !s.pprofEnabled
 		}
 	}
 }
-func (s *systemSpawn) Destroy(world *ecs.World) {}
+func (s *systemSpawn) Destroy(world *ClientWorld) {}

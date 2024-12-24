@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkSystems(b *testing.B) {
-	var world = New("Main")
+	var world = CreateWorld("Main")
 
 	world.RegisterComponentTypes(
 		&transformComponent,

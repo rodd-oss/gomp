@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type ECSID uint
@@ -25,8 +27,8 @@ type World struct {
 	tick         int
 	lastEntityID EntityID
 
-	updateSystems       [][]System
-	drawSystems         [][]System
+	updateSystems       [][]AnyUpdateSystem[World]
+	drawSystems         [][]AnyDrawSystem[World]
 	components          []AnyComponentInstancesPtr
 	deletedEntityIDs    []EntityID
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
@@ -42,7 +44,7 @@ func generateECSID() ECSID {
 	return id
 }
 
-func New(title string) World {
+func CreateWorld(title string) World {
 	id := generateECSID()
 	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
 
@@ -58,21 +60,21 @@ func New(title string) World {
 	return ecs
 }
 
-func (e *World) RegisterComponentTypes(component_ptr ...AnyComponentTypePtr) {
+func (e *World) RegisterComponentTypes(component_ptr ...AnyComponentTypePtr[World]) {
 	for i := 0; i < len(component_ptr); i++ {
 		e.components = append(e.components, component_ptr[i].register(e, ComponentID(i)))
 	}
 }
 
-func (e *World) RegisterUpdateSystems() *SystemBuilder {
-	return &SystemBuilder{
-		ecs:     e,
+func (e *World) RegisterUpdateSystems() *UpdateSystemBuilder[World] {
+	return &UpdateSystemBuilder[World]{
+		world:   e,
 		systems: &e.updateSystems,
 	}
 }
 
-func (e *World) RegisterDrawSystems() *SystemBuilder {
-	return &SystemBuilder{
+func (e *World) RegisterDrawSystems() *DrawSystemBuilder[World] {
+	return &DrawSystemBuilder[World]{
 		ecs:     e,
 		systems: &e.drawSystems,
 	}
@@ -89,7 +91,10 @@ func (e *World) RunUpdateSystems() error {
 		e.wg.Add(len(e.updateSystems[i]))
 		for j := range e.updateSystems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.updateSystems[i][j], e)
+			go func(system AnyUpdateSystem[World], e *World) {
+				defer e.wg.Done()
+				system.Run(e)
+			}(e.updateSystems[i][j], e)
 		}
 		e.wg.Wait()
 	}
@@ -100,18 +105,21 @@ func (e *World) RunUpdateSystems() error {
 	return nil
 }
 
-func (e *World) RunDrawSystems() {
+func (e *World) RunDrawSystems(screen *ebiten.Image) {
 	for i := range e.drawSystems {
 		// If systems are sequantial, we dont spawn goroutines
 		if len(e.drawSystems[i]) == 1 {
-			e.drawSystems[i][0].Run(e)
+			e.drawSystems[i][0].Run(e, screen)
 			continue
 		}
 
 		e.wg.Add(len(e.drawSystems[i]))
 		for j := range e.drawSystems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.drawSystems[i][j], e)
+			go func(system AnyDrawSystem[World], e *World, screen *ebiten.Image) {
+				defer e.wg.Done()
+				system.Run(e, screen)
+			}(e.drawSystems[i][j], e, screen)
 		}
 		e.wg.Wait()
 	}

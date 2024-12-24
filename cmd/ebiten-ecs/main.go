@@ -22,7 +22,7 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 func main() {
 	flag.Parse()
 
-	newGame := newGame()
+	newGame := newGameClient()
 
 	ebiten.SetRunnableOnUnfocused(true)
 	ebiten.SetWindowSize(width, height)

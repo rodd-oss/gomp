@@ -19,7 +19,7 @@ type game struct {
 }
 
 func newGame() game {
-	world := ecs.New("1 mil pixel")
+	world := ecs.CreateWorld("1 mil pixel")
 
 	world.RegisterComponentTypes(
 		&destroyComponentType,

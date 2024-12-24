@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	github.com/alphadose/haxmap v1.4.1 // indirect
 	github.com/colega/zeropool v0.0.0-20230505084239-6fb4a4f75381 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20231223183121-56fa3ac82ce7 // indirect
@@ -28,6 +29,7 @@ require (
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hajimehoshi/ebiten v1.12.12 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/negrel/assert v0.5.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quasilyte/gmath v0.0.0-20221217210116-fba37a2e15c7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

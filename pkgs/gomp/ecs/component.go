@@ -11,11 +11,13 @@ import (
 	"sync"
 )
 
-type AnyComponentTypePtr interface {
-	register(*World, ComponentID) AnyComponentInstancesPtr
+type AnyComponentTypePtr[W any] interface {
+	register(*W, ComponentID) AnyComponentInstancesPtr
 }
 
 type AnyComponentInstancesPtr interface {
+	registerComponentMask(mask *ComponentManager[ComponentBitArray256])
+	getId() ComponentID
 	Remove(EntityID)
 	Clean()
 }
@@ -64,6 +66,13 @@ type WorldComponents[T any] struct {
 	ID            ComponentID
 	maskComponent *SparseSet[ComponentBitArray256, EntityID]
 	instances     *SparseSet[T, EntityID]
+}
+
+func (c *WorldComponents[T]) getId() ComponentID {
+	return c.ID
+}
+
+func (c *WorldComponents[T]) registerComponentMask(mask *ComponentManager[ComponentBitArray256]) {
 }
 
 func (c *WorldComponents[T]) Get(entity EntityID) (T, bool) {

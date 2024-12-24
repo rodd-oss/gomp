@@ -8,33 +8,20 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 )
 
-type systemCalcHp struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
-	destroyComponent   ecs.WorldComponents[empty]
-}
+type systemCalcHp struct{}
 
-func (s *systemCalcHp) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-	s.destroyComponent = destroyComponentType.Instances(world)
-}
-func (s *systemCalcHp) Run(world *ecs.World) {
-	s.healthComponent.AllParallel(func(entity ecs.EntityID, h *health) bool {
+func (s *systemCalcHp) Init(world *ClientWorld) {}
+func (s *systemCalcHp) Run(world *ClientWorld) {
+	world.Components.health.AllParallel(func(entity ecs.EntityID, h *health) bool {
 		h.hp--
 
 		if h.hp <= 0 {
-			s.destroyComponent.Set(entity, struct{}{})
+			world.Components.destroy.Create(entity, struct{}{})
 		}
 
 		return true
 	})
 }
-func (s *systemCalcHp) Destroy(world *ecs.World) {}
+func (s *systemCalcHp) Destroy(world *ClientWorld) {}

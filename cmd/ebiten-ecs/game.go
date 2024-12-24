@@ -8,75 +8,102 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type game struct {
-	world            *ecs.World
-	cameraComponents ecs.WorldComponents[camera]
-	op               *ebiten.DrawImageOptions
+type ClientWorld = ecs.GenericWorld[clientComponents, clientSystems]
+
+type client struct {
+	world *ClientWorld
 }
 
-func newGame() (newGame game) {
-	world := ecs.New("1 mil pixel")
-
-	world.RegisterComponentTypes(
-		&destroyComponentType,
-		&cameraComponentType,
-		&transformComponentType,
-		&healthComponentType,
-		&colorComponentType,
-		&movementComponentType,
-	)
-
-	world.RegisterUpdateSystems().
-		Sequential(
-			new(systemSpawn),
-			new(systemCalcHp),
-			new(systemCalcColor),
-			new(systemDestroyRemovedEntities),
-		)
-
-	world.RegisterDrawSystems().
-		Sequential(
-			new(systemDraw),
-		)
-
-	newGame.world = &world
-	newGame.cameraComponents = cameraComponentType.Instances(&world)
-	newGame.op = new(ebiten.DrawImageOptions)
-
-	return newGame
+type clientComponents struct {
+	destroy   *ecs.ComponentManager[destroy]
+	camera    *ecs.ComponentManager[camera]
+	transform *ecs.ComponentManager[transform]
+	health    *ecs.ComponentManager[health]
+	color     *ecs.ComponentManager[color.RGBA]
 }
 
-func (g *game) Update() error {
-	return g.world.RunUpdateSystems()
+type clientSystems struct {
+	spawn   *systemSpawn
+	calcHp  *systemCalcHp
+	calcCol *systemCalcColor
+	destroy *systemDestroyRemovedEntities
+	draw    *systemDraw
 }
 
-func (g *game) Draw(screen *ebiten.Image) {
-	var mainCamera *camera
+func newGameClient() (c client) {
+	// Create components
+	colors := ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID)
+	transforms := ecs.CreateComponentManager[transform](TRANSFORM_COMPONENT_ID)
+	health := ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID)
+	destroys := ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID)
+	cameras := ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID)
 
-	g.world.RunDrawSystems()
+	// Create component managers
 
-	g.cameraComponents.AllData(func(c *camera) bool {
-		mainCamera = c
-		return false
-	})
-
-	if mainCamera == nil {
-		return
+	components := clientComponents{
+		color:     &colors,
+		camera:    &cameras,
+		health:    &health,
+		destroy:   &destroys,
+		transform: &transforms,
 	}
 
-	g.op.GeoM.Reset()
-	g.op.GeoM.Scale(mainCamera.mainLayer.zoom, mainCamera.mainLayer.zoom)
-	screen.DrawImage(mainCamera.mainLayer.image, g.op)
+	// Create systems
+	systems := clientSystems{
+		spawn:   new(systemSpawn),
+		calcHp:  new(systemCalcHp),
+		calcCol: new(systemCalcColor),
+		destroy: new(systemDestroyRemovedEntities),
+		draw:    new(systemDraw),
+	}
 
-	g.op.GeoM.Reset()
-	g.op.GeoM.Scale(mainCamera.debugLayer.zoom, mainCamera.debugLayer.zoom)
-	screen.DrawImage(mainCamera.debugLayer.image, g.op)
+	// Create world
+	world := ecs.CreateGenericWorld(0, &components, &systems)
+
+	// Register components
+	world.RegisterComponents(
+		components.color,
+		components.camera,
+		components.health,
+		components.transform,
+		components.destroy,
+	)
+
+	// Register update systems
+	world.RegisterUpdateSystems().
+		Sequential(
+			systems.spawn,
+			systems.calcHp,
+			systems.calcCol,
+			systems.destroy,
+		)
+
+	// Register draw systems
+	world.RegisterDrawSystems().
+		Sequential(
+			systems.draw,
+		)
+
+	newClient := client{
+		world: &world,
+	}
+
+	return newClient
 }
 
-func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (c *client) Update() error {
+	return c.world.RunUpdateSystems()
+}
+
+func (c *client) Draw(screen *ebiten.Image) {
+	c.world.RunDrawSystems(screen)
+}
+
+func (c *client) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }

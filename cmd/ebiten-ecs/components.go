@@ -7,9 +7,17 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+)
+
+const (
+	COLOR_COMPONENT_ID ecs.ComponentID = iota
+	TRANSFORM_COMPONENT_ID
+	HEALTH_COMPONENT_ID
+	DESTROY_COMPONENT_ID
+	SPAWN_COMPONENT_ID
+	CAMERA_COMPONENT_ID
 )
 
 type transform struct {
@@ -18,10 +26,6 @@ type transform struct {
 
 type health struct {
 	hp, maxHp int32
-}
-
-type movement struct {
-	goToX, goToY int32
 }
 
 type cameraLayer struct {
@@ -33,14 +37,7 @@ type camera struct {
 	debugLayer cameraLayer
 }
 
-type empty struct{}
-
-var transformComponentType = ecs.CreateComponent[transform]()
-var healthComponentType = ecs.CreateComponent[health]()
-var colorComponentType = ecs.CreateComponent[color.RGBA]()
-var movementComponentType = ecs.CreateComponent[movement]()
-var cameraComponentType = ecs.CreateComponent[camera]()
-var destroyComponentType = ecs.CreateComponent[empty]()
+type destroy struct{}
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

@@ -12,25 +12,17 @@ import (
 )
 
 type systemCalcColor struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
-
 	baseColor color.RGBA
 }
 
-func (s *systemCalcColor) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-
+func (s *systemCalcColor) Init(world *ClientWorld) {
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
-func (s *systemCalcColor) Run(world *ecs.World) {
-	s.colorComponent.AllParallel(func(ei ecs.EntityID, c *color.RGBA) bool {
-		health := s.healthComponent.GetPtr(ei)
+func (s *systemCalcColor) Run(world *ClientWorld) {
+	components := world.Components
+
+	components.color.AllParallel(func(ei ecs.EntityID, c *color.RGBA) bool {
+		health := components.health.Get(ei)
 		if health == nil {
 			return true
 		}
@@ -45,4 +37,4 @@ func (s *systemCalcColor) Run(world *ecs.World) {
 		return true
 	})
 }
-func (s *systemCalcColor) Destroy(world *ecs.World) {}
+func (s *systemCalcColor) Destroy(world *ClientWorld) {}
