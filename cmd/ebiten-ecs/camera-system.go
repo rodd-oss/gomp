@@ -9,9 +9,10 @@ package main
 import (
 	"fmt"
 	"gomp_game/pkgs/gomp/ecs"
+	"image"
 	"image/color"
+	"image/draw"
 	"strings"
-	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -27,9 +28,9 @@ type cameraSystem struct {
 	cameraComponent      ecs.WorldComponents[camera]
 	destroyComponentType ecs.WorldComponents[empty]
 
-	screenBuffer []byte
-	debugInfo    []string
-	p            *message.Printer
+	buffer    *image.RGBA
+	debugInfo []string
+	p         *message.Printer
 }
 
 func (s *cameraSystem) Init(world *ecs.World) {
@@ -54,12 +55,14 @@ func (s *cameraSystem) Init(world *ecs.World) {
 		},
 	})
 
-	s.screenBuffer = make([]byte, 4*width*height)
+	s.buffer = image.NewRGBA(image.Rect(0, 0, width, height))
 	s.debugInfo = make([]string, 0)
 }
 
 func (s *cameraSystem) Run(world *ecs.World) {
 	_, dy := ebiten.Wheel()
+
+	draw.Draw(s.buffer, s.buffer.Bounds(), &image.Uniform{color.Transparent}, image.Point{}, draw.Src)
 
 	s.colorComponent.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
 		if color == nil {
@@ -70,10 +73,7 @@ func (s *cameraSystem) Run(world *ecs.World) {
 		if transform == nil {
 			return true
 		}
-
-		index := (transform.x + transform.y*width) * 4
-
-		*(*[4]byte)(unsafe.Pointer(&s.screenBuffer[index])) = *(*[4]byte)(unsafe.Pointer(color))
+		s.buffer.SetRGBA(int(transform.x), int(transform.y), *color)
 		return true
 	})
 
@@ -87,8 +87,7 @@ func (s *cameraSystem) Run(world *ecs.World) {
 	mainCamera.debugLayer.image.Clear()
 
 	mainCamera.mainLayer.zoom += float64(dy)
-	mainCamera.mainLayer.image.WritePixels(s.screenBuffer)
-	clear(s.screenBuffer)
+	mainCamera.mainLayer.image.WritePixels(s.buffer.Pix)
 
 	if mainCamera.mainLayer.zoom < 0.1 {
 		mainCamera.mainLayer.zoom = 0.1

@@ -43,7 +43,7 @@ func (s *spawnSystem) Init(world *ecs.World) {
 }
 func (s *spawnSystem) Run(world *ecs.World) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		for range rand.Intn(10000) {
+		for range rand.Intn(1000) {
 
 			newCreature := world.CreateEntity("Creature")
 
