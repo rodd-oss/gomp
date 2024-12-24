@@ -13,7 +13,8 @@ type System interface {
 }
 
 type SystemBuilder struct {
-	ecs *World
+	ecs     *World
+	systems *[][]System
 }
 
 func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
@@ -21,13 +22,13 @@ func (b *SystemBuilder) Sequential(systems ...System) *SystemBuilder {
 		systems[i].Init(b.ecs)
 		parallelSystems := make([]System, 0)
 		parallelSystems = append(parallelSystems, systems[i])
-		b.ecs.systems = append(b.ecs.systems, parallelSystems)
+		*b.systems = append(*b.systems, parallelSystems)
 	}
 	return b
 }
 
 func (b *SystemBuilder) Parallel(systems ...System) *SystemBuilder {
-	b.ecs.systems = append(b.ecs.systems, systems)
+	*b.systems = append(*b.systems, systems)
 	for i := 0; i < len(systems); i++ {
 		systems[i].Init(b.ecs)
 	}

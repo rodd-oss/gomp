@@ -18,7 +18,7 @@ type game struct {
 	op               *ebiten.DrawImageOptions
 }
 
-func newGame() game {
+func newGame() (newGame game) {
 	world := ecs.New("1 mil pixel")
 
 	world.RegisterComponentTypes(
@@ -30,35 +30,34 @@ func newGame() game {
 		&movementComponentType,
 	)
 
-	world.RegisterSystems().
+	world.RegisterUpdateSystems().
 		Sequential(
-			new(spawnSystem),
-			new(hpSystem),
-			new(colorSystem),
-			new(destroySystem),
-			new(cameraSystem),
+			new(systemSpawn),
+			new(systemCalcHp),
+			new(systemCalcColor),
+			new(systemDestroyRemovedEntities),
 		)
 
-	newGame := game{
-		world:            &world,
-		cameraComponents: cameraComponentType.Instances(&world),
-		op:               new(ebiten.DrawImageOptions),
-	}
+	world.RegisterDrawSystems().
+		Sequential(
+			new(systemDraw),
+		)
+
+	newGame.world = &world
+	newGame.cameraComponents = cameraComponentType.Instances(&world)
+	newGame.op = new(ebiten.DrawImageOptions)
 
 	return newGame
 }
 
 func (g *game) Update() error {
-	err := g.world.RunSystems()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return g.world.RunUpdateSystems()
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
 	var mainCamera *camera
+
+	g.world.RunDrawSystems()
 
 	g.cameraComponents.AllData(func(c *camera) bool {
 		mainCamera = c

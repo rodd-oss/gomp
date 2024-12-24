@@ -29,7 +29,7 @@ func PrepareWorld(description string, system System) *World {
 	world.RegisterComponentTypes(
 		&pixelComponentType,
 	)
-	world.RegisterSystems().Parallel(
+	world.RegisterUpdateSystems().Parallel(
 		system,
 	)
 
@@ -166,7 +166,7 @@ func BenchmarkRangeIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystems()
+		world.RunUpdateSystems()
 	}
 }
 
@@ -178,6 +178,6 @@ func BenchmarkDirectCallIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystems()
+		world.RunUpdateSystems()
 	}
 }

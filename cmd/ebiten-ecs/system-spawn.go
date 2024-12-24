@@ -19,7 +19,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-type spawnSystem struct {
+type systemSpawn struct {
 	transformComponent ecs.WorldComponents[transform]
 	healthComponent    ecs.WorldComponents[health]
 	colorComponent     ecs.WorldComponents[color.RGBA]
@@ -35,15 +35,15 @@ const (
 var entityCount = 0
 var pprofEnabled = false
 
-func (s *spawnSystem) Init(world *ecs.World) {
+func (s *systemSpawn) Init(world *ecs.World) {
 	s.transformComponent = transformComponentType.Instances(world)
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
 	s.movementComponent = movementComponentType.Instances(world)
 }
-func (s *spawnSystem) Run(world *ecs.World) {
+func (s *systemSpawn) Run(world *ecs.World) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		for range rand.Intn(1000) {
+		for range rand.Intn(10000) {
 
 			newCreature := world.CreateEntity("Creature")
 
@@ -102,4 +102,4 @@ func (s *spawnSystem) Run(world *ecs.World) {
 		}
 	}
 }
-func (s *spawnSystem) Destroy(world *ecs.World) {}
+func (s *systemSpawn) Destroy(world *ecs.World) {}

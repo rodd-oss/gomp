@@ -11,7 +11,7 @@ import (
 	"image/color"
 )
 
-type hpSystem struct {
+type systemCalcHp struct {
 	transformComponent ecs.WorldComponents[transform]
 	healthComponent    ecs.WorldComponents[health]
 	colorComponent     ecs.WorldComponents[color.RGBA]
@@ -19,14 +19,14 @@ type hpSystem struct {
 	destroyComponent   ecs.WorldComponents[empty]
 }
 
-func (s *hpSystem) Init(world *ecs.World) {
+func (s *systemCalcHp) Init(world *ecs.World) {
 	s.transformComponent = transformComponentType.Instances(world)
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
 	s.movementComponent = movementComponentType.Instances(world)
 	s.destroyComponent = destroyComponentType.Instances(world)
 }
-func (s *hpSystem) Run(world *ecs.World) {
+func (s *systemCalcHp) Run(world *ecs.World) {
 	s.healthComponent.AllParallel(func(entity ecs.EntityID, h *health) bool {
 		h.hp--
 
@@ -37,4 +37,4 @@ func (s *hpSystem) Run(world *ecs.World) {
 		return true
 	})
 }
-func (s *hpSystem) Destroy(world *ecs.World) {}
+func (s *systemCalcHp) Destroy(world *ecs.World) {}

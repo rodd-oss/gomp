@@ -25,7 +25,8 @@ type World struct {
 	tick         int
 	lastEntityID EntityID
 
-	systems             [][]System
+	updateSystems       [][]System
+	drawSystems         [][]System
 	components          []AnyComponentInstancesPtr
 	deletedEntityIDs    []EntityID
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
@@ -63,24 +64,32 @@ func (e *World) RegisterComponentTypes(component_ptr ...AnyComponentTypePtr) {
 	}
 }
 
-func (e *World) RegisterSystems() *SystemBuilder {
+func (e *World) RegisterUpdateSystems() *SystemBuilder {
 	return &SystemBuilder{
-		ecs: e,
+		ecs:     e,
+		systems: &e.updateSystems,
 	}
 }
 
-func (e *World) RunSystems() error {
-	for i := range e.systems {
+func (e *World) RegisterDrawSystems() *SystemBuilder {
+	return &SystemBuilder{
+		ecs:     e,
+		systems: &e.drawSystems,
+	}
+}
+
+func (e *World) RunUpdateSystems() error {
+	for i := range e.updateSystems {
 		// If systems are sequantial, we dont spawn goroutines
-		if len(e.systems[i]) == 1 {
-			e.systems[i][0].Run(e)
+		if len(e.updateSystems[i]) == 1 {
+			e.updateSystems[i][0].Run(e)
 			continue
 		}
 
-		e.wg.Add(len(e.systems[i]))
-		for j := range e.systems[i] {
+		e.wg.Add(len(e.updateSystems[i]))
+		for j := range e.updateSystems[i] {
 			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go runSystemAsync(e.systems[i][j], e)
+			go runSystemAsync(e.updateSystems[i][j], e)
 		}
 		e.wg.Wait()
 	}
@@ -89,6 +98,23 @@ func (e *World) RunSystems() error {
 	e.Clean()
 
 	return nil
+}
+
+func (e *World) RunDrawSystems() {
+	for i := range e.drawSystems {
+		// If systems are sequantial, we dont spawn goroutines
+		if len(e.drawSystems[i]) == 1 {
+			e.drawSystems[i][0].Run(e)
+			continue
+		}
+
+		e.wg.Add(len(e.drawSystems[i]))
+		for j := range e.drawSystems[i] {
+			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
+			go runSystemAsync(e.drawSystems[i][j], e)
+		}
+		e.wg.Wait()
+	}
 }
 
 func (e *World) CreateEntity(title string) EntityID {

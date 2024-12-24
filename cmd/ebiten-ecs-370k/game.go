@@ -30,7 +30,7 @@ func newGame() game {
 		&movementComponentType,
 	)
 
-	world.RegisterSystems().
+	world.RegisterUpdateSystems().
 		Sequential(
 			new(spawnSystem),
 			new(hpSystem),
@@ -49,7 +49,7 @@ func newGame() game {
 }
 
 func (g *game) Update() error {
-	err := g.world.RunSystems()
+	err := g.world.RunUpdateSystems()
 	if err != nil {
 		return err
 	}

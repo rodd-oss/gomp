@@ -11,38 +11,31 @@ import (
 	"image/color"
 )
 
-type colorSystem struct {
+type systemDestroyRemovedEntities struct {
 	transformComponent ecs.WorldComponents[transform]
 	healthComponent    ecs.WorldComponents[health]
 	colorComponent     ecs.WorldComponents[color.RGBA]
 	movementComponent  ecs.WorldComponents[movement]
+	destroyComponent   ecs.WorldComponents[empty]
 
-	baseColor color.RGBA
+	n int
 }
 
-func (s *colorSystem) Init(world *ecs.World) {
+func (s *systemDestroyRemovedEntities) Init(world *ecs.World) {
 	s.transformComponent = transformComponentType.Instances(world)
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
 	s.movementComponent = movementComponentType.Instances(world)
+	s.destroyComponent = destroyComponentType.Instances(world)
 
-	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
-func (s *colorSystem) Run(world *ecs.World) {
-	s.colorComponent.AllParallel(func(ei ecs.EntityID, c *color.RGBA) bool {
-		health := s.healthComponent.GetPtr(ei)
-		if health == nil {
-			return true
-		}
-
-		hpPercentage := float32(health.hp) / float32(health.maxHp)
-
-		c.R = uint8(hpPercentage * float32(s.baseColor.R))
-		c.G = uint8(hpPercentage * float32(s.baseColor.G))
-		c.B = uint8(hpPercentage * float32(s.baseColor.B))
-		c.A = s.baseColor.A
+func (s *systemDestroyRemovedEntities) Run(world *ecs.World) {
+	s.n = 0
+	s.destroyComponent.All(func(e ecs.EntityID, h *empty) bool {
+		world.DestroyEntity(e)
+		entityCount--
 
 		return true
 	})
 }
-func (s *colorSystem) Destroy(world *ecs.World) {}
+func (s *systemDestroyRemovedEntities) Destroy(world *ecs.World) {}

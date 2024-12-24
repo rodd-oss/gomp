@@ -19,7 +19,7 @@ func BenchmarkSystems(b *testing.B) {
 		&bulletComponent,
 	)
 
-	world.RegisterSystems().
+	world.RegisterUpdateSystems().
 		Parallel(
 			new(PlayerSpawnSystem),
 			new(BulletSpawnSystem),
@@ -32,7 +32,7 @@ func BenchmarkSystems(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystems()
+		world.RunUpdateSystems()
 	}
 }
 

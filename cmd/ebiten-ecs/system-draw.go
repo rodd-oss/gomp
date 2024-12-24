@@ -20,7 +20,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-type cameraSystem struct {
+type systemDraw struct {
 	transformComponent   ecs.WorldComponents[transform]
 	healthComponent      ecs.WorldComponents[health]
 	colorComponent       ecs.WorldComponents[color.RGBA]
@@ -33,7 +33,7 @@ type cameraSystem struct {
 	p         *message.Printer
 }
 
-func (s *cameraSystem) Init(world *ecs.World) {
+func (s *systemDraw) Init(world *ecs.World) {
 	s.transformComponent = transformComponentType.Instances(world)
 	s.healthComponent = healthComponentType.Instances(world)
 	s.colorComponent = colorComponentType.Instances(world)
@@ -59,7 +59,7 @@ func (s *cameraSystem) Init(world *ecs.World) {
 	s.debugInfo = make([]string, 0)
 }
 
-func (s *cameraSystem) Run(world *ecs.World) {
+func (s *systemDraw) Run(world *ecs.World) {
 	_, dy := ebiten.Wheel()
 
 	draw.Draw(s.buffer, s.buffer.Bounds(), &image.Uniform{color.Transparent}, image.Point{}, draw.Src)
@@ -111,4 +111,4 @@ func (s *cameraSystem) Run(world *ecs.World) {
 	ebitenutil.DebugPrint(mainCamera.debugLayer.image, strings.Join(s.debugInfo, "\n"))
 	s.debugInfo = s.debugInfo[:0]
 }
-func (s *cameraSystem) Destroy(world *ecs.World) {}
+func (s *systemDraw) Destroy(world *ecs.World) {}
