@@ -20,74 +20,37 @@ type client struct {
 }
 
 type clientComponents struct {
-	destroy   *ecs.ComponentManager[destroy]
-	camera    *ecs.ComponentManager[camera]
-	transform *ecs.ComponentManager[transform]
-	health    *ecs.ComponentManager[health]
-	color     *ecs.ComponentManager[color.RGBA]
+	Destroy   *ecs.ComponentManager[destroy]
+	Camera    *ecs.ComponentManager[camera]
+	Transform *ecs.ComponentManager[transform]
+	Health    *ecs.ComponentManager[health]
+	Color     *ecs.ComponentManager[color.RGBA]
 }
 
 type clientSystems struct {
-	spawn   *systemSpawn
-	calcHp  *systemCalcHp
-	calcCol *systemCalcColor
-	destroy *systemDestroyRemovedEntities
-	draw    *systemDraw
+	Spawn   *systemSpawn
+	CalcHp  *systemCalcHp
+	CalcCol *systemCalcColor
+	Destroy *systemDestroyRemovedEntities
+	Draw    *systemDraw
 }
 
 func newGameClient() (c client) {
-	// Create components
-	colors := ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID)
-	transforms := ecs.CreateComponentManager[transform](TRANSFORM_COMPONENT_ID)
-	health := ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID)
-	destroys := ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID)
-	cameras := ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID)
-
+	// TODO: move initializing components with reflect inside CreateGenericWorld() function?
 	// Create component managers
-
 	components := clientComponents{
-		color:     &colors,
-		camera:    &cameras,
-		health:    &health,
-		destroy:   &destroys,
-		transform: &transforms,
+		Color:     ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID),
+		Camera:    ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID),
+		Health:    ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID),
+		Destroy:   ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID),
+		Transform: ecs.CreateComponentManager[transform](TRANSFORM_COMPONENT_ID),
 	}
 
 	// Create systems
-	systems := clientSystems{
-		spawn:   new(systemSpawn),
-		calcHp:  new(systemCalcHp),
-		calcCol: new(systemCalcColor),
-		destroy: new(systemDestroyRemovedEntities),
-		draw:    new(systemDraw),
-	}
+	systems := new(clientSystems)
 
-	// Create world
-	world := ecs.CreateGenericWorld(0, &components, &systems)
-
-	// Register components
-	world.RegisterComponents(
-		components.color,
-		components.camera,
-		components.health,
-		components.transform,
-		components.destroy,
-	)
-
-	// Register update systems
-	world.RegisterUpdateSystems().
-		Sequential(
-			systems.spawn,
-			systems.calcHp,
-			systems.calcCol,
-			systems.destroy,
-		)
-
-	// Register draw systems
-	world.RegisterDrawSystems().
-		Sequential(
-			systems.draw,
-		)
+	// Create world and register components and systems
+	world := ecs.CreateGenericWorld(0, &components, systems)
 
 	newClient := client{
 		world: &world,

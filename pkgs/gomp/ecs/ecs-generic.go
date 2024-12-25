@@ -7,6 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
+	"reflect"
 	"sync"
 	"sync/atomic"
 
@@ -35,21 +36,51 @@ type GenericWorld[T any, S any] struct {
 	size int32
 }
 
-func CreateGenericWorld[T any, S any](id ECSID, components *T, systems *S) GenericWorld[T, S] {
+func CreateGenericWorld[C any, US any](id ECSID, components *C, systems *US) GenericWorld[C, US] {
 	maskSet := CreateComponentManager[ComponentBitArray256](ENTITY_COMPONENT_MASK_ID)
-	ecs := GenericWorld[T, S]{
+	ecs := GenericWorld[C, US]{
 		ID:                  id,
 		Components:          components,
 		Systems:             systems,
 		wg:                  new(sync.WaitGroup),
 		deletedEntityIDs:    make([]EntityID, 0, PREALLOC_DELETED_ENTITIES),
-		entityComponentMask: &maskSet,
+		entityComponentMask: maskSet,
 	}
+
+	// Register components
+	valueOfComponents := reflect.ValueOf(components)
+	cListLen := valueOfComponents.Elem().NumField()
+	componentList := make([]AnyComponentInstancesPtr, 0, cListLen)
+	for i := 0; i < cListLen; i++ {
+		componentList = append(componentList, valueOfComponents.Elem().Field(i).Interface().(AnyComponentInstancesPtr))
+	}
+	ecs.registerComponents(componentList...)
+
+	// Register systems
+	valueOfSystems := reflect.ValueOf(systems)
+	sListLen := valueOfSystems.Elem().NumField()
+	systemUpdList := make([]AnyUpdateSystem[GenericWorld[C, US]], 0, sListLen)
+	systemDrawList := make([]AnyDrawSystem[GenericWorld[C, US]], 0, sListLen)
+	for i := 0; i < sListLen; i++ {
+		ptr := reflect.New(valueOfSystems.Elem().Field(i).Type().Elem())
+		valueOfSystems.Elem().Field(i).Set(ptr)
+		castedUpdSystem, ok := valueOfSystems.Elem().Field(i).Interface().(AnyUpdateSystem[GenericWorld[C, US]])
+		if ok {
+			systemUpdList = append(systemUpdList, castedUpdSystem)
+			continue
+		}
+
+		castedDrawSystem := valueOfSystems.Elem().Field(i).Interface().(AnyDrawSystem[GenericWorld[C, US]])
+		systemDrawList = append(systemDrawList, castedDrawSystem)
+	}
+
+	ecs.registerUpdateSystems().Sequential(systemUpdList...)
+	ecs.registerDrawSystems().Sequential(systemDrawList...)
 
 	return ecs
 }
 
-func (e *GenericWorld[T, S]) RegisterComponents(component_ptr ...AnyComponentInstancesPtr) {
+func (e *GenericWorld[T, S]) registerComponents(component_ptr ...AnyComponentInstancesPtr) {
 	var maxComponentId ComponentID
 
 	for _, component := range component_ptr {
@@ -67,14 +98,14 @@ func (e *GenericWorld[T, S]) RegisterComponents(component_ptr ...AnyComponentIns
 	}
 }
 
-func (e *GenericWorld[T, S]) RegisterUpdateSystems() *UpdateSystemBuilder[GenericWorld[T, S]] {
+func (e *GenericWorld[T, S]) registerUpdateSystems() *UpdateSystemBuilder[GenericWorld[T, S]] {
 	return &UpdateSystemBuilder[GenericWorld[T, S]]{
 		world:   e,
 		systems: &e.updateSystems,
 	}
 }
 
-func (e *GenericWorld[T, S]) RegisterDrawSystems() *DrawSystemBuilder[GenericWorld[T, S]] {
+func (e *GenericWorld[T, S]) registerDrawSystems() *DrawSystemBuilder[GenericWorld[T, S]] {
 	return &DrawSystemBuilder[GenericWorld[T, S]]{
 		ecs:     e,
 		systems: &e.drawSystems,
