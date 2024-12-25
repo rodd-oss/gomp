@@ -32,7 +32,7 @@ func (s *systemSpawn) Init(world *ClientWorld) {}
 func (s *systemSpawn) Run(world *ClientWorld) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		for range rand.Intn(1000) {
-			if world.Size() > 100_000 {
+			if world.Size() > 200_000 {
 				break
 			}
 
@@ -51,18 +51,15 @@ func (s *systemSpawn) Run(world *ClientWorld) {
 			h := health{
 				hp:    hp,
 				maxHp: maxHp,
+				color: color.RGBA{
+					R: 0,
+					G: 0,
+					B: 0,
+					A: 0,
+				},
 			}
 
 			world.Components.Health.Create(newCreature, h)
-
-			c := color.RGBA{
-				R: 0,
-				G: 0,
-				B: 0,
-				A: 0,
-			}
-
-			world.Components.Color.Create(newCreature, c)
 		}
 	}
 

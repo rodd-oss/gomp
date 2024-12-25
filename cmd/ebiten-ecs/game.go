@@ -8,7 +8,6 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -24,13 +23,11 @@ type clientComponents struct {
 	Camera    *ecs.ComponentManager[camera]
 	Transform *ecs.ComponentManager[transform]
 	Health    *ecs.ComponentManager[health]
-	Color     *ecs.ComponentManager[color.RGBA]
 }
 
 type clientSystems struct {
 	Spawn   *systemSpawn
 	CalcHp  *systemCalcHp
-	CalcCol *systemCalcColor
 	Destroy *systemDestroyRemovedEntities
 	Draw    *systemDraw
 }
@@ -39,7 +36,6 @@ func newGameClient() (c client) {
 	// TODO: move initializing components with reflect inside CreateGenericWorld() function?
 	// Create component managers
 	components := clientComponents{
-		Color:     ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID),
 		Camera:    ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID),
 		Health:    ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID),
 		Destroy:   ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID),

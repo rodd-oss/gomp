@@ -7,13 +7,13 @@ package main
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 const (
-	COLOR_COMPONENT_ID ecs.ComponentID = iota
-	TRANSFORM_COMPONENT_ID
+	TRANSFORM_COMPONENT_ID ecs.ComponentID = iota
 	HEALTH_COMPONENT_ID
 	DESTROY_COMPONENT_ID
 	SPAWN_COMPONENT_ID
@@ -25,7 +25,9 @@ type transform struct {
 }
 
 type health struct {
-	hp, maxHp int32
+	hp    int32
+	maxHp int32
+	color color.RGBA
 }
 
 type cameraLayer struct {

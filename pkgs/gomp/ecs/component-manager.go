@@ -7,7 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"github.com/alphadose/haxmap"
 	"github.com/negrel/assert"
 )
 
@@ -16,7 +15,7 @@ const preallocatedCapacity = 1 << 14
 type ComponentManager[T any] struct {
 	data          []T
 	entities      []EntityID
-	lookup        *haxmap.Map[EntityID, int]
+	lookup        map[EntityID]int
 	worldMask     *ComponentManager[ComponentBitArray256]
 	isInitialized bool
 	ID            ComponentID
@@ -26,7 +25,7 @@ func CreateComponentManager[T any](id ComponentID) *ComponentManager[T] {
 	return &ComponentManager[T]{
 		data:          make([]T, 0, preallocatedCapacity),
 		entities:      make([]EntityID, 0, preallocatedCapacity),
-		lookup:        haxmap.New[EntityID, int](preallocatedCapacity),
+		lookup:        make(map[EntityID]int, preallocatedCapacity),
 		isInitialized: true,
 		ID:            id,
 	}
@@ -52,11 +51,11 @@ func (c *ComponentManager[T]) Create(entity EntityID, value T) *T {
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 
 	var index = len(c.data)
 
-	c.lookup.Set(entity, index)
+	c.lookup[entity] = index
 
 	c.data = append(c.data, value)
 	c.entities = append(c.entities, entity)
@@ -76,7 +75,7 @@ func (c *ComponentManager[T]) Get(entity EntityID) *T {
 	// INVALID ENTITY!
 	assert.False(entity == -1)
 
-	index, ok := c.lookup.Get(entity)
+	index, ok := c.lookup[entity]
 	if !ok {
 		return nil
 	}
@@ -94,7 +93,7 @@ func (c *ComponentManager[T]) Remove(entity EntityID) {
 	// ENTITY HAS NO COMPONENT!
 	assert.True(c.lookUpHas(entity))
 
-	index, _ := c.lookup.Get(entity)
+	index, _ := c.lookup[entity]
 
 	lastIndex := len(c.data) - 1
 	if index < lastIndex {
@@ -103,18 +102,18 @@ func (c *ComponentManager[T]) Remove(entity EntityID) {
 		c.entities[index] = c.entities[lastIndex]
 
 		// Update the lookup table
-		c.lookup.Set(c.entities[index], index)
+		c.lookup[c.entities[index]] = index
 	}
 
 	// Shrink the container
 	newSize := len(c.data) - 1
 	c.data = c.data[:newSize]
 	c.entities = c.entities[:newSize]
-	c.lookup.Del(entity)
+	delete(c.lookup, entity)
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 }
 
 func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
@@ -123,7 +122,7 @@ func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 
 	for index := len(c.data) - 1; index >= 0; index-- {
 		id := c.entities[index]
@@ -140,7 +139,7 @@ func (c *ComponentManager[T]) AllParallel(yield func(EntityID, *T) bool) {
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 
 	for index := len(c.data) - 1; index >= 0; index-- {
 		id := c.entities[index]
@@ -157,7 +156,7 @@ func (c *ComponentManager[T]) AllData(yield func(*T) bool) {
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 
 	for index := len(c.data) - 1; index >= 0; index-- {
 		value := &c.data[index]
@@ -173,7 +172,7 @@ func (c *ComponentManager[T]) AllDataParallel(yield func(*T) bool) {
 
 	// Entity Count must always be the same as the number of components!
 	assert.True(len(c.entities) == len(c.data))
-	assert.True(len(c.data) == int(c.lookup.Len()))
+	assert.True(len(c.data) == len(c.lookup))
 
 	for index := len(c.data) - 1; index >= 0; index-- {
 		value := &c.data[index]
@@ -198,6 +197,6 @@ func (c ComponentManager[T]) lookUpHas(key EntityID) bool {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
-	_, ok := c.lookup.Get(key)
+	_, ok := c.lookup[key]
 	return ok
 }
