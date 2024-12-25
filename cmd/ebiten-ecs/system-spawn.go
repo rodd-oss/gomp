@@ -32,6 +32,9 @@ func (s *systemSpawn) Init(world *ClientWorld) {}
 func (s *systemSpawn) Run(world *ClientWorld) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		for range rand.Intn(1000) {
+			if world.Size() > 100_000 {
+				break
+			}
 
 			newCreature := world.CreateEntity("Creature")
 
