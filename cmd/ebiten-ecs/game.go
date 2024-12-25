@@ -7,10 +7,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
-	"reflect"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type ClientWorld = ecs.GenericWorld[clientComponents, clientSystems]
@@ -36,6 +36,7 @@ type clientSystems struct {
 }
 
 func newGameClient() (c client) {
+	// TODO: move initializing components with reflect inside CreateGenericWorld() function?
 	// Create component managers
 	components := clientComponents{
 		Color:     ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID),
@@ -46,56 +47,10 @@ func newGameClient() (c client) {
 	}
 
 	// Create systems
-	//systems := clientSystems{
-	//	Spawn:   new(systemSpawn),
-	//	CalcHp:  new(systemCalcHp),
-	//	CalcCol: new(systemCalcColor),
-	//	Destroy: new(systemDestroyRemovedEntities),
-	//	Draw:    new(systemDraw),
-	//}
-	systems := clientSystems{}
-	valueOfSystems := reflect.ValueOf(&systems)
-	sListLen := valueOfSystems.Elem().NumField()
-	for i := 0; i < sListLen; i++ {
-		ptr := reflect.New(valueOfSystems.Elem().Field(i).Type().Elem())
-		valueOfSystems.Elem().Field(i).Set(ptr)
-	}
+	systems := new(clientSystems)
 
-	// Create world
-	world := ecs.CreateGenericWorld(0, &components, &systems)
-
-	// Register components
-	//world.RegisterComponents(
-	//	components.color,
-	//	components.camera,
-	//	components.health,
-	//	components.transform,
-	//	components.destroy,
-	//)
-	valueOfComponents := reflect.ValueOf(components)
-	cListLen := valueOfComponents.NumField()
-	componentList := make([]ecs.AnyComponentInstancesPtr, 0, cListLen)
-	for i := 0; i < cListLen; i++ {
-		componentList = append(componentList, valueOfComponents.Field(i).Interface().(ecs.AnyComponentInstancesPtr))
-	}
-	world.RegisterComponents(
-		componentList...,
-	)
-
-	// Register update systems
-	world.RegisterUpdateSystems().
-		Sequential(
-			systems.Spawn,
-			systems.CalcHp,
-			systems.CalcCol,
-			systems.Destroy,
-		)
-
-	// Register draw systems
-	world.RegisterDrawSystems().
-		Sequential(
-			systems.Draw,
-		)
+	// Create world and register components and systems
+	world := ecs.CreateGenericWorld(0, &components, systems)
 
 	newClient := client{
 		world: &world,
