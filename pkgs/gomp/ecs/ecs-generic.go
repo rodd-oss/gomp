@@ -48,36 +48,65 @@ func CreateGenericWorld[C any, US any](id ECSID, components *C, systems *US) Gen
 	}
 
 	// Register components
-	valueOfComponents := reflect.ValueOf(components)
-	cListLen := valueOfComponents.Elem().NumField()
-	componentList := make([]AnyComponentInstancesPtr, 0, cListLen)
-	for i := 0; i < cListLen; i++ {
-		componentList = append(componentList, valueOfComponents.Elem().Field(i).Interface().(AnyComponentInstancesPtr))
-	}
-	ecs.registerComponents(componentList...)
+	ecs.registerComponents(
+		ecs.findComponentsFromStructRecursevly(reflect.ValueOf(components).Elem(), nil)...,
+	)
 
 	// Register systems
-	valueOfSystems := reflect.ValueOf(systems)
-	sListLen := valueOfSystems.Elem().NumField()
-	systemUpdList := make([]AnyUpdateSystem[GenericWorld[C, US]], 0, sListLen)
-	systemDrawList := make([]AnyDrawSystem[GenericWorld[C, US]], 0, sListLen)
-	for i := 0; i < sListLen; i++ {
-		ptr := reflect.New(valueOfSystems.Elem().Field(i).Type().Elem())
-		valueOfSystems.Elem().Field(i).Set(ptr)
-		castedUpdSystem, ok := valueOfSystems.Elem().Field(i).Interface().(AnyUpdateSystem[GenericWorld[C, US]])
-		if ok {
-			systemUpdList = append(systemUpdList, castedUpdSystem)
-			continue
-		}
-
-		castedDrawSystem := valueOfSystems.Elem().Field(i).Interface().(AnyDrawSystem[GenericWorld[C, US]])
-		systemDrawList = append(systemDrawList, castedDrawSystem)
-	}
-
-	ecs.registerUpdateSystems().Sequential(systemUpdList...)
-	ecs.registerDrawSystems().Sequential(systemDrawList...)
+	updSystems, drawSystems := ecs.findSystemsFromStructRecursevly(reflect.ValueOf(systems).Elem(), nil, nil)
+	ecs.registerUpdateSystems().Sequential(updSystems...)
+	ecs.registerDrawSystems().Sequential(drawSystems...)
 
 	return ecs
+}
+
+func (e *GenericWorld[T, S]) findComponentsFromStructRecursevly(structValue reflect.Value, componentList []AnyComponentInstancesPtr) []AnyComponentInstancesPtr {
+	compsType := structValue.Type()
+	anyCompInstPtrType := reflect.TypeFor[AnyComponentInstancesPtr]()
+
+	for i := range compsType.NumField() {
+		fld := compsType.Field(i)
+		fldVal := structValue.FieldByIndex(fld.Index)
+
+		if fld.Type.Implements(anyCompInstPtrType) {
+			componentList = append(componentList, fldVal.Interface().(AnyComponentInstancesPtr))
+		} else if fld.Anonymous && fld.Type.Kind() == reflect.Struct {
+			componentList = e.findComponentsFromStructRecursevly(fldVal, componentList)
+		}
+	}
+
+	return componentList
+}
+
+func (e *GenericWorld[T, S]) findSystemsFromStructRecursevly(
+	structValue reflect.Value,
+	systemUpdList []AnyUpdateSystem[GenericWorld[T, S]],
+	systemDrawList []AnyDrawSystem[GenericWorld[T, S]],
+) (updSystems []AnyUpdateSystem[GenericWorld[T, S]], drawSystems []AnyDrawSystem[GenericWorld[T, S]]) {
+	sysType := structValue.Type()
+	anyUpdateSysType := reflect.TypeFor[AnyUpdateSystem[GenericWorld[T, S]]]()
+	anyDrawSysType := reflect.TypeFor[AnyDrawSystem[GenericWorld[T, S]]]()
+
+	for i := range sysType.NumField() {
+		fld := sysType.Field(i)
+		fldVal := structValue.FieldByIndex(fld.Index)
+
+		if fld.Anonymous && fld.Type.Kind() == reflect.Struct {
+			systemUpdList, systemDrawList = e.findSystemsFromStructRecursevly(fldVal, systemUpdList, systemDrawList)
+		} else if fld.Type.Kind() == reflect.Pointer {
+			if fld.Type.Implements(anyUpdateSysType) {
+				ptr := reflect.New(fld.Type.Elem())
+				fldVal.Set(ptr)
+				systemUpdList = append(systemUpdList, ptr.Interface().(AnyUpdateSystem[GenericWorld[T, S]]))
+			} else if fld.Type.Implements(anyDrawSysType) {
+				ptr := reflect.New(fld.Type.Elem())
+				fldVal.Set(ptr)
+				systemDrawList = append(systemDrawList, ptr.Interface().(AnyDrawSystem[GenericWorld[T, S]]))
+			}
+		}
+	}
+
+	return systemUpdList, systemDrawList
 }
 
 func (e *GenericWorld[T, S]) registerComponents(component_ptr ...AnyComponentInstancesPtr) {
