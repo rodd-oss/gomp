@@ -19,19 +19,29 @@ type client struct {
 	world *ClientWorld
 }
 
-type clientComponents struct {
+type sharedComponents struct {
 	Destroy   *ecs.ComponentManager[destroy]
-	Camera    *ecs.ComponentManager[camera]
 	Transform *ecs.ComponentManager[transform]
 	Health    *ecs.ComponentManager[health]
-	Color     *ecs.ComponentManager[color.RGBA]
+}
+
+type sharedSystems struct {
+	Spawn   *systemSpawn
+	CalcHp  *systemCalcHp
+	Destroy *systemDestroyRemovedEntities
+}
+
+type clientComponents struct {
+	sharedComponents
+
+	Color  *ecs.ComponentManager[color.RGBA]
+	Camera *ecs.ComponentManager[camera]
 }
 
 type clientSystems struct {
-	Spawn   *systemSpawn
-	CalcHp  *systemCalcHp
+	sharedSystems
+
 	CalcCol *systemCalcColor
-	Destroy *systemDestroyRemovedEntities
 	Draw    *systemDraw
 }
 
@@ -39,11 +49,14 @@ func newGameClient() (c client) {
 	// TODO: move initializing components with reflect inside CreateGenericWorld() function?
 	// Create component managers
 	components := clientComponents{
-		Color:     ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID),
-		Camera:    ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID),
-		Health:    ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID),
-		Destroy:   ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID),
-		Transform: ecs.CreateComponentManager[transform](TRANSFORM_COMPONENT_ID),
+		sharedComponents: sharedComponents{
+			Health:    ecs.CreateComponentManager[health](HEALTH_COMPONENT_ID),
+			Destroy:   ecs.CreateComponentManager[destroy](DESTROY_COMPONENT_ID),
+			Transform: ecs.CreateComponentManager[transform](TRANSFORM_COMPONENT_ID),
+		},
+
+		Color:  ecs.CreateComponentManager[color.RGBA](COLOR_COMPONENT_ID),
+		Camera: ecs.CreateComponentManager[camera](CAMERA_COMPONENT_ID),
 	}
 
 	// Create systems
