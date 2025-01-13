@@ -17,7 +17,7 @@ type AnyComponentTypePtr[W any] interface {
 }
 
 type AnyComponentInstancesPtr interface {
-	registerComponentMask(mask *ComponentManager[big.Int])
+	registerComponentMask(mask *ComponentManagerInstance[big.Int])
 	getId() ComponentID
 	Remove(EntityID)
 	Clean()
@@ -25,14 +25,16 @@ type AnyComponentInstancesPtr interface {
 }
 
 type ComponentType[T any] struct {
+	id              ComponentID
 	worldComponents map[*World]WorldComponents[T]
 
 	wg *sync.WaitGroup
 	mx *sync.Mutex
 }
 
-func CreateComponent[T any]() ComponentType[T] {
+func CreateComponent[T any](id ComponentID) ComponentType[T] {
 	component := ComponentType[T]{}
+	component.id = id
 	component.worldComponents = make(map[*World]WorldComponents[T])
 	component.wg = new(sync.WaitGroup)
 	component.mx = new(sync.Mutex)
@@ -74,7 +76,7 @@ func (c *WorldComponents[T]) getId() ComponentID {
 	return c.ID
 }
 
-func (c *WorldComponents[T]) registerComponentMask(mask *ComponentManager[big.Int]) {
+func (c *WorldComponents[T]) registerComponentMask(mask *ComponentManagerInstance[big.Int]) {
 }
 
 func (c *WorldComponents[T]) Get(entity EntityID) (T, bool) {

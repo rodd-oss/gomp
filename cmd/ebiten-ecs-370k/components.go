@@ -35,12 +35,21 @@ type camera struct {
 
 type empty struct{}
 
-var transformComponentType = ecs.CreateComponent[transform]()
-var healthComponentType = ecs.CreateComponent[health]()
-var colorComponentType = ecs.CreateComponent[color.RGBA]()
-var movementComponentType = ecs.CreateComponent[movement]()
-var cameraComponentType = ecs.CreateComponent[camera]()
-var destroyComponentType = ecs.CreateComponent[empty]()
+const (
+	transformId ecs.ComponentID = iota
+	healthId
+	colorId
+	movementId
+	cameraId
+	destroyId
+)
+
+var transformComponentType = ecs.CreateComponent[transform](transformId)
+var healthComponentType = ecs.CreateComponent[health](healthId)
+var colorComponentType = ecs.CreateComponent[color.RGBA](colorId)
+var movementComponentType = ecs.CreateComponent[movement](movementId)
+var cameraComponentType = ecs.CreateComponent[camera](cameraId)
+var destroyComponentType = ecs.CreateComponent[empty](destroyId)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

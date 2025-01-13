@@ -33,3 +33,7 @@ tasks:
   pprof:
     cmds:
       - go tool pprof -http=":8000" 'http://localhost:3000/debug/pprof/profile?seconds=10'
+
+  pprof-cpu:
+    cmds:
+      - go tool pprof -http=":8000" ./cpu.out

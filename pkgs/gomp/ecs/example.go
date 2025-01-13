@@ -20,10 +20,18 @@ type Bullet struct {
 	HP int
 }
 
-var _ = CreateComponent[Rotation]()
-var transformComponent = CreateComponent[Transform]()
-var bulletSpawnerComponent = CreateComponent[BulletSpawn]()
-var bulletComponent = CreateComponent[Bullet]()
+const (
+	invalidID ComponentID = iota
+	rotationID
+	transformID
+	bulletID
+	bulletSpawnID
+)
+
+var _ = CreateComponent[Rotation](rotationID)
+var transformComponent = CreateComponent[Transform](transformID)
+var bulletSpawnerComponent = CreateComponent[BulletSpawn](bulletID)
+var bulletComponent = CreateComponent[Bullet](bulletSpawnID)
 
 type TransformSystem struct {
 	n         int

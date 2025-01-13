@@ -14,7 +14,7 @@ import (
 	"github.com/negrel/assert"
 )
 
-type ComponentManager[T any] struct {
+type ComponentManagerInstance[T any] struct {
 	mx            *sync.Mutex
 	components    *PagedArray[T]
 	entities      *PagedArray[EntityID]
@@ -23,26 +23,33 @@ type ComponentManager[T any] struct {
 	isInitialized bool
 }
 
+type ComponentManager[T any] struct {
+	id        ComponentID
+	instances map[*World]*ComponentManagerInstance[T]
+}
+
+func (m *ComponentManager[T]) Instance(world *World) *ComponentManagerInstance[T] {
+	instance, ok := m.instances[world]
+	assert.True(ok)
+	return instance
+}
+
 func CreateComponentManager[T any](id ComponentID) *ComponentManager[T] {
 	return &ComponentManager[T]{
-		components:    NewPagedArray[T](),
-		entities:      NewPagedArray[EntityID](),
-		lookup:        NewPagedMap[EntityID, int32](),
-		isInitialized: true,
-		ID:            id,
-		mx:            new(sync.Mutex),
+		id:        id,
+		instances: make(map[*World]*ComponentManagerInstance[T]),
 	}
 }
 
-func (c *ComponentManager[T]) registerComponentMask(mask *ComponentManager[big.Int]) {
+func (c *ComponentManagerInstance[T]) registerComponentMask(mask *ComponentManagerInstance[big.Int]) {
 	// c.worldMask = mask
 }
 
-func (c *ComponentManager[T]) getId() ComponentID {
+func (c *ComponentManagerInstance[T]) getId() ComponentID {
 	return c.ID
 }
 
-func (c *ComponentManager[T]) Create(entity EntityID, value T) (returnValue *T) {
+func (c *ComponentManagerInstance[T]) Create(entity EntityID, value T) (returnValue *T) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -66,7 +73,7 @@ func (c *ComponentManager[T]) Create(entity EntityID, value T) (returnValue *T) 
 	return c.components.Append(value)
 }
 
-func (c *ComponentManager[T]) Get(entity EntityID) *T {
+func (c *ComponentManagerInstance[T]) Get(entity EntityID) *T {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -81,7 +88,7 @@ func (c *ComponentManager[T]) Get(entity EntityID) *T {
 	return c.components.Get(index)
 }
 
-func (c *ComponentManager[T]) Remove(entity EntityID) {
+func (c *ComponentManagerInstance[T]) Remove(entity EntityID) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -118,12 +125,12 @@ func (c *ComponentManager[T]) Remove(entity EntityID) {
 	assert.True(c.components.Len() == c.lookup.Len())
 }
 
-func (c *ComponentManager[T]) Has(entity EntityID) bool {
+func (c *ComponentManagerInstance[T]) Has(entity EntityID) bool {
 	_, ok := c.lookup.Get(entity)
 	return ok
 }
 
-func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerInstance[T]) All(yield func(EntityID, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -155,7 +162,7 @@ func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
 	}
 }
 
-func (c *ComponentManager[T]) AllParallel(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerInstance[T]) AllParallel(yield func(EntityID, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -170,7 +177,7 @@ func (c *ComponentManager[T]) AllParallel(yield func(EntityID, *T) bool) {
 	})
 }
 
-func (c *ComponentManager[T]) AllData(yield func(*T) bool) {
+func (c *ComponentManagerInstance[T]) AllData(yield func(*T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -181,7 +188,7 @@ func (c *ComponentManager[T]) AllData(yield func(*T) bool) {
 	c.components.AllData(yield)
 }
 
-func (c *ComponentManager[T]) AllDataParallel(yield func(*T) bool) {
+func (c *ComponentManagerInstance[T]) AllDataParallel(yield func(*T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -192,14 +199,14 @@ func (c *ComponentManager[T]) AllDataParallel(yield func(*T) bool) {
 	c.components.AllDataParallel(yield)
 }
 
-func (c *ComponentManager[T]) Len() int32 {
+func (c *ComponentManagerInstance[T]) Len() int32 {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
 	return c.components.Len()
 }
 
-func (c *ComponentManager[T]) Clean() {
+func (c *ComponentManagerInstance[T]) Clean() {
 	// c.components.Clean()
 	// c.entities.Clean()
 }

@@ -21,7 +21,7 @@ type game struct {
 func newGame() game {
 	world := ecs.CreateWorld("1 mil pixel")
 
-	world.RegisterComponentTypes(
+	world.RegisterComponents(
 		&destroyComponentType,
 		&cameraComponentType,
 		&transformComponentType,
@@ -30,14 +30,14 @@ func newGame() game {
 		&movementComponentType,
 	)
 
-	world.RegisterUpdateSystems().
-		Sequential(
-			new(spawnSystem),
-			new(hpSystem),
-			new(colorSystem),
-			new(destroySystem),
-			new(cameraSystem),
-		)
+	// world.RegisterSystems().
+	// 	Sequential(
+	// 		new(spawnSystem),
+	// 		new(hpSystem),
+	// 		new(colorSystem),
+	// 		new(destroySystem),
+	// 		new(cameraSystem),
+	// 	)
 
 	newGame := game{
 		world:            &world,
@@ -49,7 +49,7 @@ func newGame() game {
 }
 
 func (g *game) Update() error {
-	err := g.world.RunUpdateSystems()
+	err := g.world.RunSystems()
 	if err != nil {
 		return err
 	}

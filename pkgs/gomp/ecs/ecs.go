@@ -8,10 +8,10 @@ package ecs
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"sync/atomic"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"time"
 )
 
 type ECSID uint
@@ -27,8 +27,10 @@ type World struct {
 	tick         int
 	lastEntityID EntityID
 
-	updateSystems       [][]AnyUpdateSystem[World]
-	drawSystems         [][]AnyDrawSystem[World]
+	size          uint32
+	shouldDestroy bool
+
+	systems             []AnySystemPtr[World]
 	components          []AnyComponentInstancesPtr
 	deletedEntityIDs    []EntityID
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
@@ -60,44 +62,30 @@ func CreateWorld(title string) World {
 	return ecs
 }
 
-func (e *World) RegisterComponentTypes(component_ptr ...AnyComponentTypePtr[World]) {
+func (e *World) RegisterComponents(component_ptr ...AnyComponentTypePtr[World]) {
 	for i := 0; i < len(component_ptr); i++ {
 		e.components = append(e.components, component_ptr[i].register(e, ComponentID(i)))
 	}
 }
 
-func (e *World) RegisterUpdateSystems() *UpdateSystemBuilder[World] {
-	return &UpdateSystemBuilder[World]{
-		world:   e,
-		systems: &e.updateSystems,
+func (e *World) RegisterSystems(systems ...AnySystemManagerPtr) {
+	for i := range systems {
+		e.systems = append(e.systems, systems[i].register(e))
+		e.systems[i].Init(e)
 	}
 }
 
-func (e *World) RegisterDrawSystems() *DrawSystemBuilder[World] {
-	return &DrawSystemBuilder[World]{
-		ecs:     e,
-		systems: &e.drawSystems,
-	}
-}
+func (e *World) RunSystems() error {
+	e.wg.Add(len(e.systems))
 
-func (e *World) RunUpdateSystems() error {
-	for i := range e.updateSystems {
-		// If systems are sequantial, we dont spawn goroutines
-		if len(e.updateSystems[i]) == 1 {
-			e.updateSystems[i][0].Run(e)
-			continue
-		}
-
-		e.wg.Add(len(e.updateSystems[i]))
-		for j := range e.updateSystems[i] {
-			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go func(system AnyUpdateSystem[World], e *World) {
-				defer e.wg.Done()
-				system.Run(e)
-			}(e.updateSystems[i][j], e)
-		}
-		e.wg.Wait()
+	for i := range e.systems {
+		func(system AnySystemPtr[World], e *World) {
+			defer e.wg.Done()
+			system.Run(e)
+		}(e.systems[i], e)
 	}
+
+	e.wg.Wait()
 
 	e.tick++
 	e.Clean()
@@ -105,30 +93,11 @@ func (e *World) RunUpdateSystems() error {
 	return nil
 }
 
-func (e *World) RunDrawSystems(screen *ebiten.Image) {
-	for i := range e.drawSystems {
-		// If systems are sequantial, we dont spawn goroutines
-		if len(e.drawSystems[i]) == 1 {
-			e.drawSystems[i][0].Run(e, screen)
-			continue
-		}
-
-		e.wg.Add(len(e.drawSystems[i]))
-		for j := range e.drawSystems[i] {
-			// TODO prespawn goroutines for systems with MAX_N channels, where MAX_N is max number of parallel systems
-			go func(system AnyDrawSystem[World], e *World, screen *ebiten.Image) {
-				defer e.wg.Done()
-				system.Run(e, screen)
-			}(e.drawSystems[i][j], e, screen)
-		}
-		e.wg.Wait()
-	}
-}
-
 func (e *World) CreateEntity(title string) EntityID {
 	var newId = e.generateEntityID()
 
 	e.entityComponentMask.Set(newId, ComponentBitArray256{})
+	e.size++
 
 	return newId
 }
@@ -145,11 +114,65 @@ func (e *World) DestroyEntity(entityId EntityID) {
 
 	e.entityComponentMask.SoftDelete(entityId)
 	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
+	e.size--
 }
 
 func (e *World) Clean() {
 	for i := range e.components {
 		e.components[i].Clean()
+	}
+}
+
+func (e *World) Size() uint32 {
+	return e.size
+}
+
+func (e *World) LastEntityID() EntityID {
+	return e.lastEntityID
+}
+
+func (e *World) ShouldDestroy() bool {
+	return e.shouldDestroy
+}
+
+func (e *World) SetShouldDestroy(value bool) {
+	e.shouldDestroy = value
+}
+
+func (e *World) Destroy() {
+	e.wg.Add(len(e.systems))
+
+	for i := range e.systems {
+		func(system AnySystemPtr[World], e *World) {
+			defer e.wg.Done()
+			system.Destroy(e)
+		}(e.systems[i], e)
+	}
+
+	e.wg.Wait()
+
+	e.Clean()
+}
+
+func (w *World) Run(tickrate uint) {
+	var ticker *time.Ticker
+	if tickrate > 0 {
+		ticker = time.NewTicker(time.Second / time.Duration(tickrate))
+	} else {
+		ticker = time.NewTicker(0)
+	}
+
+	for !w.ShouldDestroy() {
+		select {
+		case <-ticker.C:
+			w.RunSystems()
+
+			if len(ticker.C) > 0 {
+				<-ticker.C
+				log.Println("Skipping tick")
+			}
+		default:
+		}
 	}
 }
 

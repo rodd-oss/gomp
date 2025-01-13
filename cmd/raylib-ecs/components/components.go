@@ -3,41 +3,32 @@ This Source Code Form is subject to the terms of the Mozilla
 Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
-package main
+package components
 
 import (
 	"gomp_game/pkgs/gomp/ecs"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"image/color"
 )
 
 const (
-	COLOR_COMPONENT_ID ecs.ComponentID = iota
-	TRANSFORM_COMPONENT_ID
-	HEALTH_COMPONENT_ID
-	DESTROY_COMPONENT_ID
-	SPAWN_COMPONENT_ID
-	CAMERA_COMPONENT_ID
+	INVALID_ID ecs.ComponentID = iota
+	COLOR_ID
+	TRANSFORM_ID
+	HEALTH_ID
+	DESTROY_ID
 )
 
-type transform struct {
-	x, y int32
+type Transform struct {
+	X, Y int32
 }
 
-type health struct {
-	hp, maxHp int32
+type Health struct {
+	Hp, MaxHp int32
 }
 
-type cameraLayer struct {
-	image *ebiten.Image
-	zoom  float64
-}
-type camera struct {
-	mainLayer  cameraLayer
-	debugLayer cameraLayer
-}
-
-type destroy struct{}
+var TransformManager = ecs.CreateComponent[Transform](TRANSFORM_ID)
+var HealthManager = ecs.CreateComponent[Health](HEALTH_ID)
+var ColorManager = ecs.CreateComponent[color.RGBA](COLOR_ID)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

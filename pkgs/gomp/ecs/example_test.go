@@ -6,35 +6,31 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import (
-	"testing"
-)
+// func BenchmarkSystems(b *testing.B) {
+// 	var world = CreateWorld("Main")
 
-func BenchmarkSystems(b *testing.B) {
-	var world = CreateWorld("Main")
+// 	world.RegisterComponents(
+// 		&transformComponent,
+// 		&bulletSpawnerComponent,
+// 		&bulletComponent,
+// 	)
 
-	world.RegisterComponentTypes(
-		&transformComponent,
-		&bulletSpawnerComponent,
-		&bulletComponent,
-	)
+// 	world.RegisterSystems().
+// 		Parallel(
+// 			new(PlayerSpawnSystem),
+// 			new(BulletSpawnSystem),
+// 		).
+// 		Sequential(
+// 			new(BulletSystem),
+// 			new(TransformSystem),
+// 		)
 
-	world.RegisterUpdateSystems().
-		Parallel(
-			new(PlayerSpawnSystem),
-			new(BulletSpawnSystem),
-		).
-		Sequential(
-			new(BulletSystem),
-			new(TransformSystem),
-		)
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for range b.N {
-		world.RunUpdateSystems()
-	}
-}
+// 	b.ReportAllocs()
+// 	b.ResetTimer()
+// 	for range b.N {
+// 		world.RunSystems()
+// 	}
+// }
 
 // func BenchmarkEntityUpdate(b *testing.B) {
 // 	b.ReportAllocs()
