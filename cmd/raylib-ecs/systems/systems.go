@@ -8,7 +8,7 @@ package systems
 
 import "gomp_game/pkgs/gomp/ecs"
 
-var Spawn = ecs.CreateSystem(&systemSpawn{})
-var CalcHp = ecs.CreateSystem(&systemCalcHp{}, &Spawn)
-var CalcColor = ecs.CreateSystem(&systemCalcColor{}, &CalcHp)
-var Render = ecs.CreateSystem(&systemRender{width: 800, height: 600}, &CalcColor, &CalcHp)
+var SpawnService = ecs.CreateSystem(&spawnController{})
+var HpService = ecs.CreateSystem(&hpController{}, &SpawnService)
+var ColorService = ecs.CreateSystem(&colorController{}, &HpService)
+var RenderService = ecs.CreateSystem(&renderController{width: 800, height: 600}, &ColorService, &HpService)

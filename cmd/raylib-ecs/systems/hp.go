@@ -11,11 +11,11 @@ import (
 	"gomp_game/pkgs/gomp/ecs"
 )
 
-type systemCalcHp struct{}
+type hpController struct{}
 
-func (s *systemCalcHp) Init(world *ecs.World) {}
-func (s *systemCalcHp) Run(world *ecs.World) {
-	healths := components.HealthManager.Instances(world)
+func (s *hpController) Init(world *ecs.World) {}
+func (s *hpController) Run(world *ecs.World) {
+	healths := components.HealthService.GetManager(world)
 
 	healths.All(func(entity ecs.EntityID, h *components.Health) bool {
 		h.Hp--
@@ -27,4 +27,4 @@ func (s *systemCalcHp) Run(world *ecs.World) {
 		return true
 	})
 }
-func (s *systemCalcHp) Destroy(world *ecs.World) {}
+func (s *hpController) Destroy(world *ecs.World) {}

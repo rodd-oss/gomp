@@ -17,16 +17,16 @@ func main() {
 	defer world.Destroy()
 
 	world.RegisterComponents(
-		&components.TransformManager,
-		&components.HealthManager,
-		&components.ColorManager,
+		&components.TransformService,
+		&components.HealthService,
+		&components.ColorService,
 	)
 
 	world.RegisterSystems(
-		&systems.Spawn,
-		&systems.CalcHp,
-		&systems.CalcColor,
-		&systems.Render,
+		&systems.SpawnService,
+		&systems.HpService,
+		&systems.ColorService,
+		&systems.RenderService,
 	)
 
 	world.Run(144)

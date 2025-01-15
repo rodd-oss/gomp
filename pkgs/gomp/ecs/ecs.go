@@ -68,7 +68,7 @@ func (e *World) RegisterComponents(component_ptr ...AnyComponentTypePtr[World]) 
 	}
 }
 
-func (e *World) RegisterSystems(systems ...AnySystemManagerPtr) {
+func (e *World) RegisterSystems(systems ...AnySystemServicePtr) {
 	for i := range systems {
 		e.systems = append(e.systems, systems[i].register(e))
 		e.systems[i].Init(e)

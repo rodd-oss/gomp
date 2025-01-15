@@ -20,11 +20,11 @@ type hpSystem struct {
 }
 
 func (s *hpSystem) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-	s.destroyComponent = destroyComponentType.Instances(world)
+	s.transformComponent = transformComponentType.GetManager(world)
+	s.healthComponent = healthComponentType.GetManager(world)
+	s.colorComponent = colorComponentType.GetManager(world)
+	s.movementComponent = movementComponentType.GetManager(world)
+	s.destroyComponent = destroyComponentType.GetManager(world)
 }
 func (s *hpSystem) Run(world *ecs.World) {
 	s.healthComponent.AllParallel(func(entity ecs.EntityID, h *health) bool {

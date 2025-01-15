@@ -18,22 +18,23 @@ type AnySystemControllerPtr interface {
 	Destroy(*World)
 }
 
-type AnySystemManagerPtr interface {
+type AnySystemServicePtr interface {
 	register(*World) AnySystemControllerPtr
 }
 
-type SystemManager[T AnySystemPtr[World]] struct {
+type SystemService[T AnySystemPtr[World]] struct {
 	instance  map[*World]T
 	initValue T
 }
 
-func (m *SystemManager[T]) register(word *World) AnySystemControllerPtr {
+func (m *SystemService[T]) register(word *World) AnySystemControllerPtr {
 	m.instance[word] = m.initValue
 	return m.instance[word]
 }
 
-func CreateSystem[T AnySystemPtr[World]](controller T, dependsOn ...AnySystemManagerPtr) SystemManager[T] {
-	return SystemManager[T]{
+// TODO: dependsOn
+func CreateSystem[T AnySystemPtr[World]](controller T, dependsOn ...AnySystemServicePtr) SystemService[T] {
+	return SystemService[T]{
 		instance:  make(map[*World]T),
 		initValue: controller,
 	}

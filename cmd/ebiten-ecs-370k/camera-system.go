@@ -34,12 +34,12 @@ type cameraSystem struct {
 }
 
 func (s *cameraSystem) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
-	s.cameraComponent = cameraComponentType.Instances(world)
-	s.destroyComponentType = destroyComponentType.Instances(world)
+	s.transformComponent = transformComponentType.GetManager(world)
+	s.healthComponent = healthComponentType.GetManager(world)
+	s.colorComponent = colorComponentType.GetManager(world)
+	s.movementComponent = movementComponentType.GetManager(world)
+	s.cameraComponent = cameraComponentType.GetManager(world)
+	s.destroyComponentType = destroyComponentType.GetManager(world)
 
 	s.p = message.NewPrinter(language.Russian)
 

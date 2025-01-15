@@ -19,7 +19,7 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-type systemSpawn struct {
+type spawnController struct {
 	pprofEnabled bool
 }
 
@@ -29,11 +29,11 @@ const (
 	maxMaxHp        = 2000
 )
 
-func (s *systemSpawn) Init(world *ecs.World) {}
-func (s *systemSpawn) Run(world *ecs.World) {
-	colors := components.ColorManager.Instances(world)
-	healths := components.HealthManager.Instances(world)
-	transforms := components.TransformManager.Instances(world)
+func (s *spawnController) Init(world *ecs.World) {}
+func (s *spawnController) Run(world *ecs.World) {
+	colors := components.ColorService.GetManager(world)
+	healths := components.HealthService.GetManager(world)
+	transforms := components.TransformService.GetManager(world)
 
 	if rl.IsKeyPressed(rl.KeySpace) {
 		for range rand.Intn(10000) {
@@ -88,4 +88,4 @@ func (s *systemSpawn) Run(world *ecs.World) {
 	}
 }
 
-func (s *systemSpawn) Destroy(world *ecs.World) {}
+func (s *spawnController) Destroy(world *ecs.World) {}

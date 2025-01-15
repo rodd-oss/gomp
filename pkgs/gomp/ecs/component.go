@@ -42,7 +42,7 @@ func CreateComponent[T any](id ComponentID) ComponentType[T] {
 	return component
 }
 
-func (c *ComponentType[T]) Instances(ecs *World) WorldComponents[T] {
+func (c *ComponentType[T]) GetManager(ecs *World) WorldComponents[T] {
 	if value, ok := c.worldComponents[ecs]; ok {
 		return value
 	}

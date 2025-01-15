@@ -14,16 +14,16 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-type systemRender struct {
+type renderController struct {
 	width, height int32
 }
 
-func (s *systemRender) Init(world *ecs.World) {
+func (s *renderController) Init(world *ecs.World) {
 	rl.InitWindow(s.width, s.height, "raylib [core] example - basic window")
 }
-func (s *systemRender) Run(world *ecs.World) {
-	colors := components.ColorManager.Instances(world)
-	transforms := components.TransformManager.Instances(world)
+func (s *renderController) Run(world *ecs.World) {
+	colors := components.ColorService.GetManager(world)
+	transforms := components.TransformService.GetManager(world)
 
 	if rl.WindowShouldClose() {
 		world.SetShouldDestroy(true)
@@ -52,6 +52,6 @@ func (s *systemRender) Run(world *ecs.World) {
 	rl.EndDrawing()
 }
 
-func (s *systemRender) Destroy(world *ecs.World) {
+func (s *renderController) Destroy(world *ecs.World) {
 	rl.CloseWindow()
 }

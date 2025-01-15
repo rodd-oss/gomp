@@ -41,7 +41,7 @@ func newGame() game {
 
 	newGame := game{
 		world:            &world,
-		cameraComponents: cameraComponentType.Instances(&world),
+		cameraComponents: cameraComponentType.GetManager(&world),
 		op:               new(ebiten.DrawImageOptions),
 	}
 

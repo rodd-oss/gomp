@@ -12,20 +12,20 @@ import (
 	"image/color"
 )
 
-type systemCalcColor struct {
+type colorController struct {
 	baseColor color.RGBA
 }
 
-func (s *systemCalcColor) Init(world *ecs.World) {
+func (s *colorController) Init(world *ecs.World) {
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
 
-func (s *systemCalcColor) Run(world *ecs.World) {
-	colors := components.ColorManager.Instances(world)
-	healths := components.HealthManager.Instances(world)
+func (s *colorController) Run(world *ecs.World) {
+	colorManager := components.ColorService.GetManager(world)
+	healthManager := components.HealthService.GetManager(world)
 
-	colors.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
-		health := healths.GetPtr(entity)
+	colorManager.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
+		health := healthManager.GetPtr(entity)
 		if health == nil {
 			return true
 		}
@@ -40,4 +40,4 @@ func (s *systemCalcColor) Run(world *ecs.World) {
 		return true
 	})
 }
-func (s *systemCalcColor) Destroy(world *ecs.World) {}
+func (s *colorController) Destroy(world *ecs.World) {}

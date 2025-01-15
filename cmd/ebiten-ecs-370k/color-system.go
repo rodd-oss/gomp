@@ -21,10 +21,10 @@ type colorSystem struct {
 }
 
 func (s *colorSystem) Init(world *ecs.World) {
-	s.transformComponent = transformComponentType.Instances(world)
-	s.healthComponent = healthComponentType.Instances(world)
-	s.colorComponent = colorComponentType.Instances(world)
-	s.movementComponent = movementComponentType.Instances(world)
+	s.transformComponent = transformComponentType.GetManager(world)
+	s.healthComponent = healthComponentType.GetManager(world)
+	s.colorComponent = colorComponentType.GetManager(world)
+	s.movementComponent = movementComponentType.GetManager(world)
 
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }

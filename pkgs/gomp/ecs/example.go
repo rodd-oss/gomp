@@ -39,7 +39,7 @@ type TransformSystem struct {
 }
 
 func (s *TransformSystem) Init(world *World) {
-	s.transform = transformComponent.Instances(world)
+	s.transform = transformComponent.GetManager(world)
 }
 func (s *TransformSystem) Destroy(world *World) {}
 func (s *TransformSystem) Run(world *World) {
@@ -59,9 +59,9 @@ type BulletSpawnSystem struct {
 }
 
 func (s *BulletSpawnSystem) Init(world *World) {
-	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
-	s.transform = transformComponent.Instances(world)
-	s.bullet = bulletComponent.Instances(world)
+	s.bulletSpawner = bulletSpawnerComponent.GetManager(world)
+	s.transform = transformComponent.GetManager(world)
+	s.bullet = bulletComponent.GetManager(world)
 }
 func (s *BulletSpawnSystem) Destroy(world *World) {}
 func (s *BulletSpawnSystem) Run(world *World) {
@@ -87,7 +87,7 @@ type BulletSystem struct {
 }
 
 func (s *BulletSystem) Init(world *World) {
-	s.bullet = bulletComponent.Instances(world)
+	s.bullet = bulletComponent.GetManager(world)
 }
 func (s *BulletSystem) Destroy(world *World) {}
 func (s *BulletSystem) Run(world *World) {
@@ -105,8 +105,8 @@ type PlayerSpawnSystem struct {
 }
 
 func (s *PlayerSpawnSystem) Init(world *World) {
-	s.bulletSpawner = bulletSpawnerComponent.Instances(world)
-	s.transform = transformComponent.Instances(world)
+	s.bulletSpawner = bulletSpawnerComponent.GetManager(world)
+	s.transform = transformComponent.GetManager(world)
 
 	count := 100_000
 	tra := Transform{0, 1, 2}

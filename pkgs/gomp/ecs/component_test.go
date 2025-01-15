@@ -23,7 +23,7 @@ type pixel struct {
 var pixelComponentType = CreateComponent[pixel](1)
 
 // Commonly used functions in both benchmarks.
-func PrepareWorld(description string, system AnySystemManagerPtr) *World {
+func PrepareWorld(description string, system AnySystemServicePtr) *World {
 	world := CreateWorld(description)
 
 	world.RegisterComponents(
@@ -37,7 +37,7 @@ func PrepareWorld(description string, system AnySystemManagerPtr) *World {
 }
 
 func InitPixelComponent(pixelComponent *WorldComponents[pixel], world *World) {
-	*pixelComponent = pixelComponentType.Instances(world)
+	*pixelComponent = pixelComponentType.GetManager(world)
 	determRand := rand.New(rand.NewSource(42))
 
 	for i := range 1000 {
