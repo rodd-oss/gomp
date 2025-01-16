@@ -13,8 +13,9 @@ import (
 
 type hpController struct{}
 
-func (s *hpController) Init(world *ecs.World) {}
-func (s *hpController) Run(world *ecs.World) {
+func (s *hpController) Init(world *ecs.World)   {}
+func (s *hpController) Update(world *ecs.World) {}
+func (s *hpController) FixedUpdate(world *ecs.World) {
 	healths := components.HealthService.GetManager(world)
 
 	healths.All(func(entity ecs.EntityID, h *components.Health) bool {

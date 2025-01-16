@@ -30,7 +30,7 @@ type World struct {
 	size          uint32
 	shouldDestroy bool
 
-	systems             []AnySystemPtr[World]
+	systems             [][]*SystemServiceInstance
 	components          []AnyComponentInstancesPtr
 	deletedEntityIDs    []EntityID
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
@@ -62,42 +62,74 @@ func CreateWorld(title string) World {
 	return ecs
 }
 
-func (e *World) RegisterComponents(component_ptr ...AnyComponentTypePtr[World]) {
+func (w *World) RegisterComponents(component_ptr ...AnyComponentTypePtr[World]) {
 	for i := 0; i < len(component_ptr); i++ {
-		e.components = append(e.components, component_ptr[i].register(e, ComponentID(i)))
+		w.components = append(w.components, component_ptr[i].register(w, ComponentID(i)))
 	}
 }
 
-func (e *World) RegisterSystems(systems ...AnySystemServicePtr) {
-	for i := range systems {
-		e.systems = append(e.systems, systems[i].register(e))
-		e.systems[i].Init(e)
+func (e *World) RegisterSystems() *SystemBuilder {
+	return &SystemBuilder{
+		world:   e,
+		systems: &e.systems,
 	}
 }
 
-func (e *World) RunSystems() error {
-	e.wg.Add(len(e.systems))
+func (w *World) RunSystemFunction(method SystemFunctionMethod) error {
+	for i := range w.systems {
+		parallel := w.systems[i]
 
-	for i := range e.systems {
-		func(system AnySystemPtr[World], e *World) {
-			defer e.wg.Done()
-			system.Run(e)
-		}(e.systems[i], e)
+		if len(parallel) == 1 {
+			controller := parallel[0].controller
+			switch method {
+			case SystemFunctionInit:
+				controller.Init(w)
+			case SystemFunctionUpdate:
+				controller.Update(w)
+			case SystemFunctionFixedUpdate:
+				controller.FixedUpdate(w)
+			case SystemFunctionDestroy:
+				controller.Destroy(w)
+			}
+			continue
+		}
+
+		for j := range parallel {
+			parallel[j].PrepareWg()
+		}
+
+		w.wg.Add(len(parallel))
+		for j := range parallel {
+			controller := parallel[j]
+
+			switch method {
+			case SystemFunctionInit:
+				controller.asyncInit()
+			case SystemFunctionUpdate:
+				controller.asyncUpdate()
+			case SystemFunctionFixedUpdate:
+				controller.asyncFixedUpdate()
+			case SystemFunctionDestroy:
+				controller.asyncDestroy()
+			}
+		}
+	}
+	w.wg.Wait()
+
+	if method == SystemFunctionFixedUpdate {
+		w.tick++
 	}
 
-	e.wg.Wait()
-
-	e.tick++
-	e.Clean()
+	w.Clean()
 
 	return nil
 }
 
-func (e *World) CreateEntity(title string) EntityID {
-	var newId = e.generateEntityID()
+func (w *World) CreateEntity(title string) EntityID {
+	var newId = w.generateEntityID()
 
-	e.entityComponentMask.Set(newId, ComponentBitArray256{})
-	e.size++
+	w.entityComponentMask.Set(newId, ComponentBitArray256{})
+	w.size++
 
 	return newId
 }
@@ -117,71 +149,58 @@ func (e *World) DestroyEntity(entityId EntityID) {
 	e.size--
 }
 
-func (e *World) Clean() {
-	for i := range e.components {
-		e.components[i].Clean()
+func (w *World) Clean() {
+	for i := range w.components {
+		w.components[i].Clean()
 	}
 }
 
-func (e *World) Size() uint32 {
-	return e.size
+func (w *World) Size() uint32 {
+	return w.size
 }
 
-func (e *World) LastEntityID() EntityID {
-	return e.lastEntityID
+func (w *World) LastEntityID() EntityID {
+	return w.lastEntityID
 }
 
-func (e *World) ShouldDestroy() bool {
-	return e.shouldDestroy
+func (w *World) ShouldDestroy() bool {
+	return w.shouldDestroy
 }
 
-func (e *World) SetShouldDestroy(value bool) {
-	e.shouldDestroy = value
+func (w *World) SetShouldDestroy(value bool) {
+	w.shouldDestroy = value
 }
 
-func (e *World) Destroy() {
-	e.wg.Add(len(e.systems))
-
-	for i := range e.systems {
-		func(system AnySystemPtr[World], e *World) {
-			defer e.wg.Done()
-			system.Destroy(e)
-		}(e.systems[i], e)
-	}
-
-	e.wg.Wait()
-
-	e.Clean()
+func (w *World) Destroy() {
+	w.RunSystemFunction(SystemFunctionDestroy)
+	w.wg.Wait()
+	w.Clean()
 }
 
 func (w *World) Run(tickrate uint) {
-	var ticker *time.Ticker
-	if tickrate > 0 {
-		ticker = time.NewTicker(time.Second / time.Duration(tickrate))
-	} else {
-		ticker = time.NewTicker(0)
-	}
+	ticker := time.NewTicker(time.Second / time.Duration(tickrate))
 
 	for !w.ShouldDestroy() {
 		select {
 		case <-ticker.C:
-			w.RunSystems()
+			w.RunSystemFunction(SystemFunctionFixedUpdate)
 
 			if len(ticker.C) > 0 {
 				<-ticker.C
 				log.Println("Skipping tick")
 			}
 		default:
+			w.RunSystemFunction(SystemFunctionUpdate)
 		}
 	}
 }
 
-func (e *World) generateEntityID() (newId EntityID) {
-	if len(e.deletedEntityIDs) == 0 {
-		newId = EntityID(atomic.AddInt32((*int32)(&e.lastEntityID), 1))
+func (w *World) generateEntityID() (newId EntityID) {
+	if len(w.deletedEntityIDs) == 0 {
+		newId = EntityID(atomic.AddInt32((*int32)(&w.lastEntityID), 1))
 	} else {
-		newId = e.deletedEntityIDs[len(e.deletedEntityIDs)-1]
-		e.deletedEntityIDs = e.deletedEntityIDs[:len(e.deletedEntityIDs)-1]
+		newId = w.deletedEntityIDs[len(w.deletedEntityIDs)-1]
+		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
 	}
 	return newId
 }

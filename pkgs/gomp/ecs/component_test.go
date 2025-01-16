@@ -29,9 +29,10 @@ func PrepareWorld(description string, system AnySystemServicePtr) *World {
 	world.RegisterComponents(
 		&pixelComponentType,
 	)
-	world.RegisterSystems(
-		system,
-	)
+	world.RegisterSystems().
+		Parallel(
+			system,
+		)
 
 	return &world
 }
@@ -72,7 +73,8 @@ func (s *pixelSystem) Init(world *World) {
 
 func (s *pixelSystem) Destroy(world *World) {}
 
-func (s *pixelSystem) Run(world *World) {
+func (s *pixelSystem) Update(world *World) {}
+func (s *pixelSystem) FixedUpdate(world *World) {
 	for pixel := range s.pixelComponent.AllData {
 		// Note: was not extracted to separate function to simulate
 		// real-world interaction between range loop and inner code.
@@ -120,8 +122,8 @@ func (s *pixelSystemDirectCall) Init(world *World) {
 }
 
 func (s *pixelSystemDirectCall) Destroy(world *World) {}
-
-func (s *pixelSystemDirectCall) Run(world *World) {
+func (s *pixelSystemDirectCall) Update(world *World)  {}
+func (s *pixelSystemDirectCall) FixedUpdate(world *World) {
 	s.pixelComponent.AllDataParallel(func(pixel *pixel) bool {
 		color := &pixel.color
 
@@ -167,7 +169,7 @@ func BenchmarkRangeIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystems()
+		world.RunSystemFunction(SystemFunctionFixedUpdate)
 	}
 }
 
@@ -180,6 +182,6 @@ func BenchmarkDirectCallIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystems()
+		world.RunSystemFunction(SystemFunctionFixedUpdate)
 	}
 }

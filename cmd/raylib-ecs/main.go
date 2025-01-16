@@ -22,12 +22,15 @@ func main() {
 		&components.ColorService,
 	)
 
-	world.RegisterSystems(
-		&systems.SpawnService,
-		&systems.HpService,
-		&systems.ColorService,
-		&systems.RenderService,
-	)
+	world.RegisterSystems().
+		Parallel(
+			&systems.SpawnService,
+			&systems.HpService,
+			&systems.ColorService,
+		).
+		Sequential(
+			&systems.RenderService,
+		)
 
-	world.Run(144)
+	world.Run(60)
 }

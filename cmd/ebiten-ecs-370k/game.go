@@ -49,7 +49,7 @@ func newGame() game {
 }
 
 func (g *game) Update() error {
-	err := g.world.RunSystems()
+	err := g.world.RunSystemFunction(ecs.SystemFunctionFixedUpdate)
 	if err != nil {
 		return err
 	}

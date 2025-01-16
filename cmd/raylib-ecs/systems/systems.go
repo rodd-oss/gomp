@@ -11,4 +11,4 @@ import "gomp_game/pkgs/gomp/ecs"
 var SpawnService = ecs.CreateSystem(&spawnController{})
 var HpService = ecs.CreateSystem(&hpController{}, &SpawnService)
 var ColorService = ecs.CreateSystem(&colorController{}, &HpService)
-var RenderService = ecs.CreateSystem(&renderController{width: 800, height: 600}, &ColorService, &HpService)
+var RenderService = ecs.CreateSystem(&renderController{width: 800, height: 600})

@@ -30,13 +30,13 @@ const (
 )
 
 func (s *spawnController) Init(world *ecs.World) {}
-func (s *spawnController) Run(world *ecs.World) {
+func (s *spawnController) Update(world *ecs.World) {
 	colors := components.ColorService.GetManager(world)
 	healths := components.HealthService.GetManager(world)
 	transforms := components.TransformService.GetManager(world)
 
-	if rl.IsKeyPressed(rl.KeySpace) {
-		for range rand.Intn(10000) {
+	if rl.IsKeyDown(rl.KeySpace) {
+		for range rand.Intn(1000) {
 			if world.Size() > 100_000_000 {
 				break
 			}
@@ -86,6 +86,8 @@ func (s *spawnController) Run(world *ecs.World) {
 
 		s.pprofEnabled = !s.pprofEnabled
 	}
+}
+func (s *spawnController) FixedUpdate(world *ecs.World) {
 }
 
 func (s *spawnController) Destroy(world *ecs.World) {}

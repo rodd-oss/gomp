@@ -19,8 +19,8 @@ type colorController struct {
 func (s *colorController) Init(world *ecs.World) {
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
-
-func (s *colorController) Run(world *ecs.World) {
+func (s *colorController) Update(world *ecs.World) {}
+func (s *colorController) FixedUpdate(world *ecs.World) {
 	colorManager := components.ColorService.GetManager(world)
 	healthManager := components.HealthService.GetManager(world)
 
