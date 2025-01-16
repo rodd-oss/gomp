@@ -16,7 +16,14 @@ func main() {
 	world := ecs.CreateWorld("main-raylib")
 	defer world.Destroy()
 
-	world.RegisterComponents(
+	// patch := world.GetPatch()
+	// world.ApplyPatch(patch)
+
+	// components.TransformService.OnPatch(func(newstate components.Transform, oldstate components.Transform) components.Transform {
+	// 	return new
+	// })
+
+	world.RegisterComponentServices(
 		&components.TransformService,
 		&components.HealthService,
 		&components.ColorService,

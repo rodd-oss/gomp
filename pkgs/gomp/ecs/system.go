@@ -17,10 +17,10 @@ type AnySystemPtr[W any] interface {
 type SystemFunctionMethod int
 
 const (
-	SystemFunctionInit SystemFunctionMethod = iota
-	SystemFunctionUpdate
+	systemFunctionInit SystemFunctionMethod = iota
+	systemFunctionUpdate
 	SystemFunctionFixedUpdate
-	SystemFunctionDestroy
+	systemFunctionDestroy
 )
 
 type AnySystemControllerPtr interface {

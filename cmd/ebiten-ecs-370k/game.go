@@ -21,7 +21,7 @@ type game struct {
 func newGame() game {
 	world := ecs.CreateWorld("1 mil pixel")
 
-	world.RegisterComponents(
+	world.RegisterComponentServices(
 		&destroyComponentType,
 		&cameraComponentType,
 		&transformComponentType,
@@ -49,7 +49,7 @@ func newGame() game {
 }
 
 func (g *game) Update() error {
-	err := g.world.RunSystemFunction(ecs.SystemFunctionFixedUpdate)
+	err := g.world.FixedUpdate()
 	if err != nil {
 		return err
 	}

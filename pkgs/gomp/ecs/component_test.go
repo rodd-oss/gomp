@@ -20,13 +20,13 @@ type pixel struct {
 	breath bool
 }
 
-var pixelComponentType = CreateComponent[pixel](1)
+var pixelComponentType = CreateComponentService[pixel](1)
 
 // Commonly used functions in both benchmarks.
 func PrepareWorld(description string, system AnySystemServicePtr) *World {
 	world := CreateWorld(description)
 
-	world.RegisterComponents(
+	world.RegisterComponentServices(
 		&pixelComponentType,
 	)
 	world.RegisterSystems().
@@ -169,7 +169,7 @@ func BenchmarkRangeIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystemFunction(SystemFunctionFixedUpdate)
+		world.runSystemFunction(SystemFunctionFixedUpdate)
 	}
 }
 
@@ -182,6 +182,6 @@ func BenchmarkDirectCallIteration(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		world.RunSystemFunction(SystemFunctionFixedUpdate)
+		world.runSystemFunction(SystemFunctionFixedUpdate)
 	}
 }

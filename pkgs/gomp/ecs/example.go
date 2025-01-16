@@ -28,10 +28,10 @@ const (
 	bulletSpawnID
 )
 
-var _ = CreateComponent[Rotation](rotationID)
-var transformComponent = CreateComponent[Transform](transformID)
-var bulletSpawnerComponent = CreateComponent[BulletSpawn](bulletID)
-var bulletComponent = CreateComponent[Bullet](bulletSpawnID)
+var _ = CreateComponentService[Rotation](rotationID)
+var transformComponent = CreateComponentService[Transform](transformID)
+var bulletSpawnerComponent = CreateComponentService[BulletSpawn](bulletID)
+var bulletComponent = CreateComponentService[Bullet](bulletSpawnID)
 
 type TransformSystem struct {
 	n         int

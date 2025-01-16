@@ -12,8 +12,8 @@ import (
 	"sync"
 )
 
-type AnyComponentTypePtr[W any] interface {
-	register(*W, ComponentID) AnyComponentInstancesPtr
+type AnyComponentServicePtr interface {
+	register(*World, ComponentID) AnyComponentInstancesPtr
 }
 
 type AnyComponentInstancesPtr interface {
@@ -24,7 +24,7 @@ type AnyComponentInstancesPtr interface {
 	Has(EntityID) bool
 }
 
-type ComponentType[T any] struct {
+type ComponentService[T any] struct {
 	id              ComponentID
 	worldComponents map[*World]WorldComponents[T]
 
@@ -32,8 +32,8 @@ type ComponentType[T any] struct {
 	mx *sync.Mutex
 }
 
-func CreateComponent[T any](id ComponentID) ComponentType[T] {
-	component := ComponentType[T]{}
+func CreateComponentService[T any](id ComponentID) ComponentService[T] {
+	component := ComponentService[T]{}
 	component.id = id
 	component.worldComponents = make(map[*World]WorldComponents[T])
 	component.wg = new(sync.WaitGroup)
@@ -42,7 +42,7 @@ func CreateComponent[T any](id ComponentID) ComponentType[T] {
 	return component
 }
 
-func (c *ComponentType[T]) GetManager(ecs *World) WorldComponents[T] {
+func (c *ComponentService[T]) GetManager(ecs *World) WorldComponents[T] {
 	if value, ok := c.worldComponents[ecs]; ok {
 		return value
 	}
@@ -50,7 +50,7 @@ func (c *ComponentType[T]) GetManager(ecs *World) WorldComponents[T] {
 	panic(fmt.Sprintf("Component <%T> is not registered in <%s> world", c, ecs.Title))
 }
 
-func (c *ComponentType[T]) register(ecs *World, id ComponentID) AnyComponentInstancesPtr {
+func (c *ComponentService[T]) register(ecs *World, id ComponentID) AnyComponentInstancesPtr {
 	newInstances := NewSparseSet[T, EntityID]()
 
 	newComponents := WorldComponents[T]{

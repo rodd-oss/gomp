@@ -62,7 +62,7 @@ func CreateWorld(title string) World {
 	return ecs
 }
 
-func (w *World) RegisterComponents(component_ptr ...AnyComponentTypePtr[World]) {
+func (w *World) RegisterComponentServices(component_ptr ...AnyComponentServicePtr) {
 	for i := 0; i < len(component_ptr); i++ {
 		w.components = append(w.components, component_ptr[i].register(w, ComponentID(i)))
 	}
@@ -75,20 +75,25 @@ func (e *World) RegisterSystems() *SystemBuilder {
 	}
 }
 
-func (w *World) RunSystemFunction(method SystemFunctionMethod) error {
+func (w *World) FixedUpdate() error {
+	w.runSystemFunction(SystemFunctionFixedUpdate)
+	return nil
+}
+
+func (w *World) runSystemFunction(method SystemFunctionMethod) error {
 	for i := range w.systems {
 		parallel := w.systems[i]
 
 		if len(parallel) == 1 {
 			controller := parallel[0].controller
 			switch method {
-			case SystemFunctionInit:
+			case systemFunctionInit:
 				controller.Init(w)
-			case SystemFunctionUpdate:
+			case systemFunctionUpdate:
 				controller.Update(w)
 			case SystemFunctionFixedUpdate:
 				controller.FixedUpdate(w)
-			case SystemFunctionDestroy:
+			case systemFunctionDestroy:
 				controller.Destroy(w)
 			}
 			continue
@@ -103,13 +108,13 @@ func (w *World) RunSystemFunction(method SystemFunctionMethod) error {
 			controller := parallel[j]
 
 			switch method {
-			case SystemFunctionInit:
+			case systemFunctionInit:
 				controller.asyncInit()
-			case SystemFunctionUpdate:
+			case systemFunctionUpdate:
 				controller.asyncUpdate()
 			case SystemFunctionFixedUpdate:
 				controller.asyncFixedUpdate()
-			case SystemFunctionDestroy:
+			case systemFunctionDestroy:
 				controller.asyncDestroy()
 			}
 		}
@@ -172,7 +177,7 @@ func (w *World) SetShouldDestroy(value bool) {
 }
 
 func (w *World) Destroy() {
-	w.RunSystemFunction(SystemFunctionDestroy)
+	w.runSystemFunction(systemFunctionDestroy)
 	w.wg.Wait()
 	w.Clean()
 }
@@ -183,14 +188,14 @@ func (w *World) Run(tickrate uint) {
 	for !w.ShouldDestroy() {
 		select {
 		case <-ticker.C:
-			w.RunSystemFunction(SystemFunctionFixedUpdate)
+			w.runSystemFunction(SystemFunctionFixedUpdate)
 
 			if len(ticker.C) > 0 {
 				<-ticker.C
 				log.Println("Skipping tick")
 			}
 		default:
-			w.RunSystemFunction(SystemFunctionUpdate)
+			w.runSystemFunction(systemFunctionUpdate)
 		}
 	}
 }

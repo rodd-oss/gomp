@@ -46,8 +46,9 @@ func (s *renderController) Update(world *ecs.World) {
 
 		rec := rl.NewRectangle(float32(transform.X), float32(transform.Y), 8, 8)
 		origin := rl.NewVector2(0, 0)
+		col := *color
 
-		rl.DrawRectanglePro(rec, origin, 0, *color)
+		rl.DrawRectanglePro(rec, origin, 0, col)
 		return true
 	})
 

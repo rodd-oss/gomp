@@ -44,12 +44,12 @@ const (
 	destroyId
 )
 
-var transformComponentType = ecs.CreateComponent[transform](transformId)
-var healthComponentType = ecs.CreateComponent[health](healthId)
-var colorComponentType = ecs.CreateComponent[color.RGBA](colorId)
-var movementComponentType = ecs.CreateComponent[movement](movementId)
-var cameraComponentType = ecs.CreateComponent[camera](cameraId)
-var destroyComponentType = ecs.CreateComponent[empty](destroyId)
+var transformComponentType = ecs.CreateComponentService[transform](transformId)
+var healthComponentType = ecs.CreateComponentService[health](healthId)
+var colorComponentType = ecs.CreateComponentService[color.RGBA](colorId)
+var movementComponentType = ecs.CreateComponentService[movement](movementId)
+var cameraComponentType = ecs.CreateComponentService[camera](cameraId)
+var destroyComponentType = ecs.CreateComponentService[empty](destroyId)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

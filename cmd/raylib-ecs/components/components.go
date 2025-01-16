@@ -26,9 +26,9 @@ type Health struct {
 	Hp, MaxHp int32
 }
 
-var TransformService = ecs.CreateComponent[Transform](TRANSFORM_ID)
-var HealthService = ecs.CreateComponent[Health](HEALTH_ID)
-var ColorService = ecs.CreateComponent[color.RGBA](COLOR_ID)
+var TransformService = ecs.CreateComponentService[Transform](TRANSFORM_ID)
+var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
+var ColorService = ecs.CreateComponentService[color.RGBA](COLOR_ID)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick
