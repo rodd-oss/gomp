@@ -204,6 +204,8 @@ func (w *World) Run(tickrate uint) {
 	// Ричард Donated 100 RUB. THANKS!
 	// ksana_pro Donated 100 RUB. THANKS!
 	// Ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
 
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
