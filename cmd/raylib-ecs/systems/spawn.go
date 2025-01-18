@@ -36,7 +36,7 @@ func (s *spawnController) Update(world *ecs.World) {
 	transforms := components.TransformService.GetManager(world)
 
 	if rl.IsKeyDown(rl.KeySpace) {
-		for range rand.Intn(1000) {
+		for range rand.Intn(10000) {
 			if world.Size() > 100_000_000 {
 				break
 			}
@@ -44,8 +44,8 @@ func (s *spawnController) Update(world *ecs.World) {
 			newCreature := world.CreateEntity("Creature")
 
 			t := components.Transform{
-				X: rand.Int31n(1000),
-				Y: rand.Int31n(1000),
+				X: rand.Int31n(800),
+				Y: rand.Int31n(600),
 			}
 
 			transforms.Set(newCreature, t)

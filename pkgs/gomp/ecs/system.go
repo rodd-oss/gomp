@@ -76,7 +76,9 @@ func (s *SystemServiceInstance) Run() {
 	for !shoudDestroy {
 		select {
 		case <-s.initChan:
+			s.WaitForDeps()
 			controller.Init(s.world)
+			s.SendDone()
 		case <-s.updateChan:
 			s.WaitForDeps()
 			controller.Update(s.world)
@@ -86,9 +88,10 @@ func (s *SystemServiceInstance) Run() {
 			controller.FixedUpdate(s.world)
 			s.SendDone()
 		case <-s.destroyChan:
+			s.WaitForDeps()
 			shoudDestroy = true
+			s.SendDone()
 		}
-
 		s.world.wg.Done()
 	}
 }

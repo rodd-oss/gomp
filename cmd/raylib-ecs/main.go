@@ -27,6 +27,7 @@ func main() {
 		&components.TransformService,
 		&components.HealthService,
 		&components.ColorService,
+		&components.SpriteService,
 	)
 
 	world.RegisterSystems().
@@ -34,6 +35,7 @@ func main() {
 			&systems.SpawnService,
 			&systems.HpService,
 			&systems.ColorService,
+			&systems.SpriteService,
 		).
 		Sequential(
 			&systems.RenderService,

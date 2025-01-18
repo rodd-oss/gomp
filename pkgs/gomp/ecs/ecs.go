@@ -8,7 +8,6 @@ package ecs
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -118,8 +117,8 @@ func (w *World) runSystemFunction(method SystemFunctionMethod) error {
 				controller.asyncDestroy()
 			}
 		}
+		w.wg.Wait()
 	}
-	w.wg.Wait()
 
 	if method == SystemFunctionFixedUpdate {
 		w.tick++
@@ -183,20 +182,43 @@ func (w *World) Destroy() {
 }
 
 func (w *World) Run(tickrate uint) {
-	ticker := time.NewTicker(time.Second / time.Duration(tickrate))
+	duration := time.Second / time.Duration(tickrate)
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// Plambirik отправил 5 000 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Skomich Donated 250 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// мой код полная хуйня Donated 251 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// дубина Donated 250 RUB. THANKS!
+	// WoWnik Donated 100 RUB. THANKS!
+	// Vorobyan Donated 100 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Мандовожка милана Donated 100 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Зритель Donated 250 RUB. THANKS!
+	// Ричард Donated 100 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
+
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
 
 	for !w.ShouldDestroy() {
-		select {
-		case <-ticker.C:
-			w.runSystemFunction(SystemFunctionFixedUpdate)
-
-			if len(ticker.C) > 0 {
-				<-ticker.C
-				log.Println("Skipping tick")
+		needFixedUpdate := true
+		for needFixedUpdate {
+			select {
+			default:
+				needFixedUpdate = false
+			case <-ticker.C:
+				w.runSystemFunction(SystemFunctionFixedUpdate)
 			}
-		default:
-			w.runSystemFunction(systemFunctionUpdate)
 		}
+		w.runSystemFunction(systemFunctionUpdate)
 	}
 }
 

@@ -8,14 +8,8 @@ package components
 import (
 	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
-)
 
-const (
-	INVALID_ID ecs.ComponentID = iota
-	COLOR_ID
-	TRANSFORM_ID
-	HEALTH_ID
-	DESTROY_ID
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 type Transform struct {
@@ -26,9 +20,15 @@ type Health struct {
 	Hp, MaxHp int32
 }
 
+type Sprite struct {
+	Pos  rl.Vector2
+	Tint color.RGBA
+}
+
 var TransformService = ecs.CreateComponentService[Transform](TRANSFORM_ID)
 var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
 var ColorService = ecs.CreateComponentService[color.RGBA](COLOR_ID)
+var SpriteService = ecs.CreateComponentService[Sprite](SPRITE_ID)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick
