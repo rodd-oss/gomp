@@ -12,11 +12,11 @@ import (
 )
 
 type hpSystem struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
-	destroyComponent   ecs.WorldComponents[empty]
+	transformComponent *ecs.ComponentManager[transform]
+	healthComponent    *ecs.ComponentManager[health]
+	colorComponent     *ecs.ComponentManager[color.RGBA]
+	movementComponent  *ecs.ComponentManager[movement]
+	destroyComponent   *ecs.ComponentManager[empty]
 }
 
 func (s *hpSystem) Init(world *ecs.World) {
@@ -31,7 +31,7 @@ func (s *hpSystem) Run(world *ecs.World) {
 		h.hp--
 
 		if h.hp <= 0 {
-			s.destroyComponent.Set(entity, struct{}{})
+			s.destroyComponent.Create(entity, struct{}{})
 		}
 
 		return true

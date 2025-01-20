@@ -21,8 +21,13 @@ type Health struct {
 }
 
 type Sprite struct {
-	Pos  rl.Vector2
-	Tint color.RGBA
+	Texture  rl.Texture2D
+	Position rl.Vector2
+	Tint     color.RGBA
+}
+
+func (sprite *Sprite) Draw() {
+	rl.DrawTextureV(sprite.Texture, sprite.Position, sprite.Tint)
 }
 
 var TransformService = ecs.CreateComponentService[Transform](TRANSFORM_ID)

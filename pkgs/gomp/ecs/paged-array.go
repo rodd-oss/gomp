@@ -246,6 +246,11 @@ func (a *PagedArray[T]) AllDataParallel(yield func(*T) bool) {
 	wg.Wait()
 }
 
+type SlicePage[T any] struct {
+	len  int32
+	data []T
+}
+
 type ArrayPage[T any] struct {
 	len  int32
 	data [page_size]T

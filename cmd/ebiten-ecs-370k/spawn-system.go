@@ -20,10 +20,10 @@ import (
 )
 
 type spawnSystem struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
+	transformComponent *ecs.ComponentManager[transform]
+	healthComponent    *ecs.ComponentManager[health]
+	colorComponent     *ecs.ComponentManager[color.RGBA]
+	movementComponent  *ecs.ComponentManager[movement]
 }
 
 const (
@@ -52,7 +52,7 @@ func (s *spawnSystem) Run(world *ecs.World) {
 				y: rand.Int31n(1000),
 			}
 
-			s.transformComponent.Set(newCreature, t)
+			s.transformComponent.Create(newCreature, t)
 
 			maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
 			hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
@@ -62,7 +62,7 @@ func (s *spawnSystem) Run(world *ecs.World) {
 				maxHp: maxHp,
 			}
 
-			s.healthComponent.Set(newCreature, h)
+			s.healthComponent.Create(newCreature, h)
 
 			c := color.RGBA{
 				R: 0,
@@ -71,14 +71,14 @@ func (s *spawnSystem) Run(world *ecs.World) {
 				A: 0,
 			}
 
-			s.colorComponent.Set(newCreature, c)
+			s.colorComponent.Create(newCreature, c)
 
 			m := movement{
 				goToX: t.x,
 				goToY: t.y,
 			}
 
-			s.movementComponent.Set(newCreature, m)
+			s.movementComponent.Create(newCreature, m)
 
 			entityCount++
 		}

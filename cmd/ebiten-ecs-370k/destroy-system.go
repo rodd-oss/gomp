@@ -12,11 +12,11 @@ import (
 )
 
 type destroySystem struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
-	destroyComponent   ecs.WorldComponents[empty]
+	transformComponent *ecs.ComponentManager[transform]
+	healthComponent    *ecs.ComponentManager[health]
+	colorComponent     *ecs.ComponentManager[color.RGBA]
+	movementComponent  *ecs.ComponentManager[movement]
+	destroyComponent   *ecs.ComponentManager[empty]
 
 	n int
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/negrel/assert"
 )
 
-type ComponentManagerInstance[T any] struct {
+type ComponentManagerX[T any] struct {
 	mx            *sync.Mutex
 	components    *PagedArray[T]
 	entities      *PagedArray[EntityID]
@@ -23,33 +23,33 @@ type ComponentManagerInstance[T any] struct {
 	isInitialized bool
 }
 
-type ComponentManager[T any] struct {
-	id        ComponentID
-	instances map[*World]*ComponentManagerInstance[T]
+type ComponentSeviceX[T any] struct {
+	id       ComponentID
+	managers map[*World]*ComponentManagerX[T]
 }
 
-func (m *ComponentManager[T]) Instance(world *World) *ComponentManagerInstance[T] {
-	instance, ok := m.instances[world]
+func (m *ComponentSeviceX[T]) Instance(world *World) *ComponentManagerX[T] {
+	instance, ok := m.managers[world]
 	assert.True(ok)
 	return instance
 }
 
-func CreateComponentManager[T any](id ComponentID) *ComponentManager[T] {
-	return &ComponentManager[T]{
-		id:        id,
-		instances: make(map[*World]*ComponentManagerInstance[T]),
+func CreateComponentServiceX[T any](id ComponentID) *ComponentSeviceX[T] {
+	return &ComponentSeviceX[T]{
+		id:       id,
+		managers: make(map[*World]*ComponentManagerX[T]),
 	}
 }
 
-func (c *ComponentManagerInstance[T]) registerComponentMask(mask *ComponentManagerInstance[big.Int]) {
+func (c *ComponentManagerX[T]) registerComponentMask(mask *ComponentManagerX[big.Int]) {
 	// c.worldMask = mask
 }
 
-func (c *ComponentManagerInstance[T]) getId() ComponentID {
+func (c *ComponentManagerX[T]) getId() ComponentID {
 	return c.ID
 }
 
-func (c *ComponentManagerInstance[T]) Create(entity EntityID, value T) (returnValue *T) {
+func (c *ComponentManagerX[T]) Create(entity EntityID, value T) (returnValue *T) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -73,7 +73,7 @@ func (c *ComponentManagerInstance[T]) Create(entity EntityID, value T) (returnVa
 	return c.components.Append(value)
 }
 
-func (c *ComponentManagerInstance[T]) Get(entity EntityID) *T {
+func (c *ComponentManagerX[T]) Get(entity EntityID) *T {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -88,7 +88,7 @@ func (c *ComponentManagerInstance[T]) Get(entity EntityID) *T {
 	return c.components.Get(index)
 }
 
-func (c *ComponentManagerInstance[T]) Remove(entity EntityID) {
+func (c *ComponentManagerX[T]) Remove(entity EntityID) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -125,12 +125,12 @@ func (c *ComponentManagerInstance[T]) Remove(entity EntityID) {
 	assert.True(c.components.Len() == c.lookup.Len())
 }
 
-func (c *ComponentManagerInstance[T]) Has(entity EntityID) bool {
+func (c *ComponentManagerX[T]) Has(entity EntityID) bool {
 	_, ok := c.lookup.Get(entity)
 	return ok
 }
 
-func (c *ComponentManagerInstance[T]) All(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerX[T]) All(yield func(EntityID, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -162,7 +162,7 @@ func (c *ComponentManagerInstance[T]) All(yield func(EntityID, *T) bool) {
 	}
 }
 
-func (c *ComponentManagerInstance[T]) AllParallel(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerX[T]) AllParallel(yield func(EntityID, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -177,7 +177,7 @@ func (c *ComponentManagerInstance[T]) AllParallel(yield func(EntityID, *T) bool)
 	})
 }
 
-func (c *ComponentManagerInstance[T]) AllData(yield func(*T) bool) {
+func (c *ComponentManagerX[T]) AllData(yield func(*T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -188,7 +188,7 @@ func (c *ComponentManagerInstance[T]) AllData(yield func(*T) bool) {
 	c.components.AllData(yield)
 }
 
-func (c *ComponentManagerInstance[T]) AllDataParallel(yield func(*T) bool) {
+func (c *ComponentManagerX[T]) AllDataParallel(yield func(*T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -199,14 +199,14 @@ func (c *ComponentManagerInstance[T]) AllDataParallel(yield func(*T) bool) {
 	c.components.AllDataParallel(yield)
 }
 
-func (c *ComponentManagerInstance[T]) Len() int32 {
+func (c *ComponentManagerX[T]) Len() int32 {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
 	return c.components.Len()
 }
 
-func (c *ComponentManagerInstance[T]) Clean() {
+func (c *ComponentManagerX[T]) Clean() {
 	// c.components.Clean()
 	// c.entities.Clean()
 }

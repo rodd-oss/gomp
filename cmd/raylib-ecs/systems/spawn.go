@@ -48,7 +48,7 @@ func (s *spawnController) Update(world *ecs.World) {
 				Y: rand.Int31n(600),
 			}
 
-			transforms.Set(newCreature, t)
+			transforms.Create(newCreature, t)
 
 			maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
 			hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
@@ -58,7 +58,7 @@ func (s *spawnController) Update(world *ecs.World) {
 				MaxHp: maxHp,
 			}
 
-			healths.Set(newCreature, h)
+			healths.Create(newCreature, h)
 
 			c := color.RGBA{
 				R: 0,
@@ -67,7 +67,7 @@ func (s *spawnController) Update(world *ecs.World) {
 				A: 0,
 			}
 
-			colors.Set(newCreature, c)
+			colors.Create(newCreature, c)
 		}
 	}
 

@@ -12,10 +12,10 @@ import (
 )
 
 type colorSystem struct {
-	transformComponent ecs.WorldComponents[transform]
-	healthComponent    ecs.WorldComponents[health]
-	colorComponent     ecs.WorldComponents[color.RGBA]
-	movementComponent  ecs.WorldComponents[movement]
+	transformComponent *ecs.ComponentManager[transform]
+	healthComponent    *ecs.ComponentManager[health]
+	colorComponent     *ecs.ComponentManager[color.RGBA]
+	movementComponent  *ecs.ComponentManager[movement]
 
 	baseColor color.RGBA
 }
@@ -30,7 +30,7 @@ func (s *colorSystem) Init(world *ecs.World) {
 }
 func (s *colorSystem) Run(world *ecs.World) {
 	s.colorComponent.AllParallel(func(ei ecs.EntityID, c *color.RGBA) bool {
-		health := s.healthComponent.GetPtr(ei)
+		health := s.healthComponent.Get(ei)
 		if health == nil {
 			return true
 		}

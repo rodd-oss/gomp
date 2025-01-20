@@ -16,7 +16,7 @@ import (
 
 type renderController struct {
 	width, height int32
-	t             rl.Texture2D
+	texture       rl.Texture2D
 }
 
 func (s *renderController) Init(world *ecs.World) {
@@ -25,11 +25,16 @@ func (s *renderController) Init(world *ecs.World) {
 	// currentMonitorRefreshRate := rl.GetMonitorRefreshRate(rl.GetCurrentMonitor())
 	// // rl.SetTargetFPS(int32(currentMonitorRefreshRate))
 
-	s.t = rl.LoadTexture("assets/star.png")
+	s.texture = rl.LoadTexture("assets/star.png")
 }
 
 func (s *renderController) Update(world *ecs.World) {
 	spriteManager := components.SpriteService.GetManager(world)
+
+	spriteManager.AllDataParallel(func(sprite *components.Sprite) bool {
+		sprite.Texture = s.texture
+		return true
+	})
 
 	if rl.WindowShouldClose() {
 		world.SetShouldDestroy(true)
@@ -41,7 +46,10 @@ func (s *renderController) Update(world *ecs.World) {
 
 	rl.ClearBackground(rl.Black)
 
-	spriteManager.AllData(s.drawSprite)
+	spriteManager.AllData(func(sprite *components.Sprite) bool {
+		sprite.Draw()
+		return true
+	})
 
 	rl.DrawRectangle(0, 0, 120, 60, rl.DarkGray)
 	rl.DrawFPS(10, 10)
@@ -52,9 +60,4 @@ func (s *renderController) FixedUpdate(world *ecs.World) {}
 
 func (s *renderController) Destroy(world *ecs.World) {
 	rl.CloseWindow()
-}
-
-func (s *renderController) drawSprite(sprite *components.Sprite) bool {
-	rl.DrawTextureV(s.t, sprite.Pos, sprite.Tint)
-	return true
 }

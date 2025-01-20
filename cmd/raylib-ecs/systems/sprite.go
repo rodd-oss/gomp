@@ -15,9 +15,10 @@ import (
 )
 
 type spriteController struct {
-	colors     ecs.WorldComponents[color.RGBA]
-	transforms ecs.WorldComponents[components.Transform]
-	sprites    ecs.WorldComponents[components.Sprite]
+	colors     *ecs.ComponentManager[color.RGBA]
+	transforms *ecs.ComponentManager[components.Transform]
+	sprites    *ecs.ComponentManager[components.Sprite]
+	t          rl.Texture2D
 }
 
 // ---------------
@@ -33,7 +34,30 @@ func (s *spriteController) Init(world *ecs.World) {
 func (s *spriteController) Update(world *ecs.World) {}
 
 func (s *spriteController) FixedUpdate(world *ecs.World) {
-	s.colors.AllParallel(s.mapColorsToSprites)
+	s.colors.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
+		if color == nil {
+			return true
+		}
+
+		transform := s.transforms.Get(entity)
+		if transform == nil {
+			return true
+		}
+
+		sprite := s.sprites.Get(entity)
+		if sprite == nil {
+			sprite := components.Sprite{
+				Position: rl.NewVector2(float32(transform.X), float32(transform.Y)),
+				Tint:     *color,
+			}
+
+			s.sprites.Create(entity, sprite)
+		} else {
+			sprite.Tint = *color
+		}
+
+		return true
+	})
 }
 
 func (s *spriteController) Destroy(world *ecs.World) {}
@@ -41,28 +65,3 @@ func (s *spriteController) Destroy(world *ecs.World) {}
 // ---------------
 // System private methods
 // ---------------
-
-func (s *spriteController) mapColorsToSprites(entity ecs.EntityID, color *color.RGBA) bool {
-	if color == nil {
-		return true
-	}
-
-	transform := s.transforms.GetPtr(entity)
-	if transform == nil {
-		return true
-	}
-
-	sprite := s.sprites.GetPtr(entity)
-	if sprite == nil {
-		sprite := components.Sprite{
-			Pos:  rl.NewVector2(float32(transform.X), float32(transform.Y)),
-			Tint: *color,
-		}
-
-		s.sprites.Set(entity, sprite)
-	} else {
-		sprite.Tint = *color
-	}
-
-	return true
-}

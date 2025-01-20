@@ -25,7 +25,7 @@ func (s *colorController) FixedUpdate(world *ecs.World) {
 	healthManager := components.HealthService.GetManager(world)
 
 	colorManager.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
-		health := healthManager.GetPtr(entity)
+		health := healthManager.Get(entity)
 		if health == nil {
 			return true
 		}

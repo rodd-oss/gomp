@@ -14,7 +14,7 @@ import (
 
 type game struct {
 	world            *ecs.World
-	cameraComponents ecs.WorldComponents[camera]
+	cameraComponents *ecs.ComponentManager[camera]
 	op               *ebiten.DrawImageOptions
 }
 

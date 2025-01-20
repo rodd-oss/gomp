@@ -35,7 +35,7 @@ var bulletComponent = CreateComponentService[Bullet](bulletSpawnID)
 
 type TransformSystem struct {
 	n         int
-	transform WorldComponents[Transform]
+	transform *ComponentManager[Transform]
 }
 
 func (s *TransformSystem) Init(world *World) {
@@ -53,9 +53,9 @@ func (s *TransformSystem) Run(world *World) {
 
 type BulletSpawnSystem struct {
 	n             int
-	bulletSpawner WorldComponents[BulletSpawn]
-	transform     WorldComponents[Transform]
-	bullet        WorldComponents[Bullet]
+	bulletSpawner *ComponentManager[BulletSpawn]
+	transform     *ComponentManager[Transform]
+	bullet        *ComponentManager[Bullet]
 }
 
 func (s *BulletSpawnSystem) Init(world *World) {
@@ -68,22 +68,22 @@ func (s *BulletSpawnSystem) Run(world *World) {
 	s.n++
 
 	var bulletData Bullet
+	bulletData.HP = 5
 
 	for id := range s.bulletSpawner.All {
-		tr, ok := s.transform.Get(id)
-		if !ok {
+		tr := s.transform.Get(id)
+		if tr == nil {
 			continue
 		}
 
 		newBullet := world.CreateEntity("bullet")
-		s.transform.Set(newBullet, tr)
-		bulletData.HP = 5
-		s.bullet.Set(newBullet, bulletData)
+		s.transform.Create(newBullet, *tr)
+		s.bullet.Create(newBullet, bulletData)
 	}
 }
 
 type BulletSystem struct {
-	bullet WorldComponents[Bullet]
+	bullet *ComponentManager[Bullet]
 }
 
 func (s *BulletSystem) Init(world *World) {
@@ -100,8 +100,8 @@ func (s *BulletSystem) Run(world *World) {
 }
 
 type PlayerSpawnSystem struct {
-	bulletSpawner WorldComponents[BulletSpawn]
-	transform     WorldComponents[Transform]
+	bulletSpawner *ComponentManager[BulletSpawn]
+	transform     *ComponentManager[Transform]
 }
 
 func (s *PlayerSpawnSystem) Init(world *World) {
@@ -115,10 +115,10 @@ func (s *PlayerSpawnSystem) Init(world *World) {
 	var player EntityID
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
-		s.transform.Set(player, tra)
+		s.transform.Create(player, tra)
 
 		if i%2 == 0 {
-			s.bulletSpawner.Set(player, bs)
+			s.bulletSpawner.Create(player, bs)
 		}
 	}
 }

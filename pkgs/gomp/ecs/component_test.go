@@ -37,8 +37,8 @@ func PrepareWorld(description string, system AnySystemServicePtr) *World {
 	return &world
 }
 
-func InitPixelComponent(pixelComponent *WorldComponents[pixel], world *World) {
-	*pixelComponent = pixelComponentType.GetManager(world)
+func InitPixelComponent(pixelComponent *ComponentManager[pixel], world *World) {
+	pixelComponent = pixelComponentType.GetManager(world)
 	determRand := rand.New(rand.NewSource(42))
 
 	for i := range 1000 {
@@ -53,7 +53,7 @@ func InitPixelComponent(pixelComponent *WorldComponents[pixel], world *World) {
 				B: randomBlue,
 				A: 255,
 			}
-			pixelComponent.Set(newPixel, pixel{
+			pixelComponent.Create(newPixel, pixel{
 				x:     int32(j),
 				y:     int32(i),
 				hp:    100,
@@ -64,7 +64,7 @@ func InitPixelComponent(pixelComponent *WorldComponents[pixel], world *World) {
 }
 
 type pixelSystem struct {
-	pixelComponent WorldComponents[pixel]
+	pixelComponent ComponentManager[pixel]
 }
 
 func (s *pixelSystem) Init(world *World) {
@@ -114,7 +114,7 @@ func (s *pixelSystem) FixedUpdate(world *World) {
 
 // Direct call iteration type
 type pixelSystemDirectCall struct {
-	pixelComponent WorldComponents[pixel]
+	pixelComponent ComponentManager[pixel]
 }
 
 func (s *pixelSystemDirectCall) Init(world *World) {

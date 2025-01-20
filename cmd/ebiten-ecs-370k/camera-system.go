@@ -21,12 +21,12 @@ import (
 )
 
 type cameraSystem struct {
-	transformComponent   ecs.WorldComponents[transform]
-	healthComponent      ecs.WorldComponents[health]
-	colorComponent       ecs.WorldComponents[color.RGBA]
-	movementComponent    ecs.WorldComponents[movement]
-	cameraComponent      ecs.WorldComponents[camera]
-	destroyComponentType ecs.WorldComponents[empty]
+	transformComponent   *ecs.ComponentManager[transform]
+	healthComponent      *ecs.ComponentManager[health]
+	colorComponent       *ecs.ComponentManager[color.RGBA]
+	movementComponent    *ecs.ComponentManager[movement]
+	cameraComponent      *ecs.ComponentManager[camera]
+	destroyComponentType *ecs.ComponentManager[empty]
 
 	buffer    *image.RGBA
 	debugInfo []string
@@ -44,7 +44,7 @@ func (s *cameraSystem) Init(world *ecs.World) {
 	s.p = message.NewPrinter(language.Russian)
 
 	newcamera := world.CreateEntity("camera")
-	s.cameraComponent.Set(newcamera, camera{
+	s.cameraComponent.Create(newcamera, camera{
 		mainLayer: cameraLayer{
 			image: ebiten.NewImage(width, height),
 			zoom:  1,
@@ -69,8 +69,8 @@ func (s *cameraSystem) Run(world *ecs.World) {
 			return true
 		}
 
-		transform, ok := s.transformComponent.Get(entity)
-		if !ok {
+		transform := s.transformComponent.Get(entity)
+		if transform == nil {
 			return true
 		}
 

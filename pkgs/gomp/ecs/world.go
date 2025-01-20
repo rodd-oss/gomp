@@ -1,0 +1,205 @@
+/*
+This Source Code Form is subject to the terms of the Mozilla
+Public License, v. 2.0. If a copy of the MPL was not distributed
+with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+package ecs
+
+import (
+	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+type World struct {
+	ID    WorldID
+	Title string
+
+	tick         int
+	lastEntityID EntityID
+
+	size          uint32
+	shouldDestroy bool
+
+	systems             [][]*SystemServiceInstance
+	components          []AnyComponentManagerPtr
+	deletedEntityIDs    []EntityID
+	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
+	wg                  *sync.WaitGroup
+	mx                  *sync.Mutex
+}
+
+func (w *World) RegisterComponentServices(component_ptr ...AnyComponentServicePtr) {
+	for i := 0; i < len(component_ptr); i++ {
+		w.components = append(w.components, component_ptr[i].register(w, ComponentID(i)))
+	}
+}
+
+func (e *World) RegisterSystems() *SystemBuilder {
+	return &SystemBuilder{
+		world:   e,
+		systems: &e.systems,
+	}
+}
+
+func (w *World) FixedUpdate() error {
+	w.runSystemFunction(SystemFunctionFixedUpdate)
+	return nil
+}
+
+func (w *World) runSystemFunction(method SystemFunctionMethod) error {
+	for i := range w.systems {
+		parallel := w.systems[i]
+
+		if len(parallel) == 1 {
+			controller := parallel[0].controller
+			switch method {
+			case systemFunctionInit:
+				controller.Init(w)
+			case systemFunctionUpdate:
+				controller.Update(w)
+			case SystemFunctionFixedUpdate:
+				controller.FixedUpdate(w)
+			case systemFunctionDestroy:
+				controller.Destroy(w)
+			}
+			continue
+		}
+
+		for j := range parallel {
+			parallel[j].PrepareWg()
+		}
+
+		w.wg.Add(len(parallel))
+		for j := range parallel {
+			controller := parallel[j]
+
+			switch method {
+			case systemFunctionInit:
+				controller.asyncInit()
+			case systemFunctionUpdate:
+				controller.asyncUpdate()
+			case SystemFunctionFixedUpdate:
+				controller.asyncFixedUpdate()
+			case systemFunctionDestroy:
+				controller.asyncDestroy()
+			}
+		}
+		w.wg.Wait()
+	}
+
+	if method == SystemFunctionFixedUpdate {
+		w.tick++
+	}
+
+	w.Clean()
+
+	return nil
+}
+
+func (w *World) CreateEntity(title string) EntityID {
+	var newId = w.generateEntityID()
+
+	w.entityComponentMask.Set(newId, ComponentBitArray256{})
+	w.size++
+
+	return newId
+}
+
+func (e *World) DestroyEntity(entityId EntityID) {
+	mask := e.entityComponentMask.GetPtr(entityId)
+	if mask == nil {
+		panic(fmt.Sprintf("Entity %d does not exist", entityId))
+	}
+
+	for i := range mask.AllSet {
+		e.components[i].Remove(entityId)
+	}
+
+	e.entityComponentMask.SoftDelete(entityId)
+	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
+	e.size--
+}
+
+func (w *World) Clean() {
+	for i := range w.components {
+		w.components[i].Clean()
+	}
+}
+
+func (w *World) Size() uint32 {
+	return w.size
+}
+
+func (w *World) LastEntityID() EntityID {
+	return w.lastEntityID
+}
+
+func (w *World) ShouldDestroy() bool {
+	return w.shouldDestroy
+}
+
+func (w *World) SetShouldDestroy(value bool) {
+	w.shouldDestroy = value
+}
+
+func (w *World) Destroy() {
+	w.runSystemFunction(systemFunctionDestroy)
+	w.wg.Wait()
+	w.Clean()
+}
+
+func (w *World) Run(tickrate uint) {
+	duration := time.Second / time.Duration(tickrate)
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// Plambirik отправил 5 000 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Skomich Donated 250 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Бодрящий член отправил 100 RUB. THANKS!
+	// мой код полная хуйня Donated 251 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// дубина Donated 250 RUB. THANKS!
+	// WoWnik Donated 100 RUB. THANKS!
+	// Vorobyan Donated 100 RUB. THANKS!
+	// MuTaToR Donated 250 RUB. THANKS!
+	// Мандовожка милана Donated 100 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Зритель Donated 250 RUB. THANKS!
+	// Ричард Donated 100 RUB. THANKS!
+	// ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
+	// Ksana_pro Donated 100 RUB. THANKS!
+
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+
+	for !w.ShouldDestroy() {
+		needFixedUpdate := true
+		for needFixedUpdate {
+			select {
+			default:
+				needFixedUpdate = false
+			case <-ticker.C:
+				w.runSystemFunction(SystemFunctionFixedUpdate)
+			}
+		}
+		w.runSystemFunction(systemFunctionUpdate)
+	}
+}
+
+func (w *World) generateEntityID() (newId EntityID) {
+	if len(w.deletedEntityIDs) == 0 {
+		newId = EntityID(atomic.AddInt32((*int32)(&w.lastEntityID), 1))
+	} else {
+		newId = w.deletedEntityIDs[len(w.deletedEntityIDs)-1]
+		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
+	}
+	return newId
+}
