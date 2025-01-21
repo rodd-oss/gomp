@@ -32,9 +32,11 @@ func main() {
 	// })
 
 	world.RegisterComponentServices(
-		&components.TransformService,
+		&components.PositionService,
+		&components.RotationService,
+		&components.ScaleService,
 		&components.HealthService,
-		&components.ColorService,
+		&components.SpriteRenderService,
 		&components.SpriteService,
 	)
 

@@ -29,10 +29,20 @@ func (s *renderController) Init(world *ecs.World) {
 }
 
 func (s *renderController) Update(world *ecs.World) {
-	spriteManager := components.SpriteService.GetManager(world)
+	spriteRenders := components.SpriteRenderService.GetManager(world)
+	sprites := components.SpriteService.GetManager(world)
 
-	spriteManager.AllDataParallel(func(sprite *components.Sprite) bool {
-		sprite.Texture = s.texture
+	sprites.AllDataParallel(func(sprite *components.Sprite) bool {
+		if sprite.Texture == nil {
+			sprite.Texture = &s.texture
+		}
+
+		sprite.TextureRegion = rl.Rectangle{
+			X:      0,
+			Y:      0,
+			Width:  float32(s.texture.Width),
+			Height: float32(s.texture.Height),
+		}
 		return true
 	})
 
@@ -46,12 +56,16 @@ func (s *renderController) Update(world *ecs.World) {
 
 	rl.ClearBackground(rl.Black)
 
-	spriteManager.AllData(func(sprite *components.Sprite) bool {
-		sprite.Draw()
+	spriteRenders.AllData(func(spriteRender *components.SpriteRender) bool {
+		sprite := &spriteRender.Sprite
+		dest := spriteRender.Dest
+		texture := *sprite.Texture
+
+		rl.DrawTexturePro(texture, sprite.TextureRegion, dest, sprite.Origin, spriteRender.Rotation, sprite.Tint)
 		return true
 	})
 
-	rl.DrawRectangle(0, 0, 120, 120, rl.DarkGray)
+	// rl.DrawRectangle(0, 0, 120, 120, rl.DarkGray)
 	rl.DrawFPS(10, 10)
 	rl.DrawText(fmt.Sprintf("%d", world.Size()), 10, 30, 20, rl.Red)
 	rl.DrawText(fmt.Sprintf("%s", world.DtUpdate()), 10, 50, 20, rl.Red)

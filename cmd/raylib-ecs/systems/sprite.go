@@ -17,51 +17,101 @@ package systems
 import (
 	"gomp_game/cmd/raylib-ecs/components"
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 type spriteController struct {
-	colors     *ecs.ComponentManager[color.RGBA]
-	transforms *ecs.ComponentManager[components.Transform]
-	sprites    *ecs.ComponentManager[components.Sprite]
-	t          rl.Texture2D
+	t rl.Texture2D
 }
 
 // ---------------
 // Basic System Methods
 // ---------------
 
-func (s *spriteController) Init(world *ecs.World) {
-	s.colors = components.ColorService.GetManager(world)
-	s.sprites = components.SpriteService.GetManager(world)
-	s.transforms = components.TransformService.GetManager(world)
-}
+func (s *spriteController) Init(world *ecs.World) {}
 
 func (s *spriteController) Update(world *ecs.World) {}
 
 func (s *spriteController) FixedUpdate(world *ecs.World) {
-	s.colors.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
-		if color == nil {
-			return true
-		}
+	// Get component managers
+	positions := components.PositionService.GetManager(world)
+	rotations := components.RotationService.GetManager(world)
+	scales := components.ScaleService.GetManager(world)
+	sprites := components.SpriteService.GetManager(world)
+	spriteRenders := components.SpriteRenderService.GetManager(world)
 
-		transform := s.transforms.Get(entity)
-		if transform == nil {
-			return true
-		}
-
-		sprite := s.sprites.Get(entity)
+	// Update sprites and spriteRenders
+	sprites.AllParallel(func(entity ecs.EntityID, sprite *components.Sprite) bool {
 		if sprite == nil {
-			sprite := components.Sprite{
-				Position: rl.NewVector2(float32(transform.X), float32(transform.Y)),
-				Tint:     *color,
+			return true
+		}
+
+		position := positions.Get(entity)
+		if position == nil {
+			return true
+		}
+
+		rotation := rotations.Get(entity)
+		if rotation == nil {
+			return true
+		}
+
+		scale := scales.Get(entity)
+		if scale == nil {
+			return true
+		}
+
+		spriteTextureRegion := &sprite.TextureRegion
+		spriteOrigin := &sprite.Origin
+		spriteTint := &sprite.Tint
+
+		spriteRender := spriteRenders.Get(entity)
+		if spriteRender == nil {
+			// Create new spriteRender
+			newRender := components.SpriteRender{
+				Sprite: *sprite,
+				Dest: rl.NewRectangle(
+					position.X,
+					position.Y,
+					spriteTextureRegion.Width*scale.X,
+					spriteTextureRegion.Height*scale.Y,
+				),
+				Rotation: rotation.Angle,
 			}
 
-			s.sprites.Create(entity, sprite)
+			spriteRenders.Create(entity, newRender)
 		} else {
-			sprite.Tint = *color
+			renderSprite := &spriteRender.Sprite
+			renderDest := &spriteRender.Dest
+
+			// Update TextureRegion
+			renderTextureRegion := &renderSprite.TextureRegion
+			renderTextureRegion.X = spriteTextureRegion.X
+			renderTextureRegion.Y = spriteTextureRegion.Y
+			renderTextureRegion.Width = spriteTextureRegion.Width
+			renderTextureRegion.Height = spriteTextureRegion.Height
+
+			// Update Origin
+			renderOrigin := &renderSprite.Origin
+			renderOrigin.X = spriteTextureRegion.Width * spriteOrigin.X * scale.X
+			renderOrigin.Y = spriteTextureRegion.Height * spriteOrigin.Y * scale.Y
+
+			// Update Tint
+			renderTint := &renderSprite.Tint
+			renderTint.A = spriteTint.A
+			renderTint.R = spriteTint.R
+			renderTint.G = spriteTint.G
+			renderTint.B = spriteTint.B
+
+			// Update destination
+			renderDest.X = position.X
+			renderDest.Y = position.Y
+			renderDest.Width = spriteTextureRegion.Width * scale.X
+			renderDest.Height = spriteTextureRegion.Height * scale.Y
+
+			// Update rotation
+			spriteRender.Rotation = rotation.Angle
 		}
 
 		return true

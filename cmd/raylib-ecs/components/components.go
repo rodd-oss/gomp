@@ -12,8 +12,14 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-type Transform struct {
-	X, Y int32
+type Position struct {
+	X, Y float32
+}
+type Rotation struct {
+	Angle float32
+}
+type Scale struct {
+	X, Y float32
 }
 
 type Health struct {
@@ -21,19 +27,26 @@ type Health struct {
 }
 
 type Sprite struct {
-	Texture  rl.Texture2D
-	Position rl.Vector2
-	Tint     color.RGBA
+	Texture       *rl.Texture2D
+	TextureRegion rl.Rectangle
+	Origin        rl.Vector2
+	Tint          color.RGBA
 }
 
-func (sprite *Sprite) Draw() {
-	rl.DrawTextureV(sprite.Texture, sprite.Position, sprite.Tint)
+type SpriteRender struct {
+	Sprite   Sprite
+	Dest     rl.Rectangle
+	Rotation float32
 }
 
-var TransformService = ecs.CreateComponentService[Transform](TRANSFORM_ID)
+var PositionService = ecs.CreateComponentService[Position](TRANSFORM_ID)
+var RotationService = ecs.CreateComponentService[Rotation](ROTATION_ID)
+var ScaleService = ecs.CreateComponentService[Scale](SCALE_ID)
+
 var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
-var ColorService = ecs.CreateComponentService[color.RGBA](COLOR_ID)
+
 var SpriteService = ecs.CreateComponentService[Sprite](SPRITE_ID)
+var SpriteRenderService = ecs.CreateComponentService[SpriteRender](SPRITE_RENDER_ID)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

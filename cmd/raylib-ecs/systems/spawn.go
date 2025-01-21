@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"gomp_game/cmd/raylib-ecs/components"
 	"gomp_game/pkgs/gomp/ecs"
-	"image/color"
 	"log"
 	"math/rand"
 	"os"
@@ -31,9 +30,11 @@ const (
 
 func (s *spawnController) Init(world *ecs.World) {}
 func (s *spawnController) Update(world *ecs.World) {
-	colors := components.ColorService.GetManager(world)
+	sprites := components.SpriteService.GetManager(world)
 	healths := components.HealthService.GetManager(world)
-	transforms := components.TransformService.GetManager(world)
+	positions := components.PositionService.GetManager(world)
+	rotations := components.RotationService.GetManager(world)
+	scales := components.ScaleService.GetManager(world)
 
 	if rl.IsKeyDown(rl.KeySpace) {
 		for range rand.Intn(10000) {
@@ -43,31 +44,40 @@ func (s *spawnController) Update(world *ecs.World) {
 
 			newCreature := world.CreateEntity("Creature")
 
-			t := components.Transform{
-				X: rand.Int31n(800),
-				Y: rand.Int31n(600),
+			// Adding position component
+			t := components.Position{
+				X: float32(rand.Int31n(800)),
+				Y: float32(rand.Int31n(600)),
 			}
+			positions.Create(newCreature, t)
 
-			transforms.Create(newCreature, t)
+			// Adding rotation component
+			rotation := components.Rotation{
+				Angle: float32(rand.Int31n(360)),
+			}
+			rotations.Create(newCreature, rotation)
 
+			// Adding scale component
+			scale := components.Scale{
+				X: 2,
+				Y: 2,
+			}
+			scales.Create(newCreature, scale)
+
+			// Adding HP component
 			maxHp := minMaxHp + rand.Int31n(maxMaxHp-minMaxHp)
 			hp := int32(float32(maxHp) * float32(minHpPercentage+rand.Int31n(100-minHpPercentage)) / 100)
-
 			h := components.Health{
 				Hp:    hp,
 				MaxHp: maxHp,
 			}
-
 			healths.Create(newCreature, h)
 
-			c := color.RGBA{
-				R: 0,
-				G: 0,
-				B: 0,
-				A: 0,
+			// Adding sprite component
+			c := components.Sprite{
+				Origin: rl.Vector2{X: 0.5, Y: 0.5},
 			}
-
-			colors.Create(newCreature, c)
+			sprites.Create(newCreature, c)
 		}
 	}
 
