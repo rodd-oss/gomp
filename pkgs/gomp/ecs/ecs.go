@@ -8,6 +8,7 @@ package ecs
 
 import (
 	"sync"
+	"time"
 )
 
 type WorldID uint
@@ -27,6 +28,8 @@ func CreateWorld(title string) World {
 		mx:                  new(sync.Mutex),
 		deletedEntityIDs:    make([]EntityID, 0, PREALLOC_DELETED_ENTITIES),
 		entityComponentMask: &maskSet,
+		lastUpdateAt:        time.Now(),
+		lastFixedUpdateAt:   time.Now(),
 	}
 
 	return world

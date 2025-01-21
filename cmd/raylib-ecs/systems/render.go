@@ -51,9 +51,11 @@ func (s *renderController) Update(world *ecs.World) {
 		return true
 	})
 
-	rl.DrawRectangle(0, 0, 120, 60, rl.DarkGray)
+	rl.DrawRectangle(0, 0, 120, 120, rl.DarkGray)
 	rl.DrawFPS(10, 10)
 	rl.DrawText(fmt.Sprintf("%d", world.Size()), 10, 30, 20, rl.Red)
+	rl.DrawText(fmt.Sprintf("%s", world.DtUpdate()), 10, 50, 20, rl.Red)
+	rl.DrawText(fmt.Sprintf("%s", world.DtFixedUpdate()), 10, 70, 20, rl.Red)
 }
 
 func (s *renderController) FixedUpdate(world *ecs.World) {}

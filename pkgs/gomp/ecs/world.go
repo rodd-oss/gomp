@@ -60,6 +60,9 @@ type World struct {
 	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
 	wg                  *sync.WaitGroup
 	mx                  *sync.Mutex
+
+	lastUpdateAt      time.Time
+	lastFixedUpdateAt time.Time
 }
 
 func (w *World) RegisterComponentServices(component_ptr ...AnyComponentServicePtr) {
@@ -196,10 +199,20 @@ func (w *World) Run(tickrate uint) {
 				needFixedUpdate = false
 			case <-ticker.C:
 				w.runSystemFunction(SystemFunctionFixedUpdate)
+				w.lastFixedUpdateAt = time.Now()
 			}
 		}
 		w.runSystemFunction(systemFunctionUpdate)
+		w.lastUpdateAt = time.Now()
 	}
+}
+
+func (w *World) DtUpdate() time.Duration {
+	return time.Since(w.lastUpdateAt)
+}
+
+func (w *World) DtFixedUpdate() time.Duration {
+	return time.Since(w.lastFixedUpdateAt)
 }
 
 func (w *World) generateEntityID() (newId EntityID) {
