@@ -35,8 +35,8 @@ type spriteController struct {
 
 func (s *spriteController) Init(world *ecs.World) {
 	s.colors = components.ColorService.GetManager(world)
-	s.transforms = components.TransformService.GetManager(world)
 	s.sprites = components.SpriteService.GetManager(world)
+	s.transforms = components.TransformService.GetManager(world)
 }
 
 func (s *spriteController) Update(world *ecs.World) {}

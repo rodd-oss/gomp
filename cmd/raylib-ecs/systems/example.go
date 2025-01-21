@@ -10,9 +10,7 @@ import (
 	"gomp_game/pkgs/gomp/ecs"
 )
 
-type exampleController struct {
-	ecs.AnySystemControllerPtr
-}
+type exampleController struct{}
 
 func (s *exampleController) Init(world *ecs.World)        {}
 func (s *exampleController) Update(world *ecs.World)      {}
