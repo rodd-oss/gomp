@@ -2,6 +2,37 @@
 This Source Code Form is subject to the terms of the Mozilla
 Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+===-===-===-===-===-===-===-===-===-===
+Donations during this file deveopment:
+-===-===-===-===-===-===-===-===-===-===
+
+<- MuTaToR Donated 250 RUB
+<- Бодрящий член Donated 100 RUB
+<- Plambirik Donated 5 000 RUB
+<- Бодрящий член Donated 100 RUB
+<- MuTaToR Donated 250 RUB
+<- ksana_pro Donated 100 RUB
+<- Skomich Donated 250 RUB
+<- MuTaToR Donated 250 RUB
+<- Бодрящий член Donated 100 RUB
+<- мой код полная хуйня Donated 251 RUB
+<- ksana_pro Donated 100 RUB
+<- дубина Donated 250 RUB
+<- WoWnik Donated 100 RUB
+<- Vorobyan Donated 100 RUB
+<- MuTaToR Donated 250 RUB
+<- Мандовожка милана Donated 100 RUB
+<- ksana_pro Donated 100 RUB
+<- Зритель Donated 250 RUB
+<- Ричард Donated 100 RUB
+<- ksana_pro Donated 100 RUB
+<- Ksana_pro Donated 100 RUB
+<- Ksana_pro Donated 100 RUB
+<- Ksana_pro Donated 100 RUB
+<- Монтажер сука Donated 50 RUB
+
+Thank you for your support!
 */
 
 package ecs
@@ -153,29 +184,6 @@ func (w *World) Destroy() {
 
 func (w *World) Run(tickrate uint) {
 	duration := time.Second / time.Duration(tickrate)
-	// MuTaToR Donated 250 RUB. THANKS!
-	// Бодрящий член отправил 100 RUB. THANKS!
-	// Plambirik отправил 5 000 RUB. THANKS!
-	// Бодрящий член отправил 100 RUB. THANKS!
-	// MuTaToR Donated 250 RUB. THANKS!
-	// ksana_pro Donated 100 RUB. THANKS!
-	// Skomich Donated 250 RUB. THANKS!
-	// MuTaToR Donated 250 RUB. THANKS!
-	// Бодрящий член отправил 100 RUB. THANKS!
-	// мой код полная хуйня Donated 251 RUB. THANKS!
-	// ksana_pro Donated 100 RUB. THANKS!
-	// дубина Donated 250 RUB. THANKS!
-	// WoWnik Donated 100 RUB. THANKS!
-	// Vorobyan Donated 100 RUB. THANKS!
-	// MuTaToR Donated 250 RUB. THANKS!
-	// Мандовожка милана Donated 100 RUB. THANKS!
-	// ksana_pro Donated 100 RUB. THANKS!
-	// Зритель Donated 250 RUB. THANKS!
-	// Ричард Donated 100 RUB. THANKS!
-	// ksana_pro Donated 100 RUB. THANKS!
-	// Ksana_pro Donated 100 RUB. THANKS!
-	// Ksana_pro Donated 100 RUB. THANKS!
-	// Ksana_pro Donated 100 RUB. THANKS!
 
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
