@@ -211,3 +211,11 @@ func (w *World) generateEntityID() (newId EntityID) {
 	}
 	return newId
 }
+
+var nextWorldId WorldID = 0
+
+func generateWorldID() WorldID {
+	id := nextWorldId
+	nextWorldId++
+	return id
+}

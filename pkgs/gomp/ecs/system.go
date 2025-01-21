@@ -145,12 +145,3 @@ func (s *SystemService[T]) registerDependencyFor(world *World, dep AnySystemServ
 func (s *SystemService[T]) getInstance(world *World) *SystemServiceInstance {
 	return s.instances[world]
 }
-
-// TODO: dependsOn
-func CreateSystem[T AnySystemControllerPtr](controller T, dependsOn ...AnySystemServicePtr) SystemService[T] {
-	return SystemService[T]{
-		initValue: controller,
-		dependsOn: dependsOn,
-		instances: make(map[*World]*SystemServiceInstance),
-	}
-}

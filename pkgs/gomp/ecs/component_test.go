@@ -163,7 +163,7 @@ func (s *pixelSystemDirectCall) FixedUpdate(world *World) {
 // Note: amount of memory allocated changes between tests even with deterministic rand.
 // Observed range 918063 B/op - 1108007 B/op
 func BenchmarkRangeIteration(b *testing.B) {
-	pixelSys := CreateSystem(new(pixelSystem))
+	pixelSys := CreateSystemService(new(pixelSystem))
 	world := PrepareWorld("range iteration", &pixelSys)
 
 	b.ReportAllocs()
@@ -176,7 +176,7 @@ func BenchmarkRangeIteration(b *testing.B) {
 // Note: amount of memory allocated changes between tests even with deterministic rand.
 // Observed range 868437 B/op - 1047789 B/op
 func BenchmarkDirectCallIteration(b *testing.B) {
-	pixelSys := CreateSystem(new(pixelSystemDirectCall))
+	pixelSys := CreateSystemService(new(pixelSystemDirectCall))
 	world := PrepareWorld("direct call iteration", &pixelSys)
 
 	b.ReportAllocs()

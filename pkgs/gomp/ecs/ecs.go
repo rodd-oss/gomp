@@ -16,19 +16,11 @@ const (
 	PREALLOC_DELETED_ENTITIES uint32 = 1 << 10
 )
 
-var nextWorldId WorldID = 0
-
-func generateWorldID() WorldID {
-	id := nextWorldId
-	nextWorldId++
-	return id
-}
-
 func CreateWorld(title string) World {
 	id := generateWorldID()
 	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
 
-	ecs := World{
+	world := World{
 		ID:                  id,
 		Title:               title,
 		wg:                  new(sync.WaitGroup),
@@ -37,7 +29,7 @@ func CreateWorld(title string) World {
 		entityComponentMask: &maskSet,
 	}
 
-	return ecs
+	return world
 }
 
 func CreateComponentService[T any](id ComponentID) ComponentService[T] {
@@ -47,4 +39,12 @@ func CreateComponentService[T any](id ComponentID) ComponentService[T] {
 	}
 
 	return component
+}
+
+func CreateSystemService[T AnySystemControllerPtr](controller T, dependsOn ...AnySystemServicePtr) SystemService[T] {
+	return SystemService[T]{
+		initValue: controller,
+		dependsOn: dependsOn,
+		instances: make(map[*World]*SystemServiceInstance),
+	}
 }
