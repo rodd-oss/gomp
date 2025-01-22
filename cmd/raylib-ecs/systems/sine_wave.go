@@ -35,7 +35,7 @@ func (s *sineWaveController) Update(world *ecs.World) {
 	audibles := components.AudibleService.GetManager(world)
 	audible := audibles.Get(s.sineWave)
 
-	if rl.IsKeyDown(rl.KeySpace) && audible.State != components.Playing {
+	if rl.IsKeyDown(rl.KeySpace) {
 		audible.State = components.Playing
 	} else {
 		audible.State = components.Stoped
