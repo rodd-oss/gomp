@@ -28,6 +28,24 @@ const (
 	maxMaxHp        = 2000
 )
 
+type resources struct {
+	textures map[string]rl.Texture2D
+}
+
+func (r *resources) GetTexture(name string) rl.Texture2D {
+	texture, ok := r.textures[name]
+	if !ok {
+		texture = rl.LoadTexture(name)
+		r.textures[name] = texture
+	}
+
+	return texture
+}
+
+var Resources = &resources{
+	textures: make(map[string]rl.Texture2D),
+}
+
 func (s *spawnController) Init(world *ecs.World) {}
 func (s *spawnController) Update(world *ecs.World) {
 	sprites := components.SpriteService.GetManager(world)
@@ -73,10 +91,15 @@ func (s *spawnController) Update(world *ecs.World) {
 			}
 			healths.Create(newCreature, h)
 
+			texture := Resources.GetTexture("assets/star.png")
+
 			// Adding sprite component
 			c := components.Sprite{
-				Origin: rl.Vector2{X: 0.5, Y: 0.5},
+				Origin:  rl.Vector2{X: 0.5, Y: 0.5},
+				Texture: texture,
+				Frame:   rl.Rectangle{X: 0, Y: 0, Width: float32(texture.Width), Height: float32(texture.Height)},
 			}
+
 			sprites.Create(newCreature, c)
 		}
 	}

@@ -21,16 +21,16 @@ func (s *colorController) Init(world *ecs.World) {
 }
 func (s *colorController) Update(world *ecs.World) {}
 func (s *colorController) FixedUpdate(world *ecs.World) {
-	colorManager := components.SpriteService.GetManager(world)
-	healthManager := components.HealthService.GetManager(world)
+	sprites := components.SpriteService.GetManager(world)
+	hps := components.HealthService.GetManager(world)
 
-	colorManager.AllParallel(func(entity ecs.EntityID, sprite *components.Sprite) bool {
-		health := healthManager.Get(entity)
-		if health == nil {
+	sprites.AllParallel(func(entity ecs.EntityID, sprite *components.Sprite) bool {
+		hp := hps.Get(entity)
+		if hp == nil {
 			return true
 		}
 
-		hpPercentage := float32(health.Hp) / float32(health.MaxHp)
+		hpPercentage := float32(hp.Hp) / float32(hp.MaxHp)
 
 		sprite.Tint = color.RGBA{
 			uint8(hpPercentage * float32(s.baseColor.R)),

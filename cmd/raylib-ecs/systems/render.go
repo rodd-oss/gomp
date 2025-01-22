@@ -16,35 +16,18 @@ import (
 
 type renderController struct {
 	width, height int32
-	texture       rl.Texture2D
 }
 
 func (s *renderController) Init(world *ecs.World) {
 	rl.InitWindow(s.width, s.height, "raylib [core] example - basic window")
 
-	// currentMonitorRefreshRate := rl.GetMonitorRefreshRate(rl.GetCurrentMonitor())
-	// // rl.SetTargetFPS(int32(currentMonitorRefreshRate))
+	currentMonitorRefreshRate := rl.GetMonitorRefreshRate(rl.GetCurrentMonitor())
+	rl.SetTargetFPS(int32(currentMonitorRefreshRate))
 
-	s.texture = rl.LoadTexture("assets/star.png")
 }
 
 func (s *renderController) Update(world *ecs.World) {
-	spriteRenders := components.SpriteRenderService.GetManager(world)
-	sprites := components.SpriteService.GetManager(world)
-
-	sprites.AllDataParallel(func(sprite *components.Sprite) bool {
-		if sprite.Texture == nil {
-			sprite.Texture = &s.texture
-		}
-
-		sprite.TextureRegion = rl.Rectangle{
-			X:      0,
-			Y:      0,
-			Width:  float32(s.texture.Width),
-			Height: float32(s.texture.Height),
-		}
-		return true
-	})
+	spriteRenders := components.TextureRenderService.GetManager(world)
 
 	if rl.WindowShouldClose() {
 		world.SetShouldDestroy(true)
@@ -56,12 +39,8 @@ func (s *renderController) Update(world *ecs.World) {
 
 	rl.ClearBackground(rl.Black)
 
-	spriteRenders.AllData(func(spriteRender *components.SpriteRender) bool {
-		sprite := &spriteRender.Sprite
-		dest := spriteRender.Dest
-		texture := *sprite.Texture
-
-		rl.DrawTexturePro(texture, sprite.TextureRegion, dest, sprite.Origin, spriteRender.Rotation, sprite.Tint)
+	spriteRenders.AllData(func(tr *components.TextureRender) bool {
+		rl.DrawTexturePro(tr.Texture, tr.Frame, tr.Dest, tr.Origin, tr.Rotation, tr.Tint)
 		return true
 	})
 

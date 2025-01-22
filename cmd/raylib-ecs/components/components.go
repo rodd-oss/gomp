@@ -8,6 +8,7 @@ package components
 import (
 	"gomp_game/pkgs/gomp/ecs"
 	"image/color"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -21,32 +22,54 @@ type Rotation struct {
 type Scale struct {
 	X, Y float32
 }
-
 type Health struct {
 	Hp, MaxHp int32
 }
-
 type Sprite struct {
-	Texture       *rl.Texture2D
-	TextureRegion rl.Rectangle
-	Origin        rl.Vector2
-	Tint          color.RGBA
+	Texture rl.Texture2D
+	Frame   rl.Rectangle
+	Origin  rl.Vector2
+	Tint    color.RGBA
 }
-
-type SpriteRender struct {
-	Sprite   Sprite
+type SpriteSheet struct {
+	Texture     rl.Texture2D
+	Frame       rl.Rectangle
+	Origin      rl.Vector2
+	Tint        color.RGBA
+	NumOfFrames int32
+	FPS         int32
+	Vertical    bool
+}
+type TextureRender struct {
+	Texture  rl.Texture2D
+	Frame    rl.Rectangle
+	Origin   rl.Vector2
+	Tint     color.RGBA
 	Dest     rl.Rectangle
 	Rotation float32
 }
+type Animation struct {
+	First         int32
+	Last          int32
+	Current       int32
+	Speed         float32
+	Loop          bool
+	Vertical      bool
+	ElapsedTime   time.Duration
+	FrameDuration time.Duration
+}
 
-var PositionService = ecs.CreateComponentService[Position](TRANSFORM_ID)
+var PositionService = ecs.CreateComponentService[Position](POSITION_ID)
 var RotationService = ecs.CreateComponentService[Rotation](ROTATION_ID)
 var ScaleService = ecs.CreateComponentService[Scale](SCALE_ID)
 
 var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
 
 var SpriteService = ecs.CreateComponentService[Sprite](SPRITE_ID)
-var SpriteRenderService = ecs.CreateComponentService[SpriteRender](SPRITE_RENDER_ID)
+var SpriteSheetService = ecs.CreateComponentService[SpriteSheet](SPRITE_SHEET_ID)
+var AnimationService = ecs.CreateComponentService[Animation](ANIMATION_ID)
+
+var TextureRenderService = ecs.CreateComponentService[TextureRender](TEXTURE_RENDER_ID)
 
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick

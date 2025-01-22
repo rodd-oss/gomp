@@ -36,16 +36,27 @@ func main() {
 		&components.RotationService,
 		&components.ScaleService,
 		&components.HealthService,
-		&components.SpriteRenderService,
 		&components.SpriteService,
+		&components.SpriteSheetService,
+		&components.AnimationService,
+		&components.TextureRenderService,
 	)
 
 	world.RegisterSystems().
-		Parallel(
+		Sequential(
 			&systems.SpawnService,
+		).
+		Parallel(
 			&systems.HpService,
 			&systems.ColorService,
-			&systems.SpriteService,
+		).
+		Parallel(
+			&systems.TRSpriteService,
+			&systems.TRSpriteSheetService,
+			&systems.TRAnimationService,
+			&systems.TRPositionService,
+			&systems.TRRotationService,
+			&systems.TRScaleService,
 		).
 		Sequential(
 			&systems.RenderService,
