@@ -6,13 +6,17 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package systems
 
-import "gomp_game/pkgs/gomp/ecs"
+import (
+	"gomp_game/cmd/raylib-ecs/assets"
+	"gomp_game/pkgs/gomp/ecs"
+)
+
+var InitService = ecs.CreateSystemService(&initController{windowWidth: 800, windowHeight: 600})
 
 var ExampleService = ecs.CreateSystemService(&exampleController{})
 
 var SpawnService = ecs.CreateSystemService(&spawnController{})
-
-var HpService = ecs.CreateSystemService(&hpController{})
+var HpService = ecs.CreateSystemService(&hpController{}, &SpawnService)
 var ColorService = ecs.CreateSystemService(&colorController{}, &HpService)
 
 // Texture Render Systems
@@ -24,4 +28,7 @@ var TRRotationService = ecs.CreateSystemService(&trRotationController{}, &TRSpri
 var TRScaleService = ecs.CreateSystemService(&trScaleController{}, &TRSpriteService, &TRSpriteSheetService)
 
 // Render System
-var RenderService = ecs.CreateSystemService(&renderController{width: 800, height: 600})
+var AssetLibService = ecs.CreateSystemService(&assetLibController{
+	assets: []ecs.AnyAssetLibrary{assets.Textures},
+})
+var RenderService = ecs.CreateSystemService(&renderController{})

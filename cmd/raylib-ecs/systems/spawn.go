@@ -8,6 +8,7 @@ package systems
 
 import (
 	"fmt"
+	"gomp_game/cmd/raylib-ecs/assets"
 	"gomp_game/cmd/raylib-ecs/components"
 	"gomp_game/pkgs/gomp/ecs"
 	"log"
@@ -27,24 +28,6 @@ const (
 	minMaxHp        = 500
 	maxMaxHp        = 2000
 )
-
-type resources struct {
-	textures map[string]rl.Texture2D
-}
-
-func (r *resources) GetTexture(name string) rl.Texture2D {
-	texture, ok := r.textures[name]
-	if !ok {
-		texture = rl.LoadTexture(name)
-		r.textures[name] = texture
-	}
-
-	return texture
-}
-
-var Resources = &resources{
-	textures: make(map[string]rl.Texture2D),
-}
 
 func (s *spawnController) Init(world *ecs.World) {}
 func (s *spawnController) Update(world *ecs.World) {
@@ -91,7 +74,7 @@ func (s *spawnController) Update(world *ecs.World) {
 			}
 			healths.Create(newCreature, h)
 
-			texture := Resources.GetTexture("assets/star.png")
+			texture := assets.Textures.Get("assets/star.png")
 
 			// Adding sprite component
 			c := components.Sprite{

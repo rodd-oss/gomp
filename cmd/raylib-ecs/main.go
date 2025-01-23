@@ -44,9 +44,10 @@ func main() {
 
 	world.RegisterSystems().
 		Sequential(
-			&systems.SpawnService,
+			&systems.InitService,
 		).
 		Parallel(
+			&systems.SpawnService,
 			&systems.HpService,
 			&systems.ColorService,
 		).
@@ -59,6 +60,7 @@ func main() {
 			&systems.TRScaleService,
 		).
 		Sequential(
+			&systems.AssetLibService,
 			&systems.RenderService,
 		)
 

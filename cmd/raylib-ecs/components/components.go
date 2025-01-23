@@ -26,13 +26,13 @@ type Health struct {
 	Hp, MaxHp int32
 }
 type Sprite struct {
-	Texture rl.Texture2D
+	Texture *rl.Texture2D
 	Frame   rl.Rectangle
 	Origin  rl.Vector2
 	Tint    color.RGBA
 }
 type SpriteSheet struct {
-	Texture     rl.Texture2D
+	Texture     *rl.Texture2D
 	Frame       rl.Rectangle
 	Origin      rl.Vector2
 	Tint        color.RGBA
@@ -41,7 +41,7 @@ type SpriteSheet struct {
 	Vertical    bool
 }
 type TextureRender struct {
-	Texture  rl.Texture2D
+	Texture  *rl.Texture2D
 	Frame    rl.Rectangle
 	Origin   rl.Vector2
 	Tint     color.RGBA
