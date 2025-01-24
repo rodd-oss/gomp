@@ -22,6 +22,9 @@ type Rotation struct {
 type Scale struct {
 	X, Y float32
 }
+type Mirrored struct {
+	X, Y bool
+}
 type Health struct {
 	Hp, MaxHp int32
 }
@@ -35,7 +38,6 @@ type SpriteSheet struct {
 	Texture     *rl.Texture2D
 	Frame       rl.Rectangle
 	Origin      rl.Vector2
-	Tint        color.RGBA
 	NumOfFrames int32
 	FPS         int32
 	Vertical    bool
@@ -46,6 +48,7 @@ type SpriteMatrixAnimation struct {
 	Frame       rl.Rectangle
 	NumOfFrames uint8
 	Vertical    bool
+	Loop        bool
 }
 type SpriteMatrix struct {
 	Texture    *rl.Texture2D
@@ -62,33 +65,34 @@ type TextureRender struct {
 	Rotation float32
 }
 type AnimationPlayer struct {
-	First         int32
-	Last          int32
-	Current       int32
+	First         uint8
+	Last          uint8
+	Current       uint8
 	Speed         float32
 	Loop          bool
 	Vertical      bool
 	ElapsedTime   time.Duration
 	FrameDuration time.Duration
+	State         AnimationState
+	IsInitialized bool
 }
-type AnimatorState int
-type Animator struct {
-	LastState AnimatorState
-	State     AnimatorState
-}
+
+type AnimationState int
 
 var PositionService = ecs.CreateComponentService[Position](POSITION_ID)
 var RotationService = ecs.CreateComponentService[Rotation](ROTATION_ID)
 var ScaleService = ecs.CreateComponentService[Scale](SCALE_ID)
+var MirroredService = ecs.CreateComponentService[Mirrored](SCALE_ID)
 
 var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
 
 var SpriteService = ecs.CreateComponentService[Sprite](SPRITE_ID)
 var SpriteSheetService = ecs.CreateComponentService[SpriteSheet](SPRITE_SHEET_ID)
 var SpriteMatrixService = ecs.CreateComponentService[SpriteMatrix](SPRITE_MATRIX_ID)
-var AnimationService = ecs.CreateComponentService[AnimationPlayer](ANIMATION_ID)
-var AnimatorService = ecs.CreateComponentService[Animator](ANIMATOR_ID)
 var TintService = ecs.CreateComponentService[Tint](TINT_ID)
+
+var AnimationPlayerService = ecs.CreateComponentService[AnimationPlayer](ANIMATION_ID)
+var AnimationStateService = ecs.CreateComponentService[AnimationState](ANIMATION_STATE_ID)
 
 var TextureRenderService = ecs.CreateComponentService[TextureRender](TEXTURE_RENDER_ID)
 

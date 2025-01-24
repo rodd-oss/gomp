@@ -18,9 +18,6 @@ type initController struct {
 
 func (s *initController) Init(world *ecs.World) {
 	rl.InitWindow(s.windowWidth, s.windowHeight, "raylib [core] example - basic window")
-
-	// currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
-	// rl.SetTargetFPS(currentMonitorRefreshRate)
 }
 
 func (s *initController) Update(world *ecs.World)      {}

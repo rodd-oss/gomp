@@ -12,6 +12,7 @@ import (
 )
 
 var InitService = ecs.CreateSystemService(&initController{windowWidth: 800, windowHeight: 600})
+var DebugService = ecs.CreateSystemService(&debugController{})
 
 var ExampleService = ecs.CreateSystemService(&exampleController{})
 
@@ -20,15 +21,23 @@ var SpawnService = ecs.CreateSystemService(&spawnController{})
 var HpService = ecs.CreateSystemService(&hpController{}, &PlayerService)
 var ColorService = ecs.CreateSystemService(&colorController{}, &HpService)
 
-var AnimationService = ecs.CreateSystemService(&animationController{})
+var AnimationSpriteMatrixService = ecs.CreateSystemService(&animationSpriteMatrixController{})
+var AnimationPlayerService = ecs.CreateSystemService(&animationPlayerController{}, &AnimationSpriteMatrixService)
 
-// Texture Render Systems
+// Texture Render Main Systems
+var trSpriteSystemServices = []ecs.AnySystemServicePtr{&TRSpriteService, &TRSpriteSheetService, &TRSpriteMatrixService}
+
 var TRSpriteService = ecs.CreateSystemService(&trSpriteController{})
 var TRSpriteSheetService = ecs.CreateSystemService(&trSpriteSheetController{})
-var TRAnimationService = ecs.CreateSystemService(&trAnimationController{}, &TRSpriteService, &TRSpriteSheetService)
-var TRPositionService = ecs.CreateSystemService(&trPositionController{}, &TRSpriteService, &TRSpriteSheetService)
-var TRRotationService = ecs.CreateSystemService(&trRotationController{}, &TRSpriteService, &TRSpriteSheetService)
-var TRScaleService = ecs.CreateSystemService(&trScaleController{}, &TRSpriteService, &TRSpriteSheetService)
+var TRSpriteMatrixService = ecs.CreateSystemService(&trSpriteMatrixController{})
+
+// Texture Render Sub Systems
+var TRAnimationService = ecs.CreateSystemService(&trAnimationController{})
+var TRMirroredService = ecs.CreateSystemService(&trMirroredController{}, &TRAnimationService)
+var TRPositionService = ecs.CreateSystemService(&trPositionController{})
+var TRRotationService = ecs.CreateSystemService(&trRotationController{})
+var TRScaleService = ecs.CreateSystemService(&trScaleController{})
+var TRTintService = ecs.CreateSystemService(&trTintController{})
 
 // Render System
 var AssetLibService = ecs.CreateSystemService(&assetLibController{

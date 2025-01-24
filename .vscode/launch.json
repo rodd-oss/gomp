@@ -6,6 +6,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
+      "buildFlags": "-tags 'assert'",
       "program": "./cmd/raylib-ecs"
     }
   ]

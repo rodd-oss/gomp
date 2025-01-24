@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	PlayerStateIdle components.AnimatorState = iota
+	PlayerStateIdle components.AnimationState = iota
 	PlayerStateWalk
 	PlayerStateJump
 	PlayerStateFall
@@ -32,6 +32,37 @@ type Player struct {
 	SpriteMatrix    *components.SpriteMatrix
 	Tint            *components.Tint
 	AnimationPlayer *components.AnimationPlayer
+	AnimationState  *components.AnimationState
+	Mirrored        *components.Mirrored
+}
+
+var playerSpriteMatrix = components.SpriteMatrix{
+	Texture: assets.Textures.Get("assets/milansheet.png"),
+	Origin:  rl.Vector2{X: 0.5, Y: 0.5},
+	FPS:     12,
+	Animations: []components.SpriteMatrixAnimation{
+		{
+			Name:        "idle",
+			Frame:       rl.Rectangle{X: 0, Y: 0, Width: 96, Height: 128},
+			NumOfFrames: 1,
+			Vertical:    false,
+			Loop:        true,
+		},
+		{
+			Name:        "walk",
+			Frame:       rl.Rectangle{X: 0, Y: 512, Width: 96, Height: 128},
+			NumOfFrames: 8,
+			Vertical:    false,
+			Loop:        true,
+		},
+		{
+			Name:        "jump",
+			Frame:       rl.Rectangle{X: 96, Y: 0, Width: 96, Height: 128},
+			NumOfFrames: 1,
+			Vertical:    false,
+			Loop:        false,
+		},
+	},
 }
 
 func CreatePlayer(world *ecs.World) (player Player) {
@@ -40,8 +71,10 @@ func CreatePlayer(world *ecs.World) (player Player) {
 	positions := components.PositionService.GetManager(world)
 	rotations := components.RotationService.GetManager(world)
 	scales := components.ScaleService.GetManager(world)
-	animations := components.AnimationService.GetManager(world)
+	animationPlayers := components.AnimationPlayerService.GetManager(world)
+	animationStates := components.AnimationStateService.GetManager(world)
 	tints := components.TintService.GetManager(world)
+	mirrored := components.MirroredService.GetManager(world)
 
 	// Creating new player
 
@@ -68,36 +101,17 @@ func CreatePlayer(world *ecs.World) (player Player) {
 	player.Tint = tints.Create(entity, tint)
 
 	// Adding sprite matrix component
-	spritematrix := components.SpriteMatrix{
-		Texture: assets.Textures.Get("assets/milansheet.png"),
-		Origin:  rl.Vector2{X: 0.5, Y: 0.5},
-		FPS:     12,
-		Animations: []components.SpriteMatrixAnimation{
-			{
-				Name:        "idle",
-				Frame:       rl.Rectangle{X: 0, Y: 0, Width: 96, Height: 128},
-				NumOfFrames: 1,
-				Vertical:    false,
-			},
-			{
-				Name:        "walk",
-				Frame:       rl.Rectangle{X: 0, Y: 512, Width: 96, Height: 128},
-				NumOfFrames: 8,
-				Vertical:    false,
-			},
-			{
-				Name:        "jump",
-				Frame:       rl.Rectangle{X: 96, Y: 0, Width: 96, Height: 128},
-				NumOfFrames: 1,
-				Vertical:    false,
-			},
-		},
-	}
-	player.SpriteMatrix = spriteMatrixes.Create(entity, spritematrix)
+	player.SpriteMatrix = spriteMatrixes.Create(entity, playerSpriteMatrix)
 
-	// Adding animation component
+	// Adding animation player component
 	animation := components.AnimationPlayer{}
-	player.AnimationPlayer = animations.Create(entity, animation)
+	player.AnimationPlayer = animationPlayers.Create(entity, animation)
+
+	// Adding Animation state component
+	player.AnimationState = animationStates.Create(entity, PlayerStateWalk)
+
+	// Adding Mirrored component
+	player.Mirrored = mirrored.Create(entity, components.Mirrored{})
 
 	return player
 }

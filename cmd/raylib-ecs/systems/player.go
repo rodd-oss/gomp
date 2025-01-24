@@ -22,16 +22,35 @@ func (s *playerController) Init(world *ecs.World) {
 	s.player = entities.CreatePlayer(world)
 	s.player.Position.X = 100
 	s.player.Position.Y = 100
+
 }
 func (s *playerController) Update(world *ecs.World) {
-	animations := components.AnimationService.GetManager(world)
+	animationStates := components.AnimationStateService.GetManager(world)
 
-	animation := animations.Get(s.player.Entity)
+	animationState := animationStates.Get(s.player.Entity)
 
-	if rl.IsKeyDown(rl.KeyD) {
-		animation.Speed = 0
+	if rl.IsKeyDown(rl.KeySpace) {
+		*animationState = entities.PlayerStateJump
 	} else {
-		animation.Speed = 1
+		*animationState = entities.PlayerStateIdle
+		if rl.IsKeyDown(rl.KeyD) {
+			*animationState = entities.PlayerStateWalk
+			s.player.Position.X++
+			s.player.Mirrored.X = false
+		}
+		if rl.IsKeyDown(rl.KeyA) {
+			*animationState = entities.PlayerStateWalk
+			s.player.Position.X--
+			s.player.Mirrored.X = true
+		}
+		if rl.IsKeyDown(rl.KeyW) {
+			*animationState = entities.PlayerStateWalk
+			s.player.Position.Y--
+		}
+		if rl.IsKeyDown(rl.KeyS) {
+			*animationState = entities.PlayerStateWalk
+			s.player.Position.Y++
+		}
 	}
 }
 func (s *playerController) FixedUpdate(world *ecs.World) {}

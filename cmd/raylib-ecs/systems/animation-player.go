@@ -7,19 +7,24 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
+	"fmt"
 	"gomp_game/cmd/raylib-ecs/components"
 	"gomp_game/pkgs/gomp/ecs"
 	"time"
+
+	"github.com/negrel/assert"
 )
 
-type animationController struct{}
+type animationPlayerController struct{}
 
-func (s *animationController) Init(world *ecs.World) {}
-func (s *animationController) Update(world *ecs.World) {
-	animations := components.AnimationService.GetManager(world)
+func (s *animationPlayerController) Init(world *ecs.World) {}
+func (s *animationPlayerController) Update(world *ecs.World) {
+	animationPlayers := components.AnimationPlayerService.GetManager(world)
 
-	animations.AllData(func(animation *components.AnimationPlayer) bool {
+	animationPlayers.AllDataParallel(func(animation *components.AnimationPlayer) bool {
 		animation.ElapsedTime += time.Duration(float32(world.DtUpdate().Microseconds())*animation.Speed) * time.Microsecond
+
+		assert.True(animation.FrameDuration > 0, fmt.Errorf("Frame duration must be greater than 0 (got %v)", animation.FrameDuration))
 
 		// Check if animation is playing backwards
 		if animation.Speed < 0 {
@@ -53,5 +58,5 @@ func (s *animationController) Update(world *ecs.World) {
 		return true
 	})
 }
-func (s *animationController) FixedUpdate(world *ecs.World) {}
-func (s *animationController) Destroy(world *ecs.World)     {}
+func (s *animationPlayerController) FixedUpdate(world *ecs.World) {}
+func (s *animationPlayerController) Destroy(world *ecs.World)     {}

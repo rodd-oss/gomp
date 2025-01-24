@@ -16,7 +16,10 @@ import (
 
 type renderController struct{}
 
-func (s *renderController) Init(world *ecs.World) {}
+func (s *renderController) Init(world *ecs.World) {
+	currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
+	rl.SetTargetFPS(currentMonitorRefreshRate)
+}
 func (s *renderController) Update(world *ecs.World) {
 	spriteRenders := components.TextureRenderService.GetManager(world)
 

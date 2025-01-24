@@ -36,7 +36,6 @@ func (s *trSpriteSheetController) Update(world *ecs.World) {
 				Texture: spriteSheet.Texture,
 				Frame:   spriteSheet.Frame,
 				Origin:  spriteSheet.Origin,
-				Tint:    spriteSheet.Tint,
 				Dest: rl.NewRectangle(
 					0,
 					0,
@@ -48,9 +47,9 @@ func (s *trSpriteSheetController) Update(world *ecs.World) {
 			textureRenders.Create(entity, newRender)
 		} else {
 			// Update spriteRender
+			tr.Texture = spriteSheet.Texture
 			tr.Frame = spriteSheet.Frame
 			tr.Origin = spriteSheet.Origin
-			tr.Tint = spriteSheet.Tint
 		}
 		return true
 	})

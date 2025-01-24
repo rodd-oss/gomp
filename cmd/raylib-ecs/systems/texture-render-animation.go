@@ -18,7 +18,7 @@ func (s *trAnimationController) Init(world *ecs.World)        {}
 func (s *trAnimationController) FixedUpdate(world *ecs.World) {}
 func (s *trAnimationController) Update(world *ecs.World) {
 	// Get component managers
-	animations := components.AnimationService.GetManager(world)
+	animations := components.AnimationPlayerService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
 
 	// Update sprites and spriteRenders

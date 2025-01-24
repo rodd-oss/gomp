@@ -35,10 +35,14 @@ func main() {
 		&components.PositionService,
 		&components.RotationService,
 		&components.ScaleService,
+		&components.MirroredService,
 		&components.HealthService,
 		&components.SpriteService,
 		&components.SpriteSheetService,
-		&components.AnimationService,
+		&components.SpriteMatrixService,
+		&components.TintService,
+		&components.AnimationPlayerService,
+		&components.AnimationStateService,
 		&components.TextureRenderService,
 	)
 
@@ -51,18 +55,25 @@ func main() {
 			&systems.HpService,
 			&systems.ColorService,
 		).
-		Sequential(
-			&systems.AnimationService,
+		Parallel(
+			&systems.AnimationSpriteMatrixService,
+			&systems.AnimationPlayerService,
 		).
 		Parallel(
 			&systems.TRSpriteService,
 			&systems.TRSpriteSheetService,
+			&systems.TRSpriteMatrixService,
+		).
+		Parallel(
 			&systems.TRAnimationService,
+			&systems.TRMirroredService,
 			&systems.TRPositionService,
 			&systems.TRRotationService,
 			&systems.TRScaleService,
+			&systems.TRTintService,
 		).
 		Sequential(
+			&systems.DebugService,
 			&systems.AssetLibService,
 			&systems.RenderService,
 		)

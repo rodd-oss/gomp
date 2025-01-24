@@ -7,14 +7,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
-	"fmt"
 	"gomp_game/cmd/raylib-ecs/assets"
 	"gomp_game/cmd/raylib-ecs/components"
 	"gomp_game/pkgs/gomp/ecs"
-	"log"
 	"math/rand"
-	"os"
-	"runtime/pprof"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -85,22 +81,6 @@ func (s *spawnController) Update(world *ecs.World) {
 
 			sprites.Create(newCreature, c)
 		}
-	}
-
-	if rl.IsKeyPressed(rl.KeyF9) {
-		if s.pprofEnabled {
-			pprof.StopCPUProfile()
-			fmt.Println("CPU Profile Stopped")
-		} else {
-			f, err := os.Create("cpu.out")
-			if err != nil {
-				log.Fatal(err)
-			}
-			pprof.StartCPUProfile(f)
-			fmt.Println("CPU Profile Started")
-		}
-
-		s.pprofEnabled = !s.pprofEnabled
 	}
 }
 func (s *spawnController) FixedUpdate(world *ecs.World) {
