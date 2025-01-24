@@ -40,6 +40,8 @@ func main() {
 		&components.SpriteSheetService,
 		&components.AnimationService,
 		&components.TextureRenderService,
+		&components.AudioChannelService,
+		&components.AudibleService,
 	)
 
 	world.RegisterSystems().
@@ -58,6 +60,8 @@ func main() {
 			&systems.TRPositionService,
 			&systems.TRRotationService,
 			&systems.TRScaleService,
+			&systems.AudioSystem,
+			&systems.SineWaveService,
 		).
 		Sequential(
 			&systems.AssetLibService,
