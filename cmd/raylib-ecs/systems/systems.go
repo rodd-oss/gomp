@@ -27,6 +27,10 @@ var TRPositionService = ecs.CreateSystemService(&trPositionController{}, &TRSpri
 var TRRotationService = ecs.CreateSystemService(&trRotationController{}, &TRSpriteService, &TRSpriteSheetService)
 var TRScaleService = ecs.CreateSystemService(&trScaleController{}, &TRSpriteService, &TRSpriteSheetService)
 
+// Audio Systems
+var AudioSystem = ecs.CreateSystemService(&AudioController{})
+var SineWaveService = ecs.CreateSystemService(&sineWaveController{}, &AudioSystem)
+
 // Render System
 var AssetLibService = ecs.CreateSystemService(&assetLibController{
 	assets: []ecs.AnyAssetLibrary{assets.Textures},

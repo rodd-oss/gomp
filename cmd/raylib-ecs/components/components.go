@@ -71,6 +71,9 @@ var AnimationService = ecs.CreateComponentService[Animation](ANIMATION_ID)
 
 var TextureRenderService = ecs.CreateComponentService[TextureRender](TEXTURE_RENDER_ID)
 
+var AudioChannelService = ecs.CreateComponentService[AudioChannel](AUDIO_CHANNEL_ID)
+var AudibleService = ecs.CreateComponentService[Audible](AUDIBLE_ID)
+
 // spawn creature every tick with random hp and position
 // each creature looses hp every tick
 // each creature has Color that depends on its own maxHP and current hp
