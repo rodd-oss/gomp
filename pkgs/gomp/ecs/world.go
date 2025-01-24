@@ -49,15 +49,15 @@ type World struct {
 	Title string
 
 	tick         int
-	lastEntityID EntityID
+	lastEntityID Entity
 
 	size          uint32
 	shouldDestroy bool
 
 	systems             [][]*SystemServiceInstance
 	components          []AnyComponentManagerPtr
-	deletedEntityIDs    []EntityID
-	entityComponentMask *SparseSet[ComponentBitArray256, EntityID]
+	deletedEntityIDs    []Entity
+	entityComponentMask *SparseSet[ComponentBitArray256, Entity]
 	wg                  *sync.WaitGroup
 	mx                  *sync.Mutex
 
@@ -133,7 +133,7 @@ func (w *World) runSystemFunction(method SystemFunctionMethod) error {
 	return nil
 }
 
-func (w *World) CreateEntity(title string) EntityID {
+func (w *World) CreateEntity(title string) Entity {
 	var newId = w.generateEntityID()
 
 	w.entityComponentMask.Set(newId, ComponentBitArray256{})
@@ -142,7 +142,7 @@ func (w *World) CreateEntity(title string) EntityID {
 	return newId
 }
 
-func (e *World) DestroyEntity(entityId EntityID) {
+func (e *World) DestroyEntity(entityId Entity) {
 	mask := e.entityComponentMask.GetPtr(entityId)
 	if mask == nil {
 		panic(fmt.Sprintf("Entity %d does not exist", entityId))
@@ -167,7 +167,7 @@ func (w *World) Size() uint32 {
 	return w.size
 }
 
-func (w *World) LastEntityID() EntityID {
+func (w *World) LastEntityID() Entity {
 	return w.lastEntityID
 }
 
@@ -191,6 +191,8 @@ func (w *World) Run(tickrate uint) {
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
 
+	var t time.Time
+
 	for !w.ShouldDestroy() {
 		needFixedUpdate := true
 		for needFixedUpdate {
@@ -198,12 +200,14 @@ func (w *World) Run(tickrate uint) {
 			default:
 				needFixedUpdate = false
 			case <-ticker.C:
+				t = time.Now()
 				w.runSystemFunction(SystemFunctionFixedUpdate)
-				w.lastFixedUpdateAt = time.Now()
+				w.lastFixedUpdateAt = t
 			}
 		}
+		t = time.Now()
 		w.runSystemFunction(systemFunctionUpdate)
-		w.lastUpdateAt = time.Now()
+		w.lastUpdateAt = t
 	}
 }
 
@@ -215,9 +219,9 @@ func (w *World) DtFixedUpdate() time.Duration {
 	return time.Since(w.lastFixedUpdateAt)
 }
 
-func (w *World) generateEntityID() (newId EntityID) {
+func (w *World) generateEntityID() (newId Entity) {
 	if len(w.deletedEntityIDs) == 0 {
-		newId = EntityID(atomic.AddInt32((*int32)(&w.lastEntityID), 1))
+		newId = Entity(atomic.AddInt32((*int32)(&w.lastEntityID), 1))
 	} else {
 		newId = w.deletedEntityIDs[len(w.deletedEntityIDs)-1]
 		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]

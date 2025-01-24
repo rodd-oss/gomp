@@ -6,14 +6,14 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-type SparseSet[TData any, TKey EntityID | ComponentID | WorldID | int] struct {
+type SparseSet[TData any, TKey Entity | ComponentID | WorldID | int] struct {
 	// TODO: refactor map to a slice with using of a deletedSparseElements slice
 	sparse     *ChunkMap[int]
 	denseData  *ChunkArray[TData]
 	denseIndex *ChunkArray[TKey]
 }
 
-func NewSparseSet[TData any, TKey EntityID | ComponentID | WorldID | int]() SparseSet[TData, TKey] {
+func NewSparseSet[TData any, TKey Entity | ComponentID | WorldID | int]() SparseSet[TData, TKey] {
 	set := SparseSet[TData, TKey]{}
 	set.sparse = NewChunkMap[int](5, 10)
 	set.denseData = NewChunkArray[TData](5, 10)

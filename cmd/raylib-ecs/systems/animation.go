@@ -18,18 +18,34 @@ func (s *animationController) Init(world *ecs.World) {}
 func (s *animationController) Update(world *ecs.World) {
 	animations := components.AnimationService.GetManager(world)
 
-	animations.AllDataParallel(func(animation *components.Animation) bool {
-		animation.ElapsedTime = animation.ElapsedTime + world.DtUpdate()*time.Duration(animation.Speed)
+	animations.AllData(func(animation *components.AnimationPlayer) bool {
+		animation.ElapsedTime += time.Duration(float32(world.DtUpdate().Microseconds())*animation.Speed) * time.Microsecond
 
-		for animation.ElapsedTime >= animation.FrameDuration {
-			animation.ElapsedTime -= animation.FrameDuration
-			animation.Current++
+		// Check if animation is playing backwards
+		if animation.Speed < 0 {
+			for animation.ElapsedTime <= 0 {
+				animation.ElapsedTime += animation.FrameDuration
+				animation.Current--
 
-			if animation.Current > animation.Last {
-				if animation.Loop {
-					animation.Current = animation.First
-				} else {
-					animation.Current = animation.Last
+				if animation.Current < animation.First {
+					if animation.Loop {
+						animation.Current = animation.Last
+					} else {
+						animation.Current = animation.First
+					}
+				}
+			}
+		} else {
+			for animation.ElapsedTime >= animation.FrameDuration {
+				animation.ElapsedTime -= animation.FrameDuration
+				animation.Current++
+
+				if animation.Current > animation.Last {
+					if animation.Loop {
+						animation.Current = animation.First
+					} else {
+						animation.Current = animation.Last
+					}
 				}
 			}
 		}

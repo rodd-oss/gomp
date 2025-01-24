@@ -18,7 +18,7 @@ func (s *hpController) Update(world *ecs.World) {}
 func (s *hpController) FixedUpdate(world *ecs.World) {
 	healths := components.HealthService.GetManager(world)
 
-	healths.All(func(entity ecs.EntityID, h *components.Health) bool {
+	healths.All(func(entity ecs.Entity, h *components.Health) bool {
 		h.Hp--
 
 		if h.Hp <= 0 {

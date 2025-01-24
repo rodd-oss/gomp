@@ -24,7 +24,7 @@ func (s *colorController) FixedUpdate(world *ecs.World) {
 	sprites := components.SpriteService.GetManager(world)
 	hps := components.HealthService.GetManager(world)
 
-	sprites.AllParallel(func(entity ecs.EntityID, sprite *components.Sprite) bool {
+	sprites.AllParallel(func(entity ecs.Entity, sprite *components.Sprite) bool {
 		hp := hps.Get(entity)
 		if hp == nil {
 			return true

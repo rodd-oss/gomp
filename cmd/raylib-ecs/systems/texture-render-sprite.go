@@ -32,7 +32,7 @@ func (s *trSpriteController) Update(world *ecs.World) {
 	textureRenders := components.TextureRenderService.GetManager(world)
 
 	// Update sprites and spriteRenders
-	sprites.AllParallel(func(entity ecs.EntityID, sprite *components.Sprite) bool {
+	sprites.AllParallel(func(entity ecs.Entity, sprite *components.Sprite) bool {
 		if sprite == nil {
 			return true
 		}

@@ -112,7 +112,7 @@ func (s *PlayerSpawnSystem) Init(world *World) {
 	tra := Transform{0, 1, 2}
 	bs := BulletSpawn{}
 
-	var player EntityID
+	var player Entity
 	for i := 0; i < count; i++ {
 		player = world.CreateEntity("Player")
 		s.transform.Create(player, tra)

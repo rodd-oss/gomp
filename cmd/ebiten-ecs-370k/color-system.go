@@ -29,7 +29,7 @@ func (s *colorSystem) Init(world *ecs.World) {
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
 func (s *colorSystem) Run(world *ecs.World) {
-	s.colorComponent.AllParallel(func(ei ecs.EntityID, c *color.RGBA) bool {
+	s.colorComponent.AllParallel(func(ei ecs.Entity, c *color.RGBA) bool {
 		health := s.healthComponent.Get(ei)
 		if health == nil {
 			return true

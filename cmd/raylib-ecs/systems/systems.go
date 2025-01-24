@@ -15,9 +15,12 @@ var InitService = ecs.CreateSystemService(&initController{windowWidth: 800, wind
 
 var ExampleService = ecs.CreateSystemService(&exampleController{})
 
+var PlayerService = ecs.CreateSystemService(&playerController{})
 var SpawnService = ecs.CreateSystemService(&spawnController{})
-var HpService = ecs.CreateSystemService(&hpController{}, &SpawnService)
+var HpService = ecs.CreateSystemService(&hpController{}, &PlayerService)
 var ColorService = ecs.CreateSystemService(&colorController{}, &HpService)
+
+var AnimationService = ecs.CreateSystemService(&animationController{})
 
 // Texture Render Systems
 var TRSpriteService = ecs.CreateSystemService(&trSpriteController{})

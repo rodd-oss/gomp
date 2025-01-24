@@ -31,7 +31,7 @@ func (s *destroySystem) Init(world *ecs.World) {
 }
 func (s *destroySystem) Run(world *ecs.World) {
 	s.n = 0
-	s.destroyComponent.All(func(e ecs.EntityID, h *empty) bool {
+	s.destroyComponent.All(func(e ecs.Entity, h *empty) bool {
 		world.DestroyEntity(e)
 		entityCount--
 

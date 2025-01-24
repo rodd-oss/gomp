@@ -64,7 +64,7 @@ func (s *cameraSystem) Run(world *ecs.World) {
 
 	draw.Draw(s.buffer, s.buffer.Bounds(), &image.Uniform{color.Transparent}, image.Point{}, draw.Src)
 
-	s.colorComponent.AllParallel(func(entity ecs.EntityID, color *color.RGBA) bool {
+	s.colorComponent.AllParallel(func(entity ecs.Entity, color *color.RGBA) bool {
 		if color == nil {
 			return true
 		}

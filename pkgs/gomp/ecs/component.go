@@ -25,9 +25,9 @@ type AnyComponentServicePtr interface {
 type AnyComponentManagerPtr interface {
 	registerComponentMask(mask *ComponentManager[big.Int])
 	getId() ComponentID
-	Remove(EntityID)
+	Remove(Entity)
 	Clean()
-	Has(EntityID) bool
+	Has(Entity) bool
 }
 
 // ================
@@ -50,8 +50,8 @@ func (c *ComponentService[T]) register(world *World, id ComponentID) AnyComponen
 		mx: new(sync.Mutex),
 
 		components: NewPagedArray[T](),
-		entities:   NewPagedArray[EntityID](),
-		lookup:     NewPagedMap[EntityID, int32](),
+		entities:   NewPagedArray[Entity](),
+		lookup:     NewPagedMap[Entity, int32](),
 
 		maskComponent: world.entityComponentMask,
 		id:            id,
@@ -71,10 +71,10 @@ type ComponentManager[T any] struct {
 	mx *sync.Mutex
 
 	components *PagedArray[T]
-	entities   *PagedArray[EntityID]
-	lookup     *PagedMap[EntityID, int32]
+	entities   *PagedArray[Entity]
+	lookup     *PagedMap[Entity, int32]
 
-	maskComponent *SparseSet[ComponentBitArray256, EntityID]
+	maskComponent *SparseSet[ComponentBitArray256, Entity]
 	id            ComponentID
 	isInitialized bool
 }
@@ -90,7 +90,7 @@ func (c *ComponentManager[T]) registerComponentMask(mask *ComponentManager[big.I
 //=====================================
 //=====================================
 
-func (c *ComponentManager[T]) Create(entity EntityID, value T) (component *T) {
+func (c *ComponentManager[T]) Create(entity Entity, value T) (component *T) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -112,7 +112,7 @@ func (c *ComponentManager[T]) Create(entity EntityID, value T) (component *T) {
 	return component
 }
 
-func (c *ComponentManager[T]) Get(entity EntityID) (component *T) {
+func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
 	assert.True(entity != -1, "INVALID ENTITY!")
 
@@ -124,7 +124,7 @@ func (c *ComponentManager[T]) Get(entity EntityID) (component *T) {
 	return c.components.Get(index)
 }
 
-func (c *ComponentManager[T]) Remove(entity EntityID) {
+func (c *ComponentManager[T]) Remove(entity Entity) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -158,12 +158,12 @@ func (c *ComponentManager[T]) Remove(entity EntityID) {
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 }
 
-func (c *ComponentManager[T]) Has(entity EntityID) bool {
+func (c *ComponentManager[T]) Has(entity Entity) bool {
 	_, ok := c.lookup.Get(entity)
 	return ok
 }
 
-func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
+func (c *ComponentManager[T]) All(yield func(Entity, *T) bool) {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
 
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
@@ -182,7 +182,7 @@ func (c *ComponentManager[T]) All(yield func(EntityID, *T) bool) {
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 }
 
-func (c *ComponentManager[T]) AllParallel(yield func(EntityID, *T) bool) {
+func (c *ComponentManager[T]) AllParallel(yield func(Entity, *T) bool) {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
 
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")

@@ -27,7 +27,7 @@ func (s *hpSystem) Init(world *ecs.World) {
 	s.destroyComponent = destroyComponentType.GetManager(world)
 }
 func (s *hpSystem) Run(world *ecs.World) {
-	s.healthComponent.AllParallel(func(entity ecs.EntityID, h *health) bool {
+	s.healthComponent.AllParallel(func(entity ecs.Entity, h *health) bool {
 		h.hp--
 
 		if h.hp <= 0 {

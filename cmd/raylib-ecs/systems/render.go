@@ -26,7 +26,6 @@ func (s *renderController) Update(world *ecs.World) {
 	}
 
 	rl.BeginDrawing()
-	defer rl.EndDrawing()
 
 	rl.ClearBackground(rl.Black)
 
@@ -41,6 +40,8 @@ func (s *renderController) Update(world *ecs.World) {
 	rl.DrawText(fmt.Sprintf("%d", world.Size()), 10, 30, 20, rl.Red)
 	rl.DrawText(fmt.Sprintf("%s", world.DtUpdate()), 10, 50, 20, rl.Red)
 	rl.DrawText(fmt.Sprintf("%s", world.DtFixedUpdate()), 10, 70, 20, rl.Red)
+
+	rl.EndDrawing()
 }
 
 func (s *renderController) FixedUpdate(world *ecs.World) {}

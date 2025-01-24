@@ -47,9 +47,12 @@ func main() {
 			&systems.InitService,
 		).
 		Parallel(
-			&systems.SpawnService,
+			&systems.PlayerService,
 			&systems.HpService,
 			&systems.ColorService,
+		).
+		Sequential(
+			&systems.AnimationService,
 		).
 		Parallel(
 			&systems.TRSpriteService,

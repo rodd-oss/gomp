@@ -24,7 +24,7 @@ func (s *trSpriteSheetController) Update(world *ecs.World) {
 	textureRenders := components.TextureRenderService.GetManager(world)
 
 	// Update sprites and spriteRenders
-	spriteSheets.AllParallel(func(entity ecs.EntityID, spriteSheet *components.SpriteSheet) bool {
+	spriteSheets.AllParallel(func(entity ecs.Entity, spriteSheet *components.SpriteSheet) bool {
 		if spriteSheet == nil {
 			return true
 		}

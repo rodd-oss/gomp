@@ -19,14 +19,14 @@ const (
 
 func CreateWorld(title string) World {
 	id := generateWorldID()
-	maskSet := NewSparseSet[ComponentBitArray256, EntityID]()
+	maskSet := NewSparseSet[ComponentBitArray256, Entity]()
 
 	world := World{
 		ID:                  id,
 		Title:               title,
 		wg:                  new(sync.WaitGroup),
 		mx:                  new(sync.Mutex),
-		deletedEntityIDs:    make([]EntityID, 0, PREALLOC_DELETED_ENTITIES),
+		deletedEntityIDs:    make([]Entity, 0, PREALLOC_DELETED_ENTITIES),
 		entityComponentMask: &maskSet,
 		lastUpdateAt:        time.Now(),
 		lastFixedUpdateAt:   time.Now(),

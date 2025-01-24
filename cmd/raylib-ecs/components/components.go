@@ -40,6 +40,19 @@ type SpriteSheet struct {
 	FPS         int32
 	Vertical    bool
 }
+type Tint = color.RGBA
+type SpriteMatrixAnimation struct {
+	Name        string
+	Frame       rl.Rectangle
+	NumOfFrames uint8
+	Vertical    bool
+}
+type SpriteMatrix struct {
+	Texture    *rl.Texture2D
+	Origin     rl.Vector2
+	FPS        int32
+	Animations []SpriteMatrixAnimation
+}
 type TextureRender struct {
 	Texture  *rl.Texture2D
 	Frame    rl.Rectangle
@@ -48,7 +61,7 @@ type TextureRender struct {
 	Dest     rl.Rectangle
 	Rotation float32
 }
-type Animation struct {
+type AnimationPlayer struct {
 	First         int32
 	Last          int32
 	Current       int32
@@ -57,6 +70,11 @@ type Animation struct {
 	Vertical      bool
 	ElapsedTime   time.Duration
 	FrameDuration time.Duration
+}
+type AnimatorState int
+type Animator struct {
+	LastState AnimatorState
+	State     AnimatorState
 }
 
 var PositionService = ecs.CreateComponentService[Position](POSITION_ID)
@@ -67,7 +85,10 @@ var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
 
 var SpriteService = ecs.CreateComponentService[Sprite](SPRITE_ID)
 var SpriteSheetService = ecs.CreateComponentService[SpriteSheet](SPRITE_SHEET_ID)
-var AnimationService = ecs.CreateComponentService[Animation](ANIMATION_ID)
+var SpriteMatrixService = ecs.CreateComponentService[SpriteMatrix](SPRITE_MATRIX_ID)
+var AnimationService = ecs.CreateComponentService[AnimationPlayer](ANIMATION_ID)
+var AnimatorService = ecs.CreateComponentService[Animator](ANIMATOR_ID)
+var TintService = ecs.CreateComponentService[Tint](TINT_ID)
 
 var TextureRenderService = ecs.CreateComponentService[TextureRender](TEXTURE_RENDER_ID)
 

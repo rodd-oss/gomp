@@ -17,8 +17,8 @@ import (
 type ComponentManagerX[T any] struct {
 	mx            *sync.Mutex
 	components    *PagedArray[T]
-	entities      *PagedArray[EntityID]
-	lookup        *PagedMap[EntityID, int32]
+	entities      *PagedArray[Entity]
+	lookup        *PagedMap[Entity, int32]
 	ID            ComponentID
 	isInitialized bool
 }
@@ -49,7 +49,7 @@ func (c *ComponentManagerX[T]) getId() ComponentID {
 	return c.ID
 }
 
-func (c *ComponentManagerX[T]) Create(entity EntityID, value T) (returnValue *T) {
+func (c *ComponentManagerX[T]) Create(entity Entity, value T) (returnValue *T) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -73,7 +73,7 @@ func (c *ComponentManagerX[T]) Create(entity EntityID, value T) (returnValue *T)
 	return c.components.Append(value)
 }
 
-func (c *ComponentManagerX[T]) Get(entity EntityID) *T {
+func (c *ComponentManagerX[T]) Get(entity Entity) *T {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -88,7 +88,7 @@ func (c *ComponentManagerX[T]) Get(entity EntityID) *T {
 	return c.components.Get(index)
 }
 
-func (c *ComponentManagerX[T]) Remove(entity EntityID) {
+func (c *ComponentManagerX[T]) Remove(entity Entity) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -125,12 +125,12 @@ func (c *ComponentManagerX[T]) Remove(entity EntityID) {
 	assert.True(c.components.Len() == c.lookup.Len())
 }
 
-func (c *ComponentManagerX[T]) Has(entity EntityID) bool {
+func (c *ComponentManagerX[T]) Has(entity Entity) bool {
 	_, ok := c.lookup.Get(entity)
 	return ok
 }
 
-func (c *ComponentManagerX[T]) All(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerX[T]) All(yield func(Entity, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
@@ -162,7 +162,7 @@ func (c *ComponentManagerX[T]) All(yield func(EntityID, *T) bool) {
 	}
 }
 
-func (c *ComponentManagerX[T]) AllParallel(yield func(EntityID, *T) bool) {
+func (c *ComponentManagerX[T]) AllParallel(yield func(Entity, *T) bool) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
