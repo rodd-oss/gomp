@@ -25,8 +25,6 @@ var AnimationSpriteMatrixService = ecs.CreateSystemService(&animationSpriteMatri
 var AnimationPlayerService = ecs.CreateSystemService(&animationPlayerController{}, &AnimationSpriteMatrixService)
 
 // Texture Render Main Systems
-var trSpriteSystemServices = []ecs.AnySystemServicePtr{&TRSpriteService, &TRSpriteSheetService, &TRSpriteMatrixService}
-
 var TRSpriteService = ecs.CreateSystemService(&trSpriteController{})
 var TRSpriteSheetService = ecs.CreateSystemService(&trSpriteSheetController{})
 var TRSpriteMatrixService = ecs.CreateSystemService(&trSpriteMatrixController{})
