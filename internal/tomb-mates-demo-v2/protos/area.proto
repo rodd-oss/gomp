@@ -7,8 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 syntax="proto3";
 
 package protos;
-option go_package = "internal/protos";
-import "internal/protos/utils.proto";
+option go_package = "internal/tomb-mates-demo-v2/protos";
+import "internal/tomb-mates-demo-v2/protos/utils.proto";
 
 message Area {
     uint32 id = 1;

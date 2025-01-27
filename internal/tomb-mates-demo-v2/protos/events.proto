@@ -7,10 +7,10 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 syntax="proto3";
 
 package protos;
-option go_package = "internal/protos";
-import "internal/protos/unit.proto";
-import "internal/protos/utils.proto";
-import "internal/protos/network-entity.proto";
+option go_package = "internal/tomb-mates-demo-v2/protos";
+import "internal/tomb-mates-demo-v2/protos/unit.proto";
+import "internal/tomb-mates-demo-v2/protos/utils.proto";
+import "internal/tomb-mates-demo-v2/protos/network-entity.proto";
 
 message Event {
     EventType type = 1;
