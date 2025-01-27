@@ -7,23 +7,23 @@ tasks:
 
   server:
     cmds:
-      - go run ./cmd/server .
+      - go run ./examples/server .
 
   client-desktop:
     cmds:
-      - go run ./cmd/client-desktop .
+      - go run ./examples/ebiten-client-desktop .
 
   gomp-server:
     cmds:
-      - go run ./pkgs/example/cmd/gomp-server .
+      - go run ./pkgs/ebiten-ecs/examples/gomp-server .
 
   gomp-client:
     cmds:
-      - go run ./pkgs/example/cmd/gomp-client .
+      - go run ./pkgs/ebiten-ecs/examples/gomp-ebiten-client .
 
   build-web-client:
     cmds:
-      - env GOOS=js GOARCH=wasm go build -o ./.dist/web-client.wasm ./cmd/web-client-ws/main.go
+      - env GOOS=js GOARCH=wasm go build -o ./.dist/web-ebiten-client.wasm ./examples/web-ebiten-client-ws/main.go
       - cp $(go env GOROOT)/misc/wasm/wasm_exec.js ./.dist
 
   proto:

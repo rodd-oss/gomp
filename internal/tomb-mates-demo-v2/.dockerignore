@@ -1,0 +1,8 @@
+bin
+.dist
+.dockerignore
+internal/tomb-mates-demo-v2/Dockerfile
+internal/tomb-mates-demo-v2/docker-compose.yml
+dev.Dockerfile
+dev.docker-compose.yml
+.env

@@ -1,14 +1,11 @@
-# Go mmo game
+# Golang MultiPlayer Game Engine Framework
 
-Основано на репозитоии [Tomb Mates](https://github.com/jilio/tomb_mates)
+## Tools
+- [taskfile](https://taskfile.dev/) makefile alternative for running different tasks during development
+- [raylib-go](https://github.com/gen2brain/raylib-go) bindings for rendering systems
+- [quic-go](https://github.com/quic-go/quic-go) udp protocol for networking
 
-## Запустить dev сервер
-
-```
-task dev
-```
-
-## Команды
+## Task commands
 
 ```
 task proto

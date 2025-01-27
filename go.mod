@@ -1,4 +1,4 @@
-module gomp_game
+module gomp
 
 go 1.23.5
 

@@ -65,7 +65,7 @@ func (n *Network) UpdateHost(dt float64) {
 		client := <-n.Host.register
 		n.Host.clients[client.id] = client
 		// TODO: create player as a world entity
-		// n.Players[client.id] = NetworkPlayer{}
+		// n.Players[ebiten-client.id] = NetworkPlayer{}
 
 		if i >= 9 {
 			break
