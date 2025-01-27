@@ -37,7 +37,7 @@ type Player struct {
 }
 
 var playerSpriteMatrix = components.SpriteMatrix{
-	Texture: assets.Textures.Get("assets/milansheet.png"),
+	Texture: assets.Textures.Get("cmd/raylib-ecs/assets/milansheet.png"),
 	Origin:  rl.Vector2{X: 0.5, Y: 0.5},
 	FPS:     12,
 	Animations: []components.SpriteMatrixAnimation{

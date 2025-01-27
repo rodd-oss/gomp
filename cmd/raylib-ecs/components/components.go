@@ -82,7 +82,7 @@ type AnimationState int
 var PositionService = ecs.CreateComponentService[Position](POSITION_ID)
 var RotationService = ecs.CreateComponentService[Rotation](ROTATION_ID)
 var ScaleService = ecs.CreateComponentService[Scale](SCALE_ID)
-var MirroredService = ecs.CreateComponentService[Mirrored](SCALE_ID)
+var MirroredService = ecs.CreateComponentService[Mirrored](MIRRORED_ID)
 
 var HealthService = ecs.CreateComponentService[Health](HEALTH_ID)
 

@@ -24,7 +24,7 @@ func (s *animationPlayerController) Update(world *ecs.World) {
 	animationPlayers.AllDataParallel(func(animation *components.AnimationPlayer) bool {
 		animation.ElapsedTime += time.Duration(float32(world.DtUpdate().Microseconds())*animation.Speed) * time.Microsecond
 
-		assert.True(animation.FrameDuration > 0, fmt.Errorf("Frame duration must be greater than 0 (got %v)", animation.FrameDuration))
+		assert.True(animation.FrameDuration > 0, fmt.Errorf("frame duration must be greater than 0 (got %v)", animation.FrameDuration))
 
 		// Check if animation is playing backwards
 		if animation.Speed < 0 {
