@@ -6,7 +6,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package components
 
 import (
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 	"image/color"
 	"time"
 

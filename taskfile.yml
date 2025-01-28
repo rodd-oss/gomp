@@ -15,11 +15,11 @@ tasks:
 
   gomp-server:
     cmds:
-      - go run ./pkgs/ebiten-ecs/examples/gomp-server .
+      - go run ./pkg/ebiten-ecs/examples/gomp-server .
 
   gomp-client:
     cmds:
-      - go run ./pkgs/ebiten-ecs/examples/gomp-ebiten-client .
+      - go run ./pkg/ebiten-ecs/examples/gomp-ebiten-client .
 
   build-web-client:
     cmds:

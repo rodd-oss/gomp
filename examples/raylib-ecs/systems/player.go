@@ -10,7 +10,7 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/examples/raylib-ecs/components"
 	"gomp/examples/raylib-ecs/entities"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 )
 
 type playerController struct {

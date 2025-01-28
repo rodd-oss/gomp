@@ -8,7 +8,7 @@ package systems
 
 import (
 	"gomp/examples/raylib-ecs/components"
-	ecs2 "gomp/pkgs/ecs"
+	ecs2 "gomp/pkg/ecs"
 )
 
 // TextureRenderRotation is a system that sets Rotation of textureRender

@@ -9,7 +9,7 @@ package systems
 import (
 	"gomp/examples/raylib-ecs/assets"
 	"gomp/examples/raylib-ecs/components"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 	"math/rand"
 
 	rl "github.com/gen2brain/raylib-go/raylib"

@@ -3,7 +3,7 @@ package main
 import (
 	"gomp/examples/ebiten-ecs/scenes"
 	systems2 "gomp/examples/ebiten-ecs/systems"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 
 	"time"
 

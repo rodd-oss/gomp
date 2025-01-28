@@ -9,7 +9,7 @@ package entities
 import (
 	"gomp/examples/ebiten-ecs/components"
 	"gomp/examples/ebiten-ecs/resources"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 
 	"github.com/jakecoffman/cp/v2"
 )

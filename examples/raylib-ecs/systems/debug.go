@@ -8,7 +8,7 @@ package systems
 
 import (
 	"fmt"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 	"log"
 	"os"
 	"runtime/pprof"

@@ -8,7 +8,7 @@ package systems
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 )
 
 type initController struct {

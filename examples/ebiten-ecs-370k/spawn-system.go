@@ -8,7 +8,7 @@ package main
 
 import (
 	"fmt"
-	ecs2 "gomp/pkgs/ecs"
+	ecs2 "gomp/pkg/ecs"
 	"image/color"
 	"log"
 	"math/rand"

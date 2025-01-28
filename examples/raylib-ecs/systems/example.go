@@ -7,7 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 )
 
 type exampleController struct{}

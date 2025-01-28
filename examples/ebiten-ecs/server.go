@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"gomp/examples/ebiten-ecs/scenes"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 )
 
 func main() {

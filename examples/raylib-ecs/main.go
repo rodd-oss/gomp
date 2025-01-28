@@ -17,7 +17,7 @@ package main
 import (
 	"gomp/examples/raylib-ecs/components"
 	"gomp/examples/raylib-ecs/systems"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 )
 
 func main() {

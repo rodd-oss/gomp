@@ -2,7 +2,7 @@ package scenes
 
 import (
 	"gomp/examples/ebiten-ecs/entities"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 )
 
 var VillageScene = gomp.CreateScene("Village").

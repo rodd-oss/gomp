@@ -8,7 +8,7 @@ package main
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	ecs2 "gomp/pkgs/ecs"
+	ecs2 "gomp/pkg/ecs"
 )
 
 type game struct {

@@ -17,7 +17,7 @@ package systems
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/examples/raylib-ecs/components"
-	ecs2 "gomp/pkgs/ecs"
+	ecs2 "gomp/pkg/ecs"
 )
 
 // TextureRenderSprite is a system that prepares Sprite to be rendered

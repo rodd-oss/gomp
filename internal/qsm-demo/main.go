@@ -7,7 +7,7 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package main
 
 import (
-	qsm2 "gomp/pkgs/qsm"
+	qsm2 "gomp/pkg/qsm"
 	"log"
 	"time"
 )

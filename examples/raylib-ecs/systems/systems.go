@@ -8,7 +8,7 @@ package systems
 
 import (
 	"gomp/examples/raylib-ecs/assets"
-	ecs2 "gomp/pkgs/ecs"
+	ecs2 "gomp/pkg/ecs"
 )
 
 var InitService = ecs2.CreateSystemService(&initController{windowWidth: 800, windowHeight: 600})

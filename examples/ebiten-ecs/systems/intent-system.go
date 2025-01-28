@@ -8,7 +8,7 @@ package systems
 
 import (
 	"gomp/examples/ebiten-ecs/components"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 	"math"
 
 	input "github.com/quasilyte/ebitengine-input"

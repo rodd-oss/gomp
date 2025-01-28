@@ -10,7 +10,7 @@ import (
 	"fmt"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/examples/raylib-ecs/components"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 )
 
 type renderController struct{}

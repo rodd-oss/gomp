@@ -9,7 +9,7 @@ package systems
 import (
 	"fmt"
 	"gomp/examples/raylib-ecs/components"
-	"gomp/pkgs/ecs"
+	"gomp/pkg/ecs"
 	"time"
 
 	"github.com/negrel/assert"

@@ -8,7 +8,7 @@ package resources
 
 import (
 	"embed"
-	"gomp/pkgs/gomp"
+	"gomp/pkg/gomp"
 )
 
 //go:embed **/*.png
