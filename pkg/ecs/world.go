@@ -4,7 +4,7 @@ Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ===-===-===-===-===-===-===-===-===-===
-Donations during this file deveopment:
+Donations during this file development:
 -===-===-===-===-===-===-===-===-===-===
 
 <- MuTaToR Donated 250 RUB
@@ -44,6 +44,14 @@ import (
 	"time"
 )
 
+var nextWorldId WorldID = 0
+
+func generateWorldID() WorldID {
+	id := nextWorldId
+	nextWorldId++
+	return id
+}
+
 type World struct {
 	ID    WorldID
 	Title string
@@ -55,26 +63,30 @@ type World struct {
 	shouldDestroy bool
 
 	systems             [][]*SystemServiceInstance
-	components          []AnyComponentManagerPtr
+	components          map[ComponentID]AnyComponentManagerPtr
 	deletedEntityIDs    []Entity
 	entityComponentMask *SparseSet[ComponentBitArray256, Entity]
 	wg                  *sync.WaitGroup
 	mx                  *sync.Mutex
 
+	patch WorldPatch
+
 	lastUpdateAt      time.Time
 	lastFixedUpdateAt time.Time
 }
 
-func (w *World) RegisterComponentServices(component_ptr ...AnyComponentServicePtr) {
-	for i := 0; i < len(component_ptr); i++ {
-		w.components = append(w.components, component_ptr[i].register(w, ComponentID(i)))
+type WorldPatch []ComponentPatch
+
+func (w *World) RegisterComponentServices(componentPtr ...AnyComponentServicePtr) {
+	for i := 0; i < len(componentPtr); i++ {
+		w.components[componentPtr[i].getId()] = componentPtr[i].register(w)
 	}
 }
 
-func (e *World) RegisterSystems() *SystemBuilder {
+func (w *World) RegisterSystems() *SystemBuilder {
 	return &SystemBuilder{
-		world:   e,
-		systems: &e.systems,
+		world:   w,
+		systems: &w.systems,
 	}
 }
 
@@ -142,19 +154,19 @@ func (w *World) CreateEntity(title string) Entity {
 	return newId
 }
 
-func (e *World) DestroyEntity(entityId Entity) {
-	mask := e.entityComponentMask.GetPtr(entityId)
+func (w *World) DestroyEntity(entityId Entity) {
+	mask := w.entityComponentMask.GetPtr(entityId)
 	if mask == nil {
 		panic(fmt.Sprintf("Entity %d does not exist", entityId))
 	}
 
 	for i := range mask.AllSet {
-		e.components[i].Remove(entityId)
+		w.components[i].Remove(entityId)
 	}
 
-	e.entityComponentMask.SoftDelete(entityId)
-	e.deletedEntityIDs = append(e.deletedEntityIDs, entityId)
-	e.size--
+	w.entityComponentMask.SoftDelete(entityId)
+	w.deletedEntityIDs = append(w.deletedEntityIDs, entityId)
+	w.size--
 }
 
 func (w *World) Clean() {
@@ -185,7 +197,56 @@ func (w *World) Destroy() {
 	w.Clean()
 }
 
+func (w *World) PatchGet() WorldPatch {
+	patch := w.patch
+
+	for _, component := range w.components {
+		if !component.IsTrackingChanges() {
+			continue
+		}
+
+		w.patch[component.getId()] = component.PatchGet()
+	}
+
+	return patch
+}
+
+func (w *World) PatchApply(patch WorldPatch) {
+	for _, componentPatch := range patch {
+		component := w.components[componentPatch.ID]
+		if component == nil {
+			panic(fmt.Sprintf("Component %d does not exist", componentPatch.ID))
+		}
+
+		if !component.IsTrackingChanges() {
+			continue
+		}
+
+		component.PatchApply(componentPatch)
+	}
+}
+
+func (w *World) PatchReset() {
+	for i, component := range w.components {
+		if component == nil {
+			panic(fmt.Sprintf("Component %d does not exist", i))
+		}
+
+		if !component.IsTrackingChanges() {
+			continue
+		}
+
+		component.PatchReset()
+	}
+}
+
+func (w *World) init() {
+	w.patch = make(WorldPatch, len(w.components))
+}
+
 func (w *World) Run(tickrate uint) {
+	w.init()
+
 	duration := time.Second / time.Duration(tickrate)
 
 	ticker := time.NewTicker(duration)
@@ -227,12 +288,4 @@ func (w *World) generateEntityID() (newId Entity) {
 		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
 	}
 	return newId
-}
-
-var nextWorldId WorldID = 0
-
-func generateWorldID() WorldID {
-	id := nextWorldId
-	nextWorldId++
-	return id
 }

@@ -24,7 +24,6 @@ func main() {
 	world := ecs.CreateWorld("main-raylib")
 	defer world.Destroy()
 
-	// patch := world.GetPatch()
 	// world.ApplyPatch(patch)
 
 	// components.TransformService.OnPatch(func(newstate components.Transform, oldstate components.Transform) components.Transform {
@@ -80,5 +79,5 @@ func main() {
 			&systems.AssetLibService,
 		)
 
-	world.Run(60)
+	world.Run(1)
 }

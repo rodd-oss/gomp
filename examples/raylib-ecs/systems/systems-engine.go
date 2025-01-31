@@ -48,4 +48,7 @@ var TRTintService = ecs.CreateSystemService(&trTintController{}, &TRSpriteServic
 var AssetLibService = ecs.CreateSystemService(&assetLibController{
 	assets: []ecs.AnyAssetLibrary{assets.Textures},
 })
-var RenderService = ecs.CreateSystemService(&renderController{})
+var RenderService = ecs.CreateSystemService(&renderController{
+	windowWidth:  1024,
+	windowHeight: 768,
+})

@@ -19,7 +19,8 @@ import (
 // ================
 
 type AnyComponentServicePtr interface {
-	register(*World, ComponentID) AnyComponentManagerPtr
+	register(*World) AnyComponentManagerPtr
+	getId() ComponentID
 }
 
 type AnyComponentManagerPtr interface {
@@ -50,7 +51,7 @@ func (c *ComponentService[T]) GetManager(world *World) *ComponentManager[T] {
 	return manager
 }
 
-func (c *ComponentService[T]) register(world *World, id ComponentID) AnyComponentManagerPtr {
+func (c *ComponentService[T]) register(world *World) AnyComponentManagerPtr {
 	newManager := ComponentManager[T]{
 		mx: new(sync.Mutex),
 
@@ -59,7 +60,7 @@ func (c *ComponentService[T]) register(world *World, id ComponentID) AnyComponen
 		lookup:     NewPagedMap[Entity, int32](),
 
 		maskComponent: world.entityComponentMask,
-		id:            id,
+		id:            c.id,
 		isInitialized: true,
 
 		TrackChanges:    false,
@@ -71,6 +72,10 @@ func (c *ComponentService[T]) register(world *World, id ComponentID) AnyComponen
 	c.managers[world] = &newManager
 
 	return &newManager
+}
+
+func (c *ComponentService[T]) getId() ComponentID {
+	return c.id
 }
 
 // ================
@@ -238,6 +243,7 @@ func (c *ComponentManager[T]) PatchGet() ComponentPatch {
 func (c *ComponentManager[T]) PatchApply(patch ComponentPatch) {
 	assert.True(c.TrackChanges)
 	assert.True(patch.ID == c.id)
+	assert.True(c.decoder != nil)
 
 	var components []T
 
@@ -271,8 +277,8 @@ func (c *ComponentManager[T]) PatchReset() {
 func (c *ComponentManager[T]) getChangesBinary(source *PagedArray[Entity]) ComponentChanges {
 	changesLen := source.Len()
 
-	components := make([]T, changesLen, 0)
-	entities := make([]Entity, changesLen, 0)
+	components := make([]T, 0, changesLen)
+	entities := make([]Entity, 0, changesLen)
 
 	source.AllData(func(e *Entity) bool {
 		assert.True(e != nil)
@@ -282,6 +288,8 @@ func (c *ComponentManager[T]) getChangesBinary(source *PagedArray[Entity]) Compo
 		entities = append(entities, entId)
 		return true
 	})
+
+	assert.True(c.encoder != nil)
 
 	componentsBinary := c.encoder(components)
 

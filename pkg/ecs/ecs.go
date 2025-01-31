@@ -30,6 +30,7 @@ func CreateWorld(title string) World {
 		entityComponentMask: &maskSet,
 		lastUpdateAt:        time.Now(),
 		lastFixedUpdateAt:   time.Now(),
+		components:          make(map[ComponentID]AnyComponentManagerPtr),
 	}
 
 	return world
