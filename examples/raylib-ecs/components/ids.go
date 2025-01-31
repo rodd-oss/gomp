@@ -28,11 +28,4 @@ const (
 	TINT_ID
 	SPRITE_ANIMATOR_ID
 	NETWORK_ID
-	PATCH_IN_ID
-	PATCH_OUT_ID
-)
-
-const (
-	ko ecs.Entity = 1<<24 - 1
-	lo            = 0 >> 24
 )
