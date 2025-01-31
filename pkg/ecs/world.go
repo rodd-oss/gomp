@@ -44,12 +44,15 @@ import (
 	"time"
 )
 
-var nextWorldId WorldID = 0
+func init() {
+	nextWorldId.Store(-1)
+}
+
+var nextWorldId atomic.Int32
 
 func generateWorldID() WorldID {
-	id := nextWorldId
-	nextWorldId++
-	return id
+	id := nextWorldId.Add(1)
+	return WorldID(id)
 }
 
 type World struct {
