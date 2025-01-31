@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type WorldID uint
+type WorldID uint32
 
 const (
 	PREALLOC_DELETED_ENTITIES uint32 = 1 << 10
