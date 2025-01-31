@@ -28,6 +28,11 @@ type AnyComponentManagerPtr interface {
 	Remove(Entity)
 	Clean()
 	Has(Entity) bool
+	PatchAdd(Entity)
+	PatchGet() ComponentPatch
+	PatchApply(patch ComponentPatch)
+	PatchReset()
+	IsTrackingChanges() bool
 }
 
 // ================
@@ -56,6 +61,11 @@ func (c *ComponentService[T]) register(world *World, id ComponentID) AnyComponen
 		maskComponent: world.entityComponentMask,
 		id:            id,
 		isInitialized: true,
+
+		TrackChanges:    false,
+		createdEntities: NewPagedArray[Entity](),
+		patchedEntities: NewPagedArray[Entity](),
+		deletedEntities: NewPagedArray[Entity](),
 	}
 
 	c.managers[world] = &newManager
@@ -77,13 +87,38 @@ type ComponentManager[T any] struct {
 	maskComponent *SparseSet[ComponentBitArray256, Entity]
 	id            ComponentID
 	isInitialized bool
+
+	// Patch
+
+	TrackChanges    bool // Enable TrackChanges to track changes and add them to patch
+	createdEntities *PagedArray[Entity]
+	patchedEntities *PagedArray[Entity]
+	deletedEntities *PagedArray[Entity]
+
+	encoder func([]T) []byte
+	decoder func([]byte) []T
+}
+
+// ComponentChanges with byte encoded Components
+type ComponentChanges struct {
+	Len        int32
+	Components []byte
+	Entities   []Entity
+}
+
+// ComponentPatch with byte encoded Created, Patched and Deleted components
+type ComponentPatch struct {
+	ID      ComponentID
+	Created ComponentChanges
+	Patched ComponentChanges
+	Deleted ComponentChanges
 }
 
 func (c *ComponentManager[T]) getId() ComponentID {
 	return c.id
 }
 
-func (c *ComponentManager[T]) registerComponentMask(mask *ComponentManager[big.Int]) {
+func (c *ComponentManager[T]) registerComponentMask(*ComponentManager[big.Int]) {
 }
 
 //=====================================
@@ -95,8 +130,7 @@ func (c *ComponentManager[T]) Create(entity Entity, value T) (component *T) {
 	defer c.mx.Unlock()
 
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
-	assert.True(entity != -1, "INVALID ENTITY!")
-	assert.False(c.Has(entity), "Only one of component per enity allowed!")
+	assert.False(c.Has(entity), "Only one of component per entity allowed!")
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 
@@ -109,12 +143,13 @@ func (c *ComponentManager[T]) Create(entity Entity, value T) (component *T) {
 	mask := c.maskComponent.GetPtr(entity)
 	mask.Set(c.id)
 
+	c.createdEntities.Append(entity)
+
 	return component
 }
 
 func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
-	assert.True(entity != -1, "INVALID ENTITY!")
 
 	index, ok := c.lookup.Get(entity)
 	if !ok {
@@ -124,12 +159,26 @@ func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 	return c.components.Get(index)
 }
 
+func (c *ComponentManager[T]) Set(entity Entity, value T) *T {
+	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
+
+	index, ok := c.lookup.Get(entity)
+	if !ok {
+		return nil
+	}
+
+	component := c.components.Set(index, value)
+
+	c.patchedEntities.Append(entity)
+
+	return component
+}
+
 func (c *ComponentManager[T]) Remove(entity Entity) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
-	assert.True(entity != -1, "INVALID ENTITY!")
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 
@@ -137,7 +186,7 @@ func (c *ComponentManager[T]) Remove(entity Entity) {
 
 	lastIndex := c.components.Len() - 1
 	if index < lastIndex {
-		// Swap the the dead element with the last one
+		// Swap the dead element with the last one
 		c.components.Swap(index, lastIndex)
 		newSwappedEntityId, _ := c.entities.Swap(index, lastIndex)
 		assert.True(newSwappedEntityId != nil)
@@ -154,6 +203,8 @@ func (c *ComponentManager[T]) Remove(entity Entity) {
 	mask := c.maskComponent.GetPtr(entity)
 	mask.Unset(c.id)
 
+	c.deletedEntities.Append(entity)
+
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 }
@@ -162,6 +213,100 @@ func (c *ComponentManager[T]) Has(entity Entity) bool {
 	_, ok := c.lookup.Get(entity)
 	return ok
 }
+
+// Patches
+
+func (c *ComponentManager[T]) PatchAdd(entity Entity) {
+	assert.True(c.TrackChanges)
+
+	c.patchedEntities.Append(entity)
+}
+
+func (c *ComponentManager[T]) PatchGet() ComponentPatch {
+	assert.True(c.TrackChanges)
+
+	patch := ComponentPatch{
+		ID:      c.id,
+		Created: c.getChangesBinary(c.createdEntities),
+		Patched: c.getChangesBinary(c.patchedEntities),
+		Deleted: c.getChangesBinary(c.deletedEntities),
+	}
+
+	return patch
+}
+
+func (c *ComponentManager[T]) PatchApply(patch ComponentPatch) {
+	assert.True(c.TrackChanges)
+	assert.True(patch.ID == c.id)
+
+	var components []T
+
+	created := patch.Created
+	components = c.decoder(created.Components)
+	for i := range created.Len {
+		c.Create(created.Entities[i], components[i])
+	}
+
+	patched := patch.Patched
+	components = c.decoder(patched.Components)
+	for i := range patched.Len {
+		c.Set(patched.Entities[i], components[i])
+	}
+
+	deleted := patch.Deleted
+	components = c.decoder(deleted.Components)
+	for i := range deleted.Len {
+		c.Remove(deleted.Entities[i])
+	}
+}
+
+func (c *ComponentManager[T]) PatchReset() {
+	assert.True(c.TrackChanges)
+
+	c.createdEntities.Reset()
+	c.patchedEntities.Reset()
+	c.deletedEntities.Reset()
+}
+
+func (c *ComponentManager[T]) getChangesBinary(source *PagedArray[Entity]) ComponentChanges {
+	changesLen := source.Len()
+
+	components := make([]T, changesLen, 0)
+	entities := make([]Entity, changesLen, 0)
+
+	source.AllData(func(e *Entity) bool {
+		assert.True(e != nil)
+		entId := *e
+		assert.True(c.Has(entId))
+		components = append(components, *c.Get(entId))
+		entities = append(entities, entId)
+		return true
+	})
+
+	componentsBinary := c.encoder(components)
+
+	return ComponentChanges{
+		Len:        changesLen,
+		Components: componentsBinary,
+		Entities:   entities,
+	}
+}
+
+func (c *ComponentManager[T]) SetEncoder(function func(components []T) []byte) *ComponentManager[T] {
+	c.encoder = function
+	return c
+}
+
+func (c *ComponentManager[T]) SetDecoder(function func(data []byte) []T) *ComponentManager[T] {
+	c.decoder = function
+	return c
+}
+
+func (c *ComponentManager[T]) IsTrackingChanges() bool {
+	return c.TrackChanges
+}
+
+// Iterators
 
 func (c *ComponentManager[T]) All(yield func(Entity, *T) bool) {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")
@@ -221,6 +366,8 @@ func (c *ComponentManager[T]) AllDataParallel(yield func(*T) bool) {
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")
 }
+
+// Utils
 
 func (c *ComponentManager[T]) Len() int32 {
 	assert.True(c.isInitialized, "ComponentManager should be created with CreateComponentService()")

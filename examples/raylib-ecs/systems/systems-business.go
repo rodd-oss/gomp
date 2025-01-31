@@ -14,13 +14,11 @@ Thank you for your support!
 
 package systems
 
-import (
-	"gomp/pkg/ecs"
-)
+import "gomp/pkg/ecs"
 
-type exampleController struct{}
+// Business logic systems
 
-func (s *exampleController) Init(world *ecs.World)        {}
-func (s *exampleController) Update(world *ecs.World)      {}
-func (s *exampleController) FixedUpdate(world *ecs.World) {}
-func (s *exampleController) Destroy(world *ecs.World)     {}
+var PlayerService = ecs.CreateSystemService(&playerController{})
+var SpawnService = ecs.CreateSystemService(&spawnController{})
+var HpService = ecs.CreateSystemService(&hpController{}, &PlayerService)
+var ColorService = ecs.CreateSystemService(&colorController{}, &HpService)

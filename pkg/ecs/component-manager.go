@@ -56,9 +56,6 @@ func (c *ComponentManagerX[T]) Create(entity Entity, value T) (returnValue *T) {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
-	// INVALID ENTITY!
-	assert.True(entity != -1)
-
 	// Only one of component per enity allowed!
 	assert.False(c.Has(entity))
 
@@ -77,9 +74,6 @@ func (c *ComponentManagerX[T]) Get(entity Entity) *T {
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
 
-	// INVALID ENTITY!
-	assert.False(entity == -1)
-
 	index, ok := c.lookup.Get(entity)
 	if !ok {
 		return nil
@@ -94,9 +88,6 @@ func (c *ComponentManagerX[T]) Remove(entity Entity) {
 
 	// ComponentManager must be initialized with CreateComponentManager()
 	assert.True(c.isInitialized)
-
-	// INVALID ENTITY!
-	assert.False(entity == -1)
 
 	// ENTITY HAS NO COMPONENT!
 	assert.True(c.Has(entity))

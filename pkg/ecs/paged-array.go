@@ -86,6 +86,16 @@ func (a *PagedArray[T]) SoftReduce() {
 	}
 }
 
+func (a *PagedArray[T]) Reset() {
+	for range a.currentPageIndex {
+		page := &a.book[a.currentPageIndex]
+		page.len = 0
+	}
+
+	a.currentPageIndex = 0
+	a.len = 0
+}
+
 func (a *PagedArray[T]) Copy(fromIndex, toIndex int32) {
 	assert.True(fromIndex >= 0, "index out of range")
 	assert.True(fromIndex < a.len, "index out of range")

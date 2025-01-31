@@ -13,9 +13,12 @@ import (
 	"gomp/pkg/ecs"
 )
 
-type renderController struct{}
+type renderController struct {
+	windowWidth, windowHeight int32
+}
 
 func (s *renderController) Init(world *ecs.World) {
+	rl.InitWindow(s.windowWidth, s.windowHeight, "raylib [core] ebiten-ecs - basic window")
 	currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 	rl.SetTargetFPS(currentMonitorRefreshRate)
 }
@@ -47,4 +50,6 @@ func (s *renderController) Update(world *ecs.World) {
 }
 
 func (s *renderController) FixedUpdate(world *ecs.World) {}
-func (s *renderController) Destroy(world *ecs.World)     {}
+func (s *renderController) Destroy(world *ecs.World) {
+	rl.CloseWindow()
+}

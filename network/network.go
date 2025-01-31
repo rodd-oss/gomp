@@ -12,15 +12,10 @@ none :)
 Thank you for your support!
 */
 
-package systems
+package network
 
-import (
-	"gomp/pkg/ecs"
-)
-
-type exampleController struct{}
-
-func (s *exampleController) Init(world *ecs.World)        {}
-func (s *exampleController) Update(world *ecs.World)      {}
-func (s *exampleController) FixedUpdate(world *ecs.World) {}
-func (s *exampleController) Destroy(world *ecs.World)     {}
+type AnyNetworkTransport interface {
+	IsActive() bool
+	Send(message []byte) error
+	Receive() <-chan []byte
+}

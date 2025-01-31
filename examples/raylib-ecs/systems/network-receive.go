@@ -18,9 +18,9 @@ import (
 	"gomp/pkg/ecs"
 )
 
-type exampleController struct{}
+type networkReceiveController struct{}
 
-func (s *exampleController) Init(world *ecs.World)        {}
-func (s *exampleController) Update(world *ecs.World)      {}
-func (s *exampleController) FixedUpdate(world *ecs.World) {}
-func (s *exampleController) Destroy(world *ecs.World)     {}
+func (s *networkReceiveController) Init(world *ecs.World)        {}
+func (s *networkReceiveController) Update(world *ecs.World)      {}
+func (s *networkReceiveController) FixedUpdate(world *ecs.World) {}
+func (s *networkReceiveController) Destroy(world *ecs.World)     {}

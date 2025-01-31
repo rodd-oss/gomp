@@ -47,24 +47,26 @@ func main() {
 	)
 
 	world.RegisterSystems().
-		Sequential(
+		Sequential( // Initial systems: Main thread
 			&systems.InitService,
 		).
-		Parallel(
+		Parallel( // Network receive systems
+			&systems.NetworkReceiveService,
+		).
+		Parallel( // Business logic systems
 			&systems.PlayerService,
 			&systems.HpService,
 			&systems.ColorService,
 		).
 		Parallel(
+			// Network send systems
+			&systems.NetworkSendService,
+			// Prerender systems
 			&systems.AnimationSpriteMatrixService,
 			&systems.AnimationPlayerService,
-		).
-		Parallel(
 			&systems.TRSpriteService,
 			&systems.TRSpriteSheetService,
 			&systems.TRSpriteMatrixService,
-		).
-		Parallel(
 			&systems.TRAnimationService,
 			&systems.TRMirroredService,
 			&systems.TRPositionService,
@@ -72,10 +74,10 @@ func main() {
 			&systems.TRScaleService,
 			&systems.TRTintService,
 		).
-		Sequential(
+		Sequential( // Render systems: Main thread
+			&systems.RenderService,
 			&systems.DebugService,
 			&systems.AssetLibService,
-			&systems.RenderService,
 		)
 
 	world.Run(60)

@@ -3,6 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla
 Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
+
 package components
 
 import (
@@ -26,4 +27,12 @@ const (
 	ANIMATION_STATE_ID
 	TINT_ID
 	SPRITE_ANIMATOR_ID
+	NETWORK_ID
+	PATCH_IN_ID
+	PATCH_OUT_ID
+)
+
+const (
+	ko ecs.Entity = 1<<24 - 1
+	lo            = 0 >> 24
 )

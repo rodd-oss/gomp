@@ -221,7 +221,7 @@ func (w *World) DtFixedUpdate() time.Duration {
 
 func (w *World) generateEntityID() (newId Entity) {
 	if len(w.deletedEntityIDs) == 0 {
-		newId = Entity(atomic.AddInt32((*int32)(&w.lastEntityID), 1))
+		newId = Entity(atomic.AddUint32((*entityType)(&w.lastEntityID), 1))
 	} else {
 		newId = w.deletedEntityIDs[len(w.deletedEntityIDs)-1]
 		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
