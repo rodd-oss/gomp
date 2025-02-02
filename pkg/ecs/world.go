@@ -39,6 +39,7 @@ package ecs
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -76,6 +77,9 @@ type World struct {
 
 	lastUpdateAt      time.Time
 	lastFixedUpdateAt time.Time
+
+	selectors      []*Selector
+	selectorMatrix []ComponentBitArray256 // for cache-friendly lookup
 }
 
 type WorldPatch []ComponentPatch
@@ -291,4 +295,45 @@ func (w *World) generateEntityID() (newId Entity) {
 		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
 	}
 	return newId
+}
+
+func (w *World) CreateSelector(components ...AnyComponentServicePtr) *Selector {
+	includeMask := ComponentBitArray256{}
+	for _, comp := range components {
+		includeMask.Set(comp.getId())
+	}
+
+	selector := newSelector(includeMask, ComponentBitArray256{})
+	w.selectors = append(w.selectors, selector)
+
+	w.updateSelectorsMatrix()
+
+	return selector
+}
+
+func (w *World) updateSelectorsMatrix() {
+	oldNumSelectors := len(w.selectorMatrix)
+	newNumSelectors := len(w.selectors)
+
+	if newNumSelectors > oldNumSelectors {
+		w.selectorMatrix = append(w.selectorMatrix, slices.Repeat([]ComponentBitArray256{{}}, newNumSelectors-oldNumSelectors)...)
+		for idx := oldNumSelectors; idx < newNumSelectors; idx++ {
+			w.selectorMatrix[idx] = w.selectors[idx].includeMask
+		}
+	} else {
+		w.selectorMatrix = w.selectorMatrix[:newNumSelectors]
+	}
+}
+
+func (w *World) proposeEntityUpdateToSelectors(entId Entity, oldComponentsMask, newComponentsMask ComponentBitArray256) {
+	for idx, selectorMask := range w.selectorMatrix {
+		wasIncluded := oldComponentsMask.IncludesAll(selectorMask)
+		shouldIncluded := newComponentsMask.IncludesAll(selectorMask)
+
+		if !wasIncluded && shouldIncluded {
+			w.selectors[idx].addEntity(entId)
+		} else if wasIncluded && !shouldIncluded {
+			w.selectors[idx].removeEntity(entId)
+		}
+	}
 }
