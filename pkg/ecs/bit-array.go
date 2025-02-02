@@ -71,6 +71,22 @@ func (b *ComponentBitArray256) IsSet(index ComponentID) bool {
 	return (b[index/bits.UintSize] & (1 << (index % bits.UintSize))) != 0
 }
 
+// IncludesAll checks that all bits in other are set in b
+func (b *ComponentBitArray256) IncludesAll(other ComponentBitArray256) bool {
+	return ((b[0] & other[0]) == other[0]) &&
+		((b[1] & other[1]) == other[1]) &&
+		((b[2] & other[2]) == other[2]) &&
+		((b[3] & other[3]) == other[3])
+}
+
+// IncludesAll checks that any bits in other are set in b
+func (b *ComponentBitArray256) IncludesAny(other ComponentBitArray256) bool {
+	return ((b[0] & other[0]) > 0) ||
+		((b[1] & other[1]) > 0) ||
+		((b[2] & other[2]) > 0) ||
+		((b[3] & other[3]) > 0)
+}
+
 func (b *ComponentBitArray256) AllSet(yield func(ComponentID) bool) {
 	var id ComponentID
 	var raisedBitsCount int
