@@ -314,7 +314,6 @@ func (w *World) generateEntityID() (newId Entity) {
 
 func (w *World) RegisterSelector(sel AnySelector) {
 	w.selectorsMx.Lock()
-	defer w.selectorsMx.Unlock()
 
 	backdoor := sel.(selectorBackdoor)
 	if slices.Index(w.selectors, backdoor) >= 0 {
@@ -323,12 +322,13 @@ func (w *World) RegisterSelector(sel AnySelector) {
 
 	w.selectors = append(w.selectors, backdoor)
 
+	w.selectorsMx.Unlock()
+
 	if w.initialized {
 		backdoor.initInWorld(w)
 
 		w.addToSelectorAlreadyExistingEntities(backdoor)
 
-		w.selectorsMx.Unlock()
 		w.updateSelectorsMatrix()
 	}
 }
