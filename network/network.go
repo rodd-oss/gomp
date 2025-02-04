@@ -14,8 +14,30 @@ Thank you for your support!
 
 package network
 
-type AnyNetworkTransport interface {
-	IsActive() bool
-	Send(message []byte) error
-	Receive() <-chan []byte
+type Mode int
+type Channel int
+type PeerId int
+
+const (
+	ModeNone Mode = iota
+	ModeServer
+	ModeClient
+)
+
+type AnyNetwork interface {
+	Host(addr string)
+	Connect(addr string)
+	Disconnect()
+	Mode() Mode
+	Send(ch Channel, data []byte) error
+	Receive(ch Channel) ([]byte, error)
+}
+
+type AnyClient interface {
+	Disconnect()
+	Send(ch Channel, data []byte) error
+	Receive(ch Channel) ([]byte, error)
+}
+
+type AnyServer struct {
 }

@@ -15,53 +15,32 @@ Thank you for your support!
 package systems
 
 import (
-	"gomp/examples/raylib-ecs/components"
+	rl "github.com/gen2brain/raylib-go/raylib"
+	"gomp/network"
 	"gomp/pkg/ecs"
-	"sync/atomic"
 )
 
 type NetworkMode int
 
 const (
-	Server NetworkMode = iota
+	None NetworkMode = iota
+	Server
 	Client
 )
 
 type networkController struct {
-	mode   NetworkMode
-	lookup *ecs.PagedMap[ecs.Entity, components.NetworkId]
-	nextId atomic.Int32
 }
 
 func (s *networkController) Init(world *ecs.World) {
-	s.lookup = ecs.NewPagedMap[ecs.Entity, components.NetworkId]()
-	s.nextId.Store(0)
 }
 func (s *networkController) Update(world *ecs.World) {
-	networks := components.NetworkComponentService.GetManager(world)
+	if rl.IsKeyPressed(rl.KeyP) {
+		network.Quic.Host("127.0.0.1:27015")
+	}
 
-	switch s.mode {
-	case Server:
-		networks.All(func(entity ecs.Entity, network *components.Network) bool {
-			if network.Id == 0 {
-				network.Id = s.registerEntity(entity)
-			}
-
-			return true
-		})
-
-	case Client:
-		networks.All(func(entity ecs.Entity, network *components.Network) bool {
-			// apply patch to entity
-			return true
-		})
+	if rl.IsKeyPressed(rl.KeyO) {
+		network.Quic.Connect("127.0.0.1:27015")
 	}
 }
 func (s *networkController) FixedUpdate(world *ecs.World) {}
 func (s *networkController) Destroy(world *ecs.World)     {}
-
-func (s *networkController) registerEntity(entity ecs.Entity) components.NetworkId {
-	id := components.NetworkId(s.nextId.Add(1))
-	s.lookup.Set(entity, id)
-	return id
-}

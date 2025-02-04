@@ -17,8 +17,8 @@ package systems
 import (
 	"fmt"
 	"gomp/examples/raylib-ecs/components"
+	"gomp/network"
 	"gomp/pkg/ecs"
-	"log"
 )
 
 type networkSendController struct{}
@@ -62,8 +62,11 @@ func (s *networkSendController) Init(world *ecs.World) {
 }
 func (s *networkSendController) Update(world *ecs.World) {}
 func (s *networkSendController) FixedUpdate(world *ecs.World) {
-	patch := world.PatchGet()
-	world.PatchReset()
-	log.Printf("%v", patch)
+	//patch := world.PatchGet()
+	//world.PatchReset()
+	//log.Printf("%v", patch)
+	if network.Quic.Mode() != network.ModeNone {
+		network.Quic.Send([]byte("patch"), 0)
+	}
 }
 func (s *networkSendController) Destroy(world *ecs.World) {}

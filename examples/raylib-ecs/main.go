@@ -50,6 +50,7 @@ func main() {
 			&systems.InitService,
 		).
 		Parallel( // Network receive systems
+			&systems.NetworkService,
 			&systems.NetworkReceiveService,
 		).
 		Parallel( // Business logic systems

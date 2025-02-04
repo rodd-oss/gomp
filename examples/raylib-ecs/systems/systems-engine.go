@@ -26,6 +26,7 @@ var DebugService = ecs.CreateSystemService(&debugController{})
 
 // Engine Network systems
 
+var NetworkService = ecs.CreateSystemService(&networkController{})
 var NetworkSendService = ecs.CreateSystemService(&networkSendController{})
 var NetworkReceiveService = ecs.CreateSystemService(&networkReceiveController{})
 
