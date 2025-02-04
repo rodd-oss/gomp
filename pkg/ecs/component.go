@@ -9,6 +9,7 @@ package ecs
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"sync"
 
 	"github.com/negrel/assert"
@@ -26,8 +27,10 @@ type AnyComponentServicePtr interface {
 type AnyComponentManagerPtr interface {
 	registerComponentMask(mask *ComponentManager[big.Int])
 	getId() ComponentID
+	getComponentType() reflect.Type
 	Remove(Entity)
 	Clean()
+	GetComponent(Entity) any
 	Has(Entity) bool
 	PatchAdd(Entity)
 	PatchGet() ComponentPatch
@@ -125,6 +128,10 @@ func (c *ComponentManager[T]) getId() ComponentID {
 	return c.id
 }
 
+func (c *ComponentManager[T]) getComponentType() reflect.Type {
+	return reflect.TypeFor[T]()
+}
+
 func (c *ComponentManager[T]) registerComponentMask(*ComponentManager[big.Int]) {
 }
 
@@ -167,6 +174,10 @@ func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 	}
 
 	return c.components.Get(index)
+}
+
+func (c *ComponentManager[T]) GetComponent(entity Entity) any {
+	return c.Get(entity)
 }
 
 func (c *ComponentManager[T]) Set(entity Entity, value T) *T {

@@ -60,6 +60,8 @@ type World struct {
 	ID    WorldID
 	Title string
 
+	initialized bool
+
 	tick         int
 	lastEntityID Entity
 
@@ -78,7 +80,8 @@ type World struct {
 	lastUpdateAt      time.Time
 	lastFixedUpdateAt time.Time
 
-	selectors      []*Selector
+	selectorsMx    sync.Mutex
+	selectors      []selectorBackdoor
 	selectorMatrix []ComponentBitArray256 // for cache-friendly lookup
 }
 
@@ -249,6 +252,18 @@ func (w *World) PatchReset() {
 
 func (w *World) init() {
 	w.patch = make(WorldPatch, len(w.components))
+
+	w.selectorsMx.Lock()
+
+	for _, sel := range w.selectors {
+		sel.initInWorld(w)
+		w.addToSelectorAlreadyExistingEntities(sel)
+	}
+
+	w.selectorsMx.Unlock()
+	w.updateSelectorsMatrix()
+
+	w.initialized = true
 }
 
 func (w *World) Run(tickrate uint) {
@@ -297,28 +312,38 @@ func (w *World) generateEntityID() (newId Entity) {
 	return newId
 }
 
-func (w *World) CreateSelector(components ...AnyComponentServicePtr) *Selector {
-	includeMask := ComponentBitArray256{}
-	for _, comp := range components {
-		includeMask.Set(comp.getId())
+func (w *World) RegisterSelector(sel AnySelector) {
+	w.selectorsMx.Lock()
+	defer w.selectorsMx.Unlock()
+
+	backdoor := sel.(selectorBackdoor)
+	if slices.Index(w.selectors, backdoor) >= 0 {
+		return
 	}
 
-	selector := newSelector(includeMask, ComponentBitArray256{})
-	w.selectors = append(w.selectors, selector)
+	w.selectors = append(w.selectors, backdoor)
 
-	w.updateSelectorsMatrix()
+	if w.initialized {
+		backdoor.initInWorld(w)
 
-	return selector
+		w.addToSelectorAlreadyExistingEntities(backdoor)
+
+		w.selectorsMx.Unlock()
+		w.updateSelectorsMatrix()
+	}
 }
 
 func (w *World) updateSelectorsMatrix() {
+	w.selectorsMx.Lock()
+	defer w.selectorsMx.Unlock()
+
 	oldNumSelectors := len(w.selectorMatrix)
 	newNumSelectors := len(w.selectors)
 
 	if newNumSelectors > oldNumSelectors {
 		w.selectorMatrix = append(w.selectorMatrix, slices.Repeat([]ComponentBitArray256{{}}, newNumSelectors-oldNumSelectors)...)
 		for idx := oldNumSelectors; idx < newNumSelectors; idx++ {
-			w.selectorMatrix[idx] = w.selectors[idx].includeMask
+			w.selectorMatrix[idx] = w.selectors[idx].IncludeMask()
 		}
 	} else {
 		w.selectorMatrix = w.selectorMatrix[:newNumSelectors]
@@ -326,6 +351,9 @@ func (w *World) updateSelectorsMatrix() {
 }
 
 func (w *World) proposeEntityUpdateToSelectors(entId Entity, oldComponentsMask, newComponentsMask ComponentBitArray256) {
+	w.selectorsMx.Lock()
+	defer w.selectorsMx.Unlock()
+
 	for idx, selectorMask := range w.selectorMatrix {
 		wasIncluded := oldComponentsMask.IncludesAll(selectorMask)
 		shouldIncluded := newComponentsMask.IncludesAll(selectorMask)
@@ -334,6 +362,17 @@ func (w *World) proposeEntityUpdateToSelectors(entId Entity, oldComponentsMask, 
 			w.selectors[idx].addEntity(entId)
 		} else if wasIncluded && !shouldIncluded {
 			w.selectors[idx].removeEntity(entId)
+		}
+	}
+}
+
+func (w *World) addToSelectorAlreadyExistingEntities(selector selectorBackdoor) {
+	includeMask := selector.IncludeMask()
+	excludeMask := selector.ExcludeMask()
+
+	for entId, comp := range w.entityComponentMask.All {
+		if comp.IncludesAll(includeMask) && !comp.IncludesAny(excludeMask) {
+			selector.addEntity(entId)
 		}
 	}
 }
