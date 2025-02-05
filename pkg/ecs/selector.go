@@ -26,7 +26,6 @@ type selectorBackdoor interface {
 type selectorBase struct {
 	includeMask ComponentBitArray256
 	excludeMask ComponentBitArray256
-	// matchedEnts map[Entity]struct{}
 	matchedEnts *PagedMap[Entity, struct{}]
 }
 
@@ -43,7 +42,7 @@ func (s *selectorBase) NumEntities() int {
 }
 
 func (s *selectorBase) AllEntities() iter.Seq[Entity] {
-	return s.matchedEnts.Keys() // FIXME(?): map iterates in random order every time
+	return s.matchedEnts.Keys()
 }
 
 func (s *selectorBase) addEntity(entId Entity) {
