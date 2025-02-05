@@ -1,3 +1,5 @@
+![GO_CI](https://github.com/rodd-oss/gomp/actions/workflows/go_ci.yml/badge.svg?event=push)
+
 # Golang MultiPlayer Game Engine Framework
 Modern way to create fullstack multiplayer games using Go.
 
