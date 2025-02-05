@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"iter"
-	"maps"
 	"reflect"
 
 	"github.com/negrel/assert"
@@ -27,7 +26,8 @@ type selectorBackdoor interface {
 type selectorBase struct {
 	includeMask ComponentBitArray256
 	excludeMask ComponentBitArray256
-	matchedEnts map[Entity]struct{}
+	// matchedEnts map[Entity]struct{}
+	matchedEnts *PagedMap[Entity, struct{}]
 }
 
 func (s *selectorBase) IncludeMask() ComponentBitArray256 {
@@ -39,22 +39,22 @@ func (s *selectorBase) ExcludeMask() ComponentBitArray256 {
 }
 
 func (s *selectorBase) NumEntities() int {
-	return len(s.matchedEnts)
+	return int(s.matchedEnts.Len())
 }
 
 func (s *selectorBase) AllEntities() iter.Seq[Entity] {
-	return maps.Keys(s.matchedEnts) // FIXME(?): map iterates in random order every time
+	return s.matchedEnts.Keys() // FIXME(?): map iterates in random order every time
 }
 
 func (s *selectorBase) addEntity(entId Entity) {
 	if s.matchedEnts == nil {
-		s.matchedEnts = map[Entity]struct{}{}
+		s.matchedEnts = NewPagedMap[Entity, struct{}]()
 	}
-	s.matchedEnts[entId] = struct{}{}
+	s.matchedEnts.Set(entId, struct{}{})
 }
 
 func (s *selectorBase) removeEntity(entId Entity) {
-	delete(s.matchedEnts, entId)
+	s.matchedEnts.Delete(entId)
 }
 
 func (s *selectorBase) makeMasks(includeComponents ...AnyComponentManagerPtr) {
@@ -116,7 +116,7 @@ func (s *Selector[T]) pullComponentInstances(entId Entity, dst *T) {
 
 func (s *Selector[T]) All() iter.Seq[T] {
 	return func(yield func(T) bool) {
-		for entId := range s.matchedEnts {
+		for entId := range s.matchedEnts.Keys() {
 			var bundle T
 			s.pullComponentInstances(entId, &bundle)
 			if !yield(bundle) {
