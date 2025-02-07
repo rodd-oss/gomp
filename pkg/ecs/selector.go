@@ -36,6 +36,9 @@ func (s *selectorBase) ExcludeMask() ComponentBitArray256 {
 }
 
 func (s *selectorBase) NumEntities() int {
+	if s.matchedEnts == nil {
+		return 0
+	}
 	return int(s.matchedEnts.Len())
 }
 
