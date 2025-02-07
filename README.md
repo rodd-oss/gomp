@@ -1,3 +1,5 @@
+![Master Workflow](https://github.com/rodd-oss/gomp/actions/workflows/master_workflow.yml/badge.svg?event=push)
+
 # Golang MultiPlayer Game Engine Framework
 Modern way to create fullstack multiplayer games using Go.
 
