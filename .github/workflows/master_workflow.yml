@@ -17,3 +17,8 @@ jobs:
     with:
       go-version: ${{ matrix.go-version }}
       os: ${{ matrix.os }}
+
+  security-analysis:
+    uses: ./.github/workflows/gosec_security_check.yml
+    with:
+      go-version: '1.23.5'
