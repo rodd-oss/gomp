@@ -7,8 +7,6 @@ import (
 	"github.com/negrel/assert"
 )
 
-// Selector can be used in component controller to track entities which have
-// provided components set.
 type AnySelector interface {
 	IncludeMask() ComponentBitArray256
 	ExcludeMask() ComponentBitArray256
@@ -65,6 +63,16 @@ func (s *selectorBase) makeMasks(includeComponents ...AnyComponentManagerPtr) {
 	}
 }
 
+// Selector can be used in component controller to track entities which have
+// provided components set. Don't forget to register selector in world using
+// `world.RegisterSelector(&selector)` method
+//
+//	rbSelector ecs.Selector[struct{
+//	  RigidBody *components.RigidBody
+//	  Mass      *components.Mass
+//	  Position  *components.Position
+//	  Rotation  *components.Rotation
+//	}]
 type Selector[T any] struct {
 	selectorBase
 	meta []selectorMeta
@@ -81,8 +89,8 @@ func (s *Selector[T]) initInWorld(world *World) {
 
 	for fldIdx := range tTyp.NumField() {
 		fld := tTyp.Field(fldIdx)
-		assert.Equal(reflect.Pointer, fld.Type.Kind(), "field in GSelector type argument must be pointer to component type")
-		assert.True(fld.IsExported(), "field in GSelector must be exported")
+		assert.Equal(reflect.Pointer, fld.Type.Kind(), "field in Selector type argument must be pointer to component type")
+		assert.True(fld.IsExported(), "field in Selector must be exported")
 
 		compTyp := fld.Type.Elem()
 		found := false
