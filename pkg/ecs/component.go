@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"reflect"
 	"sync"
+	"unsafe"
 
 	"github.com/negrel/assert"
 )
@@ -31,6 +32,7 @@ type AnyComponentManagerPtr interface {
 	Remove(Entity)
 	Clean()
 	GetComponent(Entity) any
+	GetComponentUnsafe(Entity) unsafe.Pointer
 	Has(Entity) bool
 	PatchAdd(Entity)
 	PatchGet() ComponentPatch
@@ -178,6 +180,10 @@ func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 
 func (c *ComponentManager[T]) GetComponent(entity Entity) any {
 	return c.Get(entity)
+}
+
+func (c *ComponentManager[T]) GetComponentUnsafe(entity Entity) unsafe.Pointer {
+	return unsafe.Pointer(c.Get(entity))
 }
 
 func (c *ComponentManager[T]) Set(entity Entity, value T) *T {

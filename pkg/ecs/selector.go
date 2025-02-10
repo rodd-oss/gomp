@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"unsafe"
 
 	"github.com/negrel/assert"
 )
@@ -89,8 +90,8 @@ type Selector[T any] struct {
 }
 
 type selectorMeta struct {
-	fld reflect.StructField
-	mng AnyComponentManagerPtr
+	offset uintptr
+	mng    AnyComponentManagerPtr
 }
 
 func (s *Selector[T]) initInWorld(world *World) {
@@ -130,8 +131,8 @@ func (s *Selector[T]) initInWorld(world *World) {
 			if compTyp == mng.getComponentType() {
 				includeManagers = append(includeManagers, mng)
 				s.meta = append(s.meta, selectorMeta{
-					fld: fld,
-					mng: mng,
+					offset: fld.Offset,
+					mng:    mng,
 				})
 				found = true
 				break
@@ -145,10 +146,11 @@ func (s *Selector[T]) initInWorld(world *World) {
 }
 
 func (s *Selector[T]) pullComponentInstances(entId Entity, dst *T) {
-	dstVal := reflect.ValueOf(dst).Elem()
+	dstPtr := unsafe.Pointer(dst)
 	for _, it := range s.meta {
-		comp := it.mng.GetComponent(entId)
-		dstVal.FieldByIndex(it.fld.Index).Set(reflect.ValueOf(comp))
+		fldPtr := unsafe.Pointer(uintptr(dstPtr) + it.offset)
+		compPtr := it.mng.GetComponentUnsafe(entId)
+		*(*unsafe.Pointer)(fldPtr) = compPtr
 	}
 }
 
