@@ -9,7 +9,9 @@ package ecs
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"sync"
+	"unsafe"
 
 	"github.com/negrel/assert"
 )
@@ -26,8 +28,11 @@ type AnyComponentServicePtr interface {
 type AnyComponentManagerPtr interface {
 	registerComponentMask(mask *ComponentManager[big.Int])
 	getId() ComponentID
+	getComponentType() reflect.Type
 	Remove(Entity)
 	Clean()
+	GetComponent(Entity) any
+	GetComponentUnsafe(Entity) unsafe.Pointer
 	Has(Entity) bool
 	PatchAdd(Entity)
 	PatchGet() ComponentPatch
@@ -55,6 +60,7 @@ func (c *ComponentService[T]) register(world *World) AnyComponentManagerPtr {
 	newManager := ComponentManager[T]{
 		mx: new(sync.Mutex),
 
+		world:      world,
 		components: NewPagedArray[T](),
 		entities:   NewPagedArray[Entity](),
 		lookup:     NewPagedMap[Entity, int32](),
@@ -85,6 +91,7 @@ func (c *ComponentService[T]) getId() ComponentID {
 type ComponentManager[T any] struct {
 	mx *sync.Mutex
 
+	world      *World
 	components *PagedArray[T]
 	entities   *PagedArray[Entity]
 	lookup     *PagedMap[Entity, int32]
@@ -123,6 +130,10 @@ func (c *ComponentManager[T]) getId() ComponentID {
 	return c.id
 }
 
+func (c *ComponentManager[T]) getComponentType() reflect.Type {
+	return reflect.TypeFor[T]()
+}
+
 func (c *ComponentManager[T]) registerComponentMask(*ComponentManager[big.Int]) {
 }
 
@@ -146,9 +157,12 @@ func (c *ComponentManager[T]) Create(entity Entity, value T) (component *T) {
 	component = c.components.Append(value)
 
 	mask := c.maskComponent.GetPtr(entity)
+	oldMask := *mask
 	mask.Set(c.id)
 
 	c.createdEntities.Append(entity)
+
+	c.world.proposeEntityUpdateToSelectors(entity, oldMask, *mask)
 
 	return component
 }
@@ -162,6 +176,14 @@ func (c *ComponentManager[T]) Get(entity Entity) (component *T) {
 	}
 
 	return c.components.Get(index)
+}
+
+func (c *ComponentManager[T]) GetComponent(entity Entity) any {
+	return c.Get(entity)
+}
+
+func (c *ComponentManager[T]) GetComponentUnsafe(entity Entity) unsafe.Pointer {
+	return unsafe.Pointer(c.Get(entity))
 }
 
 func (c *ComponentManager[T]) Set(entity Entity, value T) *T {
@@ -206,9 +228,12 @@ func (c *ComponentManager[T]) Remove(entity Entity) {
 
 	c.lookup.Delete(entity)
 	mask := c.maskComponent.GetPtr(entity)
+	oldMask := *mask
 	mask.Unset(c.id)
 
 	c.deletedEntities.Append(entity)
+
+	c.world.proposeEntityUpdateToSelectors(entity, oldMask, *mask)
 
 	assert.True(c.components.Len() == c.lookup.Len(), "Lookup Count must always be the same as the number of components!")
 	assert.True(c.entities.Len() == c.components.Len(), "Entity Count must always be the same as the number of components!")

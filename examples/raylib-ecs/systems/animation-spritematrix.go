@@ -8,48 +8,39 @@ package systems
 
 import (
 	"gomp/examples/raylib-ecs/components"
-	ecs2 "gomp/pkg/ecs"
+	"gomp/pkg/ecs"
 	"time"
 )
 
-type animationSpriteMatrixController struct{}
-
-func (s *animationSpriteMatrixController) Init(world *ecs2.World) {}
-func (s *animationSpriteMatrixController) Update(world *ecs2.World) {
-	animationPlayers := components.AnimationPlayerService.GetManager(world)
-	animationStates := components.AnimationStateService.GetManager(world)
-	spriteMatrixes := components.SpriteMatrixService.GetManager(world)
-
-	animationPlayers.AllParallel(func(e ecs2.Entity, animationPlayer *components.AnimationPlayer) bool {
-		spriteMatrix := spriteMatrixes.Get(e)
-		if spriteMatrix == nil {
-			return true
-		}
-
-		animationStatePtr := animationStates.Get(e)
-		if animationStatePtr == nil {
-			return true
-		}
-		animationState := *animationStatePtr
-
-		if animationPlayer.State == animationState && animationPlayer.IsInitialized == true {
-			return true
-		}
-
-		currentAnimation := spriteMatrix.Animations[animationState]
-
-		animationPlayer.First = 0
-		animationPlayer.Current = 0
-		animationPlayer.Last = currentAnimation.NumOfFrames - 1
-		animationPlayer.Loop = currentAnimation.Loop
-		animationPlayer.Vertical = currentAnimation.Vertical
-		animationPlayer.FrameDuration = time.Second / time.Duration(spriteMatrix.FPS)
-		animationPlayer.State = animationState
-		animationPlayer.Speed = 1
-		animationPlayer.IsInitialized = true
-
-		return true
-	})
+type animationSpriteMatrixController struct {
+	selector ecs.Selector[struct {
+		Player *components.AnimationPlayer
+		State  *components.AnimationState
+		Matrix *components.SpriteMatrix
+	}]
 }
-func (s *animationSpriteMatrixController) FixedUpdate(world *ecs2.World) {}
-func (s *animationSpriteMatrixController) Destroy(world *ecs2.World)     {}
+
+func (s *animationSpriteMatrixController) Init(world *ecs.World) {
+	world.RegisterSelector(&s.selector)
+}
+func (s *animationSpriteMatrixController) Update(world *ecs.World) {
+	for c := range s.selector.All() {
+		if c.Player.State == *c.State && c.Player.IsInitialized == true {
+			continue
+		}
+
+		currentAnimation := c.Matrix.Animations[*c.State]
+
+		c.Player.First = 0
+		c.Player.Current = 0
+		c.Player.Last = currentAnimation.NumOfFrames - 1
+		c.Player.Loop = currentAnimation.Loop
+		c.Player.Vertical = currentAnimation.Vertical
+		c.Player.FrameDuration = time.Second / time.Duration(c.Matrix.FPS)
+		c.Player.State = *c.State
+		c.Player.Speed = 1
+		c.Player.IsInitialized = true
+	}
+}
+func (s *animationSpriteMatrixController) FixedUpdate(world *ecs.World) {}
+func (s *animationSpriteMatrixController) Destroy(world *ecs.World)     {}
