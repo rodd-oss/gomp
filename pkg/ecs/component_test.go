@@ -34,7 +34,7 @@ func PrepareWorld(description string, system AnySystemServicePtr) *World {
 			system,
 		)
 
-	return &world
+	return world
 }
 
 func InitPixelComponent(pixelComponent *ComponentManager[pixel], world *World) {

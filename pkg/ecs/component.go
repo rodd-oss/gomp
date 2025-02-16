@@ -82,6 +82,27 @@ func (c *ComponentService[T]) getId() ComponentID {
 // Service
 // ================
 
+func NewComponentManager[T any](world *World, id ComponentID) *ComponentManager[T] {
+	newManager := ComponentManager[T]{
+		mx: new(sync.Mutex),
+
+		components: NewPagedArray[T](),
+		entities:   NewPagedArray[Entity](),
+		lookup:     NewPagedMap[Entity, int32](),
+
+		maskComponent: world.entityComponentMask,
+		id:            id,
+		isInitialized: true,
+
+		TrackChanges:    false,
+		createdEntities: NewPagedArray[Entity](),
+		patchedEntities: NewPagedArray[Entity](),
+		deletedEntities: NewPagedArray[Entity](),
+	}
+
+	return &newManager
+}
+
 type ComponentManager[T any] struct {
 	mx *sync.Mutex
 
