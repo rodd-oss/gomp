@@ -19,21 +19,14 @@ import (
 	"time"
 )
 
-type EngineSystems interface {
+type EngineSystemSet interface {
 	Init()
 	Update(dt time.Duration)
 	FixedUpdate(dt time.Duration)
 	Destroy()
 }
 
-type Engine[C any, S EngineSystems] struct {
-	World      *ecs.World
-	Components C
-	Systems    S
-}
-
-func NewEngine[C any, S EngineSystems](world *ecs.World, components C, systems S) *Engine[C, S] {
-
+func NewEngine[C any, S EngineSystemSet](world *ecs.World, components C, systems S) *Engine[C, S] {
 	newGame := Engine[C, S]{
 		World:      world,
 		Components: components,
@@ -41,6 +34,12 @@ func NewEngine[C any, S EngineSystems](world *ecs.World, components C, systems S
 	}
 
 	return &newGame
+}
+
+type Engine[C any, S EngineSystemSet] struct {
+	World      *ecs.World
+	Components C
+	Systems    S
 }
 
 func (g *Engine[C, S]) Run(tickrate uint) {

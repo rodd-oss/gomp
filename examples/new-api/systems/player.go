@@ -14,6 +14,30 @@ import (
 	"time"
 )
 
+func NewPlayerSystem(
+	world *ecs.World,
+	spriteMatrixes *stdcomponents.SpriteMatrixComponentManager,
+	positions *stdcomponents.PositionComponentManager,
+	rotations *stdcomponents.RotationComponentManager,
+	scales *stdcomponents.ScaleComponentManager,
+	animationPlayers *stdcomponents.AnimationPlayerComponentManager,
+	animationStates *stdcomponents.AnimationStateComponentManager,
+	tints *stdcomponents.TintComponentManager,
+	flips *stdcomponents.FlipComponentManager,
+) *PlayerSystem {
+	return &PlayerSystem{
+		world:            world,
+		spriteMatrixes:   spriteMatrixes,
+		positions:        positions,
+		rotations:        rotations,
+		scales:           scales,
+		animationPlayers: animationPlayers,
+		animationStates:  animationStates,
+		tints:            tints,
+		flips:            flips,
+	}
+}
+
 type PlayerSystem struct {
 	world            *ecs.World
 	player           entities.Player
@@ -60,27 +84,3 @@ func (s *PlayerSystem) Run(dt time.Duration) {
 	}
 }
 func (s *PlayerSystem) Destroy() {}
-
-func NewPlayerSystem(
-	world *ecs.World,
-	spriteMatrixes *stdcomponents.SpriteMatrixComponentManager,
-	positions *stdcomponents.PositionComponentManager,
-	rotations *stdcomponents.RotationComponentManager,
-	scales *stdcomponents.ScaleComponentManager,
-	animationPlayers *stdcomponents.AnimationPlayerComponentManager,
-	animationStates *stdcomponents.AnimationStateComponentManager,
-	tints *stdcomponents.TintComponentManager,
-	flips *stdcomponents.FlipComponentManager,
-) *PlayerSystem {
-	return &PlayerSystem{
-		world:            world,
-		spriteMatrixes:   spriteMatrixes,
-		positions:        positions,
-		rotations:        rotations,
-		scales:           scales,
-		animationPlayers: animationPlayers,
-		animationStates:  animationStates,
-		tints:            tints,
-		flips:            flips,
-	}
-}
