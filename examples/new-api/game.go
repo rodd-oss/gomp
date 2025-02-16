@@ -14,18 +14,9 @@ Thank you for your support!
 
 package main
 
-import (
-	"gomp"
-	"gomp/pkg/ecs"
-)
+import "gomp"
 
 func main() {
-	world := ecs.CreateWorld("main")
-	defer world.Destroy()
-
-	components := NewDesktopComponents(world)
-	systems := NewDesktopSystems(world, components)
-
-	engine := gomp.NewEngine(world, components, systems)
+	engine := gomp.NewDesktopEngine([]gomp.Scene{})
 	engine.Run(60)
 }
