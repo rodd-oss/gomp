@@ -7,8 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"iter"
-
 	"github.com/negrel/assert"
 )
 
@@ -89,58 +87,6 @@ func (m *PagedMap[K, V]) getPageIdAndIndex(key K) (page_id int, index int) {
 	return
 }
 
-func (m *PagedMap[K, V]) getKey(pageId, index int) K {
-	return K((index & (1<<page_size_shift - 1)) | pageId<<int(page_size_shift))
-}
-
 func (m *PagedMap[K, V]) Len() int32 {
 	return m.len
-}
-
-func (m *PagedMap[K, V]) All() iter.Seq2[K, V] {
-	return func(yield func(K, V) bool) {
-		for pageId, page := range m.book {
-			for idx, e := range page.data {
-				if !e.ok {
-					continue
-				}
-
-				if !yield(m.getKey(pageId, idx), e.value) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func (m *PagedMap[K, V]) Keys() iter.Seq[K] {
-	return func(yield func(K) bool) {
-		for pageId, page := range m.book {
-			for idx, e := range page.data {
-				if !e.ok {
-					continue
-				}
-
-				if !yield(m.getKey(pageId, idx)) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func (m *PagedMap[K, V]) Values() iter.Seq[V] {
-	return func(yield func(V) bool) {
-		for _, page := range m.book {
-			for _, e := range page.data {
-				if !e.ok {
-					continue
-				}
-
-				if !yield(e.value) {
-					return
-				}
-			}
-		}
-	}
 }
