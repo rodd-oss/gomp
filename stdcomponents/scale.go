@@ -22,6 +22,6 @@ type Scale struct {
 
 type ScaleComponentManager = ecs.ComponentManager[Scale]
 
-func NewScaleComponentManager(world *ecs.World) *ecs.ComponentManager[Scale] {
+func NewScaleComponentManager(world *ecs.World) *ScaleComponentManager {
 	return ecs.NewComponentManager[Scale](world, SCALE_ID)
 }

@@ -23,6 +23,6 @@ type Tint = color.RGBA
 
 type TintComponentManager = ecs.ComponentManager[Tint]
 
-func NewTintComponentManager(world *ecs.World) *ecs.ComponentManager[Tint] {
+func NewTintComponentManager(world *ecs.World) *TintComponentManager {
 	return ecs.NewComponentManager[Tint](world, TINT_ID)
 }

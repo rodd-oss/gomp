@@ -38,15 +38,15 @@ func NewDesktopComponents(world *ecs.World) *desktopComponents {
 
 type desktopComponents struct {
 	position        *stdcomponents.PositionComponentManager
-	rotation        *ecs.ComponentManager[stdcomponents.Rotation]
-	scale           *ecs.ComponentManager[stdcomponents.Scale]
-	flip            *ecs.ComponentManager[stdcomponents.Flip]
-	sprite          *ecs.ComponentManager[stdcomponents.Sprite]
-	spriteSheet     *ecs.ComponentManager[stdcomponents.SpriteSheet]
-	spriteMatrix    *ecs.ComponentManager[stdcomponents.SpriteMatrix]
-	tint            *ecs.ComponentManager[stdcomponents.Tint]
-	animationPlayer *ecs.ComponentManager[stdcomponents.AnimationPlayer]
-	animationState  *ecs.ComponentManager[stdcomponents.AnimationState]
-	textureRender   *ecs.ComponentManager[stdcomponents.TextureRender]
-	network         *ecs.ComponentManager[stdcomponents.Network]
+	rotation        *stdcomponents.RotationComponentManager
+	scale           *stdcomponents.ScaleComponentManager
+	flip            *stdcomponents.FlipComponentManager
+	sprite          *stdcomponents.SpriteComponentManager
+	spriteSheet     *stdcomponents.SpriteSheetComponentManager
+	spriteMatrix    *stdcomponents.SpriteMatrixComponentManager
+	tint            *stdcomponents.TintComponentManager
+	animationPlayer *stdcomponents.AnimationPlayerComponentManager
+	animationState  *stdcomponents.AnimationStateComponentManager
+	textureRender   *stdcomponents.TextureRenderComponentManager
+	network         *stdcomponents.NetworkComponentManager
 }

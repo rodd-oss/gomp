@@ -23,6 +23,8 @@ type Network struct {
 	PatchOut []byte
 }
 
-func NewNetworkComponentManager(world *ecs.World) *ecs.ComponentManager[Network] {
+type NetworkComponentManager = ecs.ComponentManager[Network]
+
+func NewNetworkComponentManager(world *ecs.World) *NetworkComponentManager {
 	return ecs.NewComponentManager[Network](world, NETWORK_ID)
 }
