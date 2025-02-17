@@ -46,6 +46,8 @@ func (g *DesktopGame) Init() {
 	assert.True(ok, "Scene not found")
 	scene.Init()
 
+	g.Systems.Velocity.Init()
+
 	// Network patches
 	g.Systems.NetworkSend.Init()
 
