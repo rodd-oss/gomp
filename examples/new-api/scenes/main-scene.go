@@ -24,7 +24,7 @@ import (
 
 func NewMainScene(world *ecs.World, components *components.GameComponents) *MainScene {
 	return &MainScene{
-		playerSystem: systems.NewPlayerSystem(world, components.SpriteMatrix, components.Position, components.Rotation, components.Scale, components.AnimationPlayer, components.AnimationState, components.Tint, components.Flip),
+		playerSystem: systems.NewPlayerSystem(world, components.SpriteMatrix, components.Position, components.Rotation, components.Scale, components.Velocity, components.AnimationPlayer, components.AnimationState, components.Tint, components.Flip),
 	}
 }
 

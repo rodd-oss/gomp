@@ -22,51 +22,68 @@ type AnyGame interface {
 	Init()
 	Update(dt time.Duration)
 	FixedUpdate(dt time.Duration)
+	Render(dt time.Duration)
 	Destroy()
 	ShouldDestroy() bool
 }
 
-func NewEngine(game AnyGame) *Engine {
-	newGame := Engine{
+func NewEngine(game AnyGame) Engine {
+	engine := Engine{
 		Game: game,
 	}
 
-	return &newGame
+	return engine
 }
 
 type Engine struct {
 	Game AnyGame
+
+	lastUpdateAt      time.Time
+	lastFixedUpdateAt time.Time
+	lastRenderAt      time.Time
 }
 
-func (e *Engine) Run(tickrate uint) {
-	duration := time.Second / time.Duration(tickrate)
+func (e *Engine) Run(tickrate uint, framerate uint) {
+	fixedUpdDuration := time.Second / time.Duration(tickrate)
+	framerateDuration := time.Second / time.Duration(framerate)
 
-	ticker := time.NewTicker(duration)
-	defer ticker.Stop()
+	fixedUpdTicker := time.NewTicker(fixedUpdDuration)
+	defer fixedUpdTicker.Stop()
 
-	var (
-		t       time.Time
-		dt      time.Duration
-		fixedDt time.Duration
-	)
+	renderTicker := time.NewTicker(framerateDuration)
+	defer renderTicker.Stop()
 
 	e.Game.Init()
 	defer e.Game.Destroy()
 
+	e.lastUpdateAt = time.Now()
+	e.lastFixedUpdateAt = time.Now()
+	e.lastRenderAt = time.Now()
+
 	for !e.Game.ShouldDestroy() {
-		needFixedUpdate := true
-		for needFixedUpdate {
-			select {
-			default:
-				needFixedUpdate = false
-			case <-ticker.C:
-				t = time.Now()
-				e.Game.FixedUpdate(fixedDt)
-				fixedDt = time.Since(t)
-			}
-		}
-		t = time.Now()
+		// Update
+		dt := time.Since(e.lastUpdateAt)
 		e.Game.Update(dt)
-		dt = time.Since(t)
+		e.lastUpdateAt = time.Now()
+
+		// Fixed Update
+		select {
+		case <-fixedUpdTicker.C:
+			dt := time.Since(e.lastFixedUpdateAt)
+			e.Game.FixedUpdate(dt)
+			e.lastFixedUpdateAt = time.Now()
+		default:
+			break
+		}
+
+		// Render
+		select {
+		case <-renderTicker.C:
+			dt := time.Since(e.lastRenderAt)
+			e.Game.Render(dt)
+			e.lastRenderAt = time.Now()
+		default:
+			break
+		}
 	}
 }

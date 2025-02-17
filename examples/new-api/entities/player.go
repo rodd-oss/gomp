@@ -28,6 +28,7 @@ type Player struct {
 	Position        *stdcomponents.Position
 	Rotation        *stdcomponents.Rotation
 	Scale           *stdcomponents.Scale
+	Velocity        *stdcomponents.Velocity
 	SpriteMatrix    *stdcomponents.SpriteMatrix
 	Tint            *stdcomponents.Tint
 	AnimationPlayer *stdcomponents.AnimationPlayer
@@ -70,6 +71,7 @@ func CreatePlayer(
 	positions *stdcomponents.PositionComponentManager,
 	rotations *stdcomponents.RotationComponentManager,
 	scales *stdcomponents.ScaleComponentManager,
+	velocities *stdcomponents.VelocityComponentManager,
 	animationPlayers *stdcomponents.AnimationPlayerComponentManager,
 	animationStates *stdcomponents.AnimationStateComponentManager,
 	tints *stdcomponents.TintComponentManager,
@@ -94,6 +96,10 @@ func CreatePlayer(
 		Y: 1,
 	}
 	player.Scale = scales.Create(entity, scale)
+
+	// Adding velocity component
+	velocity := stdcomponents.Velocity{}
+	player.Velocity = velocities.Create(entity, velocity)
 
 	// Adding Tint component
 	tint := stdcomponents.Tint{R: 255, G: 255, B: 255, A: 255}

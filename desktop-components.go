@@ -24,6 +24,7 @@ func NewDesktopComponents(world *ecs.World) DesktopComponents {
 		Position:        stdcomponents.NewPositionComponentManager(world),
 		Rotation:        stdcomponents.NewRotationComponentManager(world),
 		Scale:           stdcomponents.NewScaleComponentManager(world),
+		Velocity:        stdcomponents.NewVelocityComponentManager(world),
 		Flip:            stdcomponents.NewFlipComponentManager(world),
 		Sprite:          stdcomponents.NewSpriteComponentManager(world),
 		SpriteSheet:     stdcomponents.NewSpriteSheetComponentManager(world),
@@ -40,6 +41,7 @@ type DesktopComponents struct {
 	Position        *stdcomponents.PositionComponentManager
 	Rotation        *stdcomponents.RotationComponentManager
 	Scale           *stdcomponents.ScaleComponentManager
+	Velocity        *stdcomponents.VelocityComponentManager
 	Flip            *stdcomponents.FlipComponentManager
 	Sprite          *stdcomponents.SpriteComponentManager
 	SpriteSheet     *stdcomponents.SpriteSheetComponentManager

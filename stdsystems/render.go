@@ -28,8 +28,8 @@ func NewRenderSystem(world *ecs.World, textureRenders *ecs.ComponentManager[stdc
 
 func (s *RenderSystem) Init() {
 	rl.InitWindow(1024, 768, "raylib [core] ebiten-ecs - basic window")
-	currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
-	rl.SetTargetFPS(currentMonitorRefreshRate)
+	//currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
+	//rl.SetTargetFPS(currentMonitorRefreshRate)
 }
 func (s *RenderSystem) Run(dt time.Duration) error {
 	if rl.WindowShouldClose() {

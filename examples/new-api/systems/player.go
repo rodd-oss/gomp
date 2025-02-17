@@ -20,6 +20,7 @@ func NewPlayerSystem(
 	positions *stdcomponents.PositionComponentManager,
 	rotations *stdcomponents.RotationComponentManager,
 	scales *stdcomponents.ScaleComponentManager,
+	velocities *stdcomponents.VelocityComponentManager,
 	animationPlayers *stdcomponents.AnimationPlayerComponentManager,
 	animationStates *stdcomponents.AnimationStateComponentManager,
 	tints *stdcomponents.TintComponentManager,
@@ -31,6 +32,7 @@ func NewPlayerSystem(
 		positions:        positions,
 		rotations:        rotations,
 		scales:           scales,
+		velocities:       velocities,
 		animationPlayers: animationPlayers,
 		animationStates:  animationStates,
 		tints:            tints,
@@ -45,6 +47,7 @@ type PlayerSystem struct {
 	positions        *stdcomponents.PositionComponentManager
 	rotations        *stdcomponents.RotationComponentManager
 	scales           *stdcomponents.ScaleComponentManager
+	velocities       *stdcomponents.VelocityComponentManager
 	animationPlayers *stdcomponents.AnimationPlayerComponentManager
 	animationStates  *stdcomponents.AnimationStateComponentManager
 	tints            *stdcomponents.TintComponentManager
@@ -52,12 +55,17 @@ type PlayerSystem struct {
 }
 
 func (s *PlayerSystem) Init() {
-	s.player = entities.CreatePlayer(s.world, s.spriteMatrixes, s.positions, s.rotations, s.scales, s.animationPlayers, s.animationStates, s.tints, s.flips)
+	s.player = entities.CreatePlayer(s.world, s.spriteMatrixes, s.positions, s.rotations, s.scales, s.velocities, s.animationPlayers, s.animationStates, s.tints, s.flips)
 	s.player.Position.X = 100
 	s.player.Position.Y = 100
 }
 func (s *PlayerSystem) Run(dt time.Duration) {
 	animationState := s.animationStates.Get(s.player.Entity)
+
+	var speed float32 = 300
+
+	s.player.Velocity.X = 0
+	s.player.Velocity.Y = 0
 
 	if rl.IsKeyDown(rl.KeySpace) {
 		*animationState = entities.PlayerStateJump
@@ -65,21 +73,21 @@ func (s *PlayerSystem) Run(dt time.Duration) {
 		*animationState = entities.PlayerStateIdle
 		if rl.IsKeyDown(rl.KeyD) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Position.X++
+			s.player.Velocity.X = speed
 			s.player.Flip.X = false
 		}
 		if rl.IsKeyDown(rl.KeyA) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Position.X--
+			s.player.Velocity.X = -speed
 			s.player.Flip.X = true
 		}
 		if rl.IsKeyDown(rl.KeyW) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Position.Y--
+			s.player.Velocity.Y = -speed
 		}
 		if rl.IsKeyDown(rl.KeyS) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Position.Y++
+			s.player.Velocity.Y = speed
 		}
 	}
 }

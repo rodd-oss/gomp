@@ -24,6 +24,8 @@ func NewDesktopSystems(world *ecs.World, components *DesktopComponents) DesktopS
 	return DesktopSystems{
 		Debug: stdsystems.NewDebugSystem(),
 
+		Velocity: stdsystems.NewVelocitySystem(components.Velocity, components.Position),
+
 		Network:        stdsystems.NewNetworkSystem(),
 		NetworkReceive: stdsystems.NewNetworkReceiveSystem(),
 		NetworkSend:    stdsystems.NewNetworkSendSystem(world, components.Position, components.Rotation, components.Flip),
@@ -49,6 +51,9 @@ func NewDesktopSystems(world *ecs.World, components *DesktopComponents) DesktopS
 
 type DesktopSystems struct {
 	Debug *stdsystems.DebugSystem
+
+	Velocity *stdsystems.VelocitySystem
+
 	// Network
 	Network        *stdsystems.NetworkSystem
 	NetworkReceive *stdsystems.NetworkReceiveSystem

@@ -85,6 +85,22 @@ func (g *DesktopGame) Update(dt time.Duration) {
 	// Network patches
 	g.Systems.NetworkSend.Run(dt)
 
+	g.Systems.Debug.Run(dt)
+}
+
+func (g *DesktopGame) FixedUpdate(dt time.Duration) {
+	// Scenes
+	scene, ok := g.Scenes[g.CurrentSceneId]
+	assert.True(ok, "Scene not found")
+	scene.FixedUpdate(dt)
+
+	// Network send
+	g.Systems.NetworkSend.Run(dt)
+}
+
+func (g *DesktopGame) Render(dt time.Duration) {
+	g.Systems.Velocity.Run(dt)
+
 	// Animation
 	g.Systems.AnimationSpriteMatrix.Run(dt)
 	g.Systems.AnimationPlayer.Run(dt)
@@ -104,20 +120,9 @@ func (g *DesktopGame) Update(dt time.Duration) {
 
 	// Render
 	g.Systems.AssetLib.Run(dt)
-	g.Systems.Debug.Run(dt)
 	if err := g.Systems.Render.Run(dt); err != nil {
 		g.shouldDestroy = true
 	}
-}
-
-func (g *DesktopGame) FixedUpdate(dt time.Duration) {
-	// Scenes
-	scene, ok := g.Scenes[g.CurrentSceneId]
-	assert.True(ok, "Scene not found")
-	scene.FixedUpdate(dt)
-
-	// Network send
-	g.Systems.NetworkSend.Run(dt)
 }
 
 func (g *DesktopGame) Destroy() {
