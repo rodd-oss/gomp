@@ -12,20 +12,18 @@ none :)
 Thank you for your support!
 */
 
-package gomp
+package scenes
 
 import (
+	"gomp"
+	"gomp/examples/new-api/components"
 	"gomp/pkg/ecs"
 )
 
-type DesktopEngine = Engine[*DesktopComponents, *DesktopSystems]
+func NewSceneSet(world *ecs.World, components *components.GameComponents) map[gomp.SceneId]gomp.AnyScene {
+	sceneSet := make(map[gomp.SceneId]gomp.AnyScene)
 
-func NewDesktopEngine(scenes []Scene) *DesktopEngine {
-	world := ecs.CreateWorld("main")
-	defer world.Destroy()
+	sceneSet[MainSceneId] = NewMainScene(world, components)
 
-	components := NewDesktopComponents(world)
-	systems := NewDesktopSystems(world, components, scenes)
-
-	return NewEngine(world, components, systems)
+	return sceneSet
 }

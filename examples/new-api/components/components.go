@@ -14,9 +14,19 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
-const (
-	INVALID_ID ecs.ComponentID = iota
-	HEALTH_ID
+import (
+	"gomp"
+	"gomp/pkg/ecs"
 )
+
+type GameComponents struct {
+	*gomp.DesktopComponents
+	Health *HealthComponentManager
+}
+
+func NewGameComponents(world *ecs.World, desktopComponents *gomp.DesktopComponents) GameComponents {
+	return GameComponents{
+		DesktopComponents: desktopComponents,
+		Health:            NewHealthComponentManager(world),
+	}
+}

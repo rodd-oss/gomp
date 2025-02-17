@@ -27,14 +27,13 @@ func NewRenderSystem(world *ecs.World, textureRenders *ecs.ComponentManager[stdc
 }
 
 func (s *RenderSystem) Init() {
-	rl.InitWindow(800, 600, "raylib [core] ebiten-ecs - basic window")
+	rl.InitWindow(1024, 768, "raylib [core] ebiten-ecs - basic window")
 	currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 	rl.SetTargetFPS(currentMonitorRefreshRate)
 }
-func (s *RenderSystem) Run(dt time.Duration) {
+func (s *RenderSystem) Run(dt time.Duration) error {
 	if rl.WindowShouldClose() {
-		s.world.SetShouldDestroy(true)
-		return
+		return fmt.Errorf("window closed")
 	}
 
 	rl.BeginDrawing()
@@ -54,6 +53,7 @@ func (s *RenderSystem) Run(dt time.Duration) {
 	rl.DrawText(fmt.Sprintf("%s", s.world.DtFixedUpdate()), 10, 70, 20, rl.Red)
 
 	rl.EndDrawing()
+	return nil
 }
 
 func (s *RenderSystem) Destroy() {

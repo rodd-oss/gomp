@@ -19,8 +19,8 @@ import (
 	"gomp/stdcomponents"
 )
 
-func NewDesktopComponents(world *ecs.World) *DesktopComponents {
-	return &DesktopComponents{
+func NewDesktopComponents(world *ecs.World) DesktopComponents {
+	return DesktopComponents{
 		Position:        stdcomponents.NewPositionComponentManager(world),
 		Rotation:        stdcomponents.NewRotationComponentManager(world),
 		Scale:           stdcomponents.NewScaleComponentManager(world),

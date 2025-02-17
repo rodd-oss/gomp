@@ -12,17 +12,11 @@ none :)
 Thank you for your support!
 */
 
-package gomp
+package scenes
 
-import "time"
+import "gomp"
 
-type SceneId uint16
-
-type AnyScene interface {
-	Init()
-	Destroy()
-	Update(dt time.Duration) SceneId
-	FixedUpdate(dt time.Duration)
-	OnEnter()
-	OnExit()
-}
+const (
+	MenuSceneId gomp.SceneId = iota
+	MainSceneId
+)

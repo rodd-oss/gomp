@@ -15,34 +15,30 @@ Thank you for your support!
 package gomp
 
 import (
-	"gomp/pkg/ecs"
 	"time"
 )
 
-type AnyEngineSystemSet interface {
+type AnyGame interface {
 	Init()
 	Update(dt time.Duration)
 	FixedUpdate(dt time.Duration)
 	Destroy()
+	ShouldDestroy() bool
 }
 
-func NewEngine[C any, S AnyEngineSystemSet](world *ecs.World, components C, systems S) *Engine[C, S] {
-	newGame := Engine[C, S]{
-		World:      world,
-		Components: components,
-		Systems:    systems,
+func NewEngine(game AnyGame) *Engine {
+	newGame := Engine{
+		Game: game,
 	}
 
 	return &newGame
 }
 
-type Engine[C any, S AnyEngineSystemSet] struct {
-	World      *ecs.World
-	Components C
-	Systems    S
+type Engine struct {
+	Game AnyGame
 }
 
-func (g *Engine[C, S]) Run(tickrate uint) {
+func (e *Engine) Run(tickrate uint) {
 	duration := time.Second / time.Duration(tickrate)
 
 	ticker := time.NewTicker(duration)
@@ -54,10 +50,10 @@ func (g *Engine[C, S]) Run(tickrate uint) {
 		fixedDt time.Duration
 	)
 
-	g.Systems.Init()
-	defer g.Systems.Destroy()
+	e.Game.Init()
+	defer e.Game.Destroy()
 
-	for !g.World.ShouldDestroy() {
+	for !e.Game.ShouldDestroy() {
 		needFixedUpdate := true
 		for needFixedUpdate {
 			select {
@@ -65,12 +61,12 @@ func (g *Engine[C, S]) Run(tickrate uint) {
 				needFixedUpdate = false
 			case <-ticker.C:
 				t = time.Now()
-				g.Systems.FixedUpdate(fixedDt)
+				e.Game.FixedUpdate(fixedDt)
 				fixedDt = time.Since(t)
 			}
 		}
 		t = time.Now()
-		g.Systems.Update(dt)
+		e.Game.Update(dt)
 		dt = time.Since(t)
 	}
 }

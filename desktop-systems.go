@@ -18,13 +18,11 @@ import (
 	"gomp/examples/new-api/assets"
 	"gomp/pkg/ecs"
 	"gomp/stdsystems"
-	"time"
 )
 
-func NewDesktopSystems(world *ecs.World, components *DesktopComponents, scenes []Scene) *DesktopSystems {
-	return &DesktopSystems{
-		Scenes: scenes,
-		Debug:  stdsystems.NewDebugSystem(),
+func NewDesktopSystems(world *ecs.World, components *DesktopComponents) DesktopSystems {
+	return DesktopSystems{
+		Debug: stdsystems.NewDebugSystem(),
 
 		Network:        stdsystems.NewNetworkSystem(),
 		NetworkReceive: stdsystems.NewNetworkReceiveSystem(),
@@ -50,8 +48,7 @@ func NewDesktopSystems(world *ecs.World, components *DesktopComponents, scenes [
 }
 
 type DesktopSystems struct {
-	Scenes []Scene
-	Debug  *stdsystems.DebugSystem
+	Debug *stdsystems.DebugSystem
 	// Network
 	Network        *stdsystems.NetworkSystem
 	NetworkReceive *stdsystems.NetworkReceiveSystem
@@ -73,127 +70,4 @@ type DesktopSystems struct {
 	// Render
 	AssetLib *stdsystems.AssetLibSystem
 	Render   *stdsystems.RenderSystem
-}
-
-func (s *DesktopSystems) Init() {
-	// Network receive
-	s.Network.Init()
-	s.NetworkReceive.Init()
-
-	// Network patches
-	s.NetworkSend.Init()
-
-	// Scenes
-	for i := range s.Scenes {
-		if s.Scenes[i].Enabled {
-			s.Scenes[i].Init()
-		}
-	}
-
-	// Animation
-	s.AnimationSpriteMatrix.Init()
-	s.AnimationPlayer.Init()
-
-	// Prerender init
-	s.TextureRenderSprite.Init()
-	s.TextureRenderSpriteSheet.Init()
-	s.TextureRenderMatrix.Init()
-
-	// Prerender fill
-	s.TextureRenderAnimation.Init()
-	s.TextureRenderFlip.Init()
-	s.TextureRenderPosition.Init()
-	s.TextureRenderRotation.Init()
-	s.TextureRenderScale.Init()
-	s.TextureRenderTint.Init()
-
-	// Render
-	s.Render.Init()
-	s.Debug.Init()
-	s.AssetLib.Init()
-}
-
-func (s *DesktopSystems) Update(dt time.Duration) {
-	// Network receive
-	s.Network.Run(dt)
-	s.NetworkReceive.Run(dt)
-
-	// Scenes
-	for i := range s.Scenes {
-		if s.Scenes[i].Enabled {
-			s.Scenes[i].Update(dt)
-		}
-	}
-
-	// Animation
-	s.AnimationSpriteMatrix.Run(dt)
-	s.AnimationPlayer.Run(dt)
-
-	// Prerender init
-	s.TextureRenderSprite.Run(dt)
-	s.TextureRenderSpriteSheet.Run(dt)
-	s.TextureRenderMatrix.Run(dt)
-
-	// Prerender fill
-	s.TextureRenderAnimation.Run(dt)
-	s.TextureRenderFlip.Run(dt)
-	s.TextureRenderPosition.Run(dt)
-	s.TextureRenderRotation.Run(dt)
-	s.TextureRenderScale.Run(dt)
-	s.TextureRenderTint.Run(dt)
-
-	// Render
-	s.AssetLib.Run(dt)
-	s.Debug.Run(dt)
-	s.Render.Run(dt)
-}
-
-func (s *DesktopSystems) FixedUpdate(dt time.Duration) {
-	// Scenes
-	for i := range s.Scenes {
-		if s.Scenes[i].Enabled {
-			s.Scenes[i].FixedUpdate(dt)
-		}
-	}
-
-	// Network send
-	s.NetworkSend.Run(dt)
-}
-
-func (s *DesktopSystems) Destroy() {
-	// Network intents
-	s.Network.Destroy()
-	s.NetworkReceive.Destroy()
-
-	// Scenes
-	for i := range s.Scenes {
-		if s.Scenes[i].IsInitialized {
-			s.Scenes[i].Destroy()
-		}
-	}
-
-	// Network patches
-	s.NetworkSend.Destroy()
-
-	// Animation
-	s.AnimationSpriteMatrix.Destroy()
-	s.AnimationPlayer.Destroy()
-
-	// Prerender init
-	s.TextureRenderSprite.Destroy()
-	s.TextureRenderSpriteSheet.Destroy()
-	s.TextureRenderMatrix.Destroy()
-
-	// Prerender fill
-	s.TextureRenderAnimation.Destroy()
-	s.TextureRenderFlip.Destroy()
-	s.TextureRenderPosition.Destroy()
-	s.TextureRenderRotation.Destroy()
-	s.TextureRenderScale.Destroy()
-	s.TextureRenderTint.Destroy()
-
-	// Render
-	s.Debug.Destroy()
-	s.AssetLib.Destroy()
-	s.Render.Destroy()
 }

@@ -16,12 +16,13 @@ package scenes
 
 import (
 	"gomp"
+	"gomp/examples/new-api/components"
 	"gomp/examples/new-api/systems"
 	"gomp/pkg/ecs"
 	"time"
 )
 
-func NewMainScene(world *ecs.World, components *gomp.DesktopComponents) *MainScene {
+func NewMainScene(world *ecs.World, components *components.GameComponents) *MainScene {
 	return &MainScene{
 		playerSystem: systems.NewPlayerSystem(world, components.SpriteMatrix, components.Position, components.Rotation, components.Scale, components.AnimationPlayer, components.AnimationState, components.Tint, components.Flip),
 	}
@@ -35,13 +36,25 @@ func (s *MainScene) Init() {
 	s.playerSystem.Init()
 }
 
-func (s *MainScene) Update(dt time.Duration) {
-	s.playerSystem.Run(dt)
-}
-
-func (s *MainScene) FixedUpdate() {
-}
-
 func (s *MainScene) Destroy() {
 	s.playerSystem.Destroy()
 }
+
+func (s *MainScene) Update(dt time.Duration) gomp.SceneId {
+	s.playerSystem.Run(dt)
+	return MainSceneId
+}
+
+func (s *MainScene) FixedUpdate(dt time.Duration) {
+
+}
+
+func (s *MainScene) OnEnter() {
+
+}
+
+func (s *MainScene) OnExit() {
+
+}
+
+var _ gomp.AnyScene = (*MainScene)(nil)
