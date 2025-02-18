@@ -22,6 +22,6 @@ type AnimationState int32
 
 type AnimationStateComponentManager = ecs.ComponentManager[AnimationState]
 
-func NewAnimationStateComponentManager(world *ecs.World) *AnimationStateComponentManager {
+func NewAnimationStateComponentManager(world *ecs.World) AnimationStateComponentManager {
 	return ecs.NewComponentManager[AnimationState](world, ANIMATION_STATE_ID)
 }

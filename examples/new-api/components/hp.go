@@ -22,6 +22,6 @@ type Health struct {
 
 type HealthComponentManager = ecs.ComponentManager[Health]
 
-func NewHealthComponentManager(world *ecs.World) *ecs.ComponentManager[Health] {
+func NewHealthComponentManager(world *ecs.World) ecs.ComponentManager[Health] {
 	return ecs.NewComponentManager[Health](world, HEALTH_ID)
 }

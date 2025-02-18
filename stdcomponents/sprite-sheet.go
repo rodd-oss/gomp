@@ -30,6 +30,6 @@ type SpriteSheet struct {
 
 type SpriteSheetComponentManager = ecs.ComponentManager[SpriteSheet]
 
-func NewSpriteSheetComponentManager(world *ecs.World) *SpriteSheetComponentManager {
+func NewSpriteSheetComponentManager(world *ecs.World) SpriteSheetComponentManager {
 	return ecs.NewComponentManager[SpriteSheet](world, SPRITE_SHEET_ID)
 }

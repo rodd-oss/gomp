@@ -33,7 +33,10 @@ type PlayerSystem struct {
 }
 
 func (s *PlayerSystem) Init() {
-	s.Player = entities.CreatePlayer(s.World, s.SpriteMatrixes, s.Positions, s.Rotations, s.Scales, s.Velocities, s.AnimationPlayers, s.AnimationStates, s.Tints, s.Flips)
+	s.Player = entities.CreatePlayer(
+		s.World, s.SpriteMatrixes, s.Positions, s.Rotations, s.Scales,
+		s.Velocities, s.AnimationPlayers, s.AnimationStates, s.Tints, s.Flips,
+	)
 	s.Player.Position.X = 100
 	s.Player.Position.Y = 100
 }

@@ -21,20 +21,20 @@ import (
 )
 
 type ComponentList struct {
-	Position        *stdcomponents.PositionComponentManager
-	Rotation        *stdcomponents.RotationComponentManager
-	Scale           *stdcomponents.ScaleComponentManager
-	Velocity        *stdcomponents.VelocityComponentManager
-	Flip            *stdcomponents.FlipComponentManager
-	Sprite          *stdcomponents.SpriteComponentManager
-	SpriteSheet     *stdcomponents.SpriteSheetComponentManager
-	SpriteMatrix    *stdcomponents.SpriteMatrixComponentManager
-	Tint            *stdcomponents.TintComponentManager
-	AnimationPlayer *stdcomponents.AnimationPlayerComponentManager
-	AnimationState  *stdcomponents.AnimationStateComponentManager
-	TextureRender   *stdcomponents.TextureRenderComponentManager
-	Network         *stdcomponents.NetworkComponentManager
-	Health          *components.HealthComponentManager
+	Position        stdcomponents.PositionComponentManager
+	Rotation        stdcomponents.RotationComponentManager
+	Scale           stdcomponents.ScaleComponentManager
+	Velocity        stdcomponents.VelocityComponentManager
+	Flip            stdcomponents.FlipComponentManager
+	Sprite          stdcomponents.SpriteComponentManager
+	SpriteSheet     stdcomponents.SpriteSheetComponentManager
+	SpriteMatrix    stdcomponents.SpriteMatrixComponentManager
+	Tint            stdcomponents.TintComponentManager
+	AnimationPlayer stdcomponents.AnimationPlayerComponentManager
+	AnimationState  stdcomponents.AnimationStateComponentManager
+	TextureRender   stdcomponents.TextureRenderComponentManager
+	Network         stdcomponents.NetworkComponentManager
+	Health          components.HealthComponentManager
 }
 
 func NewComponentList(world *ecs.World) ComponentList {

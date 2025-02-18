@@ -82,7 +82,7 @@ func (c *ComponentService[T]) getId() ComponentID {
 // Service
 // ================
 
-func NewComponentManager[T any](world *World, id ComponentID) *ComponentManager[T] {
+func NewComponentManager[T any](world *World, id ComponentID) ComponentManager[T] {
 	newManager := ComponentManager[T]{
 		mx: new(sync.Mutex),
 
@@ -100,7 +100,7 @@ func NewComponentManager[T any](world *World, id ComponentID) *ComponentManager[
 		deletedEntities: NewPagedArray[Entity](),
 	}
 
-	return &newManager
+	return newManager
 }
 
 type ComponentManager[T any] struct {

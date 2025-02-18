@@ -38,17 +38,17 @@ func NewDesktopComponents(world *ecs.World) DesktopComponents {
 }
 
 type DesktopComponents struct {
-	Position        *stdcomponents.PositionComponentManager
-	Rotation        *stdcomponents.RotationComponentManager
-	Scale           *stdcomponents.ScaleComponentManager
-	Velocity        *stdcomponents.VelocityComponentManager
-	Flip            *stdcomponents.FlipComponentManager
-	Sprite          *stdcomponents.SpriteComponentManager
-	SpriteSheet     *stdcomponents.SpriteSheetComponentManager
-	SpriteMatrix    *stdcomponents.SpriteMatrixComponentManager
-	Tint            *stdcomponents.TintComponentManager
-	AnimationPlayer *stdcomponents.AnimationPlayerComponentManager
-	AnimationState  *stdcomponents.AnimationStateComponentManager
-	TextureRender   *stdcomponents.TextureRenderComponentManager
-	Network         *stdcomponents.NetworkComponentManager
+	Position        stdcomponents.PositionComponentManager
+	Rotation        stdcomponents.RotationComponentManager
+	Scale           stdcomponents.ScaleComponentManager
+	Velocity        stdcomponents.VelocityComponentManager
+	Flip            stdcomponents.FlipComponentManager
+	Sprite          stdcomponents.SpriteComponentManager
+	SpriteSheet     stdcomponents.SpriteSheetComponentManager
+	SpriteMatrix    stdcomponents.SpriteMatrixComponentManager
+	Tint            stdcomponents.TintComponentManager
+	AnimationPlayer stdcomponents.AnimationPlayerComponentManager
+	AnimationState  stdcomponents.AnimationStateComponentManager
+	TextureRender   stdcomponents.TextureRenderComponentManager
+	Network         stdcomponents.NetworkComponentManager
 }
