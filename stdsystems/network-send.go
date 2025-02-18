@@ -22,32 +22,23 @@ import (
 	"time"
 )
 
-func NewNetworkSendSystem(world *ecs.World,
-	positions *stdcomponents.PositionComponentManager,
-	rotations *stdcomponents.RotationComponentManager,
-	mirroreds *stdcomponents.FlipComponentManager,
-) *NetworkSendSystem {
-	return &NetworkSendSystem{
-		world:     world,
-		positions: positions,
-		rotations: rotations,
-		mirroreds: mirroreds,
-	}
+func NewNetworkSendSystem() NetworkSendSystem {
+	return NetworkSendSystem{}
 }
 
 type NetworkSendSystem struct {
-	world     *ecs.World
-	positions *stdcomponents.PositionComponentManager
-	rotations *stdcomponents.RotationComponentManager
-	mirroreds *stdcomponents.FlipComponentManager
+	World     *ecs.World
+	Positions *stdcomponents.PositionComponentManager
+	Rotations *stdcomponents.RotationComponentManager
+	Mirroreds *stdcomponents.FlipComponentManager
 }
 
 func (s *NetworkSendSystem) Init() {
-	s.positions.TrackChanges = true
-	s.rotations.TrackChanges = true
-	s.mirroreds.TrackChanges = true
+	s.Positions.TrackChanges = true
+	s.Rotations.TrackChanges = true
+	s.Mirroreds.TrackChanges = true
 
-	s.positions.SetEncoder(func(components []stdcomponents.Position) []byte {
+	s.Positions.SetEncoder(func(components []stdcomponents.Position) []byte {
 		data := make([]byte, 0)
 		for _, component := range components {
 			binary := fmt.Sprintf("%b", component.X)
@@ -56,7 +47,7 @@ func (s *NetworkSendSystem) Init() {
 
 		return data
 	})
-	s.rotations.SetEncoder(func(components []stdcomponents.Rotation) []byte {
+	s.Rotations.SetEncoder(func(components []stdcomponents.Rotation) []byte {
 		data := make([]byte, 0)
 		for _, component := range components {
 			binary := fmt.Sprintf("%b", component.Angle)
@@ -65,7 +56,7 @@ func (s *NetworkSendSystem) Init() {
 
 		return data
 	})
-	s.mirroreds.SetEncoder(func(components []stdcomponents.Flip) []byte {
+	s.Mirroreds.SetEncoder(func(components []stdcomponents.Flip) []byte {
 		data := make([]byte, 0)
 		for _, component := range components {
 			binary := fmt.Sprintf("%b", component.X)

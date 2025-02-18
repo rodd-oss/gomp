@@ -14,15 +14,19 @@ Thank you for your support!
 
 package gomp
 
-import "time"
+import (
+	"time"
+)
 
 type SceneId uint16
 
 type AnyScene interface {
 	Init()
-	Destroy()
 	Update(dt time.Duration) SceneId
 	FixedUpdate(dt time.Duration)
+	Render(dt time.Duration)
+	Destroy()
 	OnEnter()
 	OnExit()
+	Id() SceneId
 }

@@ -21,26 +21,20 @@ import (
 	"time"
 )
 
-func NewTextureRenderSpriteSystem(
-	sprites *stdcomponents.SpriteComponentManager,
-	textureRenders *stdcomponents.TextureRenderComponentManager,
-) *TextureRenderSpriteSystem {
-	return &TextureRenderSpriteSystem{
-		sprites:        sprites,
-		textureRenders: textureRenders,
-	}
+func NewTextureRenderSpriteSystem() TextureRenderSpriteSystem {
+	return TextureRenderSpriteSystem{}
 }
 
 // TextureRenderSpriteSystem is a system that prepares Sprite to be rendered
 type TextureRenderSpriteSystem struct {
-	sprites        *stdcomponents.SpriteComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	Sprites        *stdcomponents.SpriteComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderSpriteSystem) Init() {}
 func (s *TextureRenderSpriteSystem) Run(dt time.Duration) {
 	// Run sprites and spriteRenders
-	s.sprites.AllParallel(func(entity ecs.Entity, sprite *stdcomponents.Sprite) bool {
+	s.Sprites.AllParallel(func(entity ecs.Entity, sprite *stdcomponents.Sprite) bool {
 		if sprite == nil {
 			return true
 		}
@@ -49,7 +43,7 @@ func (s *TextureRenderSpriteSystem) Run(dt time.Duration) {
 		spriteOrigin := sprite.Origin
 		spriteTint := sprite.Tint
 
-		tr := s.textureRenders.Get(entity)
+		tr := s.TextureRenders.Get(entity)
 		if tr == nil {
 			// Create new spriteRender
 			newRender := stdcomponents.TextureRender{
@@ -65,7 +59,7 @@ func (s *TextureRenderSpriteSystem) Run(dt time.Duration) {
 				),
 			}
 
-			s.textureRenders.Create(entity, newRender)
+			s.TextureRenders.Create(entity, newRender)
 		} else {
 			// Run spriteRender
 			// tr.Texture = sprite.Texture

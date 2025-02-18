@@ -13,30 +13,24 @@ import (
 	"time"
 )
 
-func NewTextureRenderSpriteSheetSystem(
-	spriteSheets *stdcomponents.SpriteSheetComponentManager,
-	textureRenders *stdcomponents.TextureRenderComponentManager,
-) *TextureRenderSpriteSheetSystem {
-	return &TextureRenderSpriteSheetSystem{
-		spriteSheets:   spriteSheets,
-		textureRenders: textureRenders,
-	}
+func NewTextureRenderSpriteSheetSystem() TextureRenderSpriteSheetSystem {
+	return TextureRenderSpriteSheetSystem{}
 }
 
 // TextureRenderSpriteSheetSystem is a system that prepares SpriteSheet to be rendered
 type TextureRenderSpriteSheetSystem struct {
-	spriteSheets   *stdcomponents.SpriteSheetComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	SpriteSheets   *stdcomponents.SpriteSheetComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderSpriteSheetSystem) Init() {}
 func (s *TextureRenderSpriteSheetSystem) Run(dt time.Duration) {
-	s.spriteSheets.AllParallel(func(entity ecs.Entity, spriteSheet *stdcomponents.SpriteSheet) bool {
+	s.SpriteSheets.AllParallel(func(entity ecs.Entity, spriteSheet *stdcomponents.SpriteSheet) bool {
 		if spriteSheet == nil {
 			return true
 		}
 
-		tr := s.textureRenders.Get(entity)
+		tr := s.TextureRenders.Get(entity)
 		if tr == nil {
 			// Create new spriteRender
 			newRender := stdcomponents.TextureRender{
@@ -51,7 +45,7 @@ func (s *TextureRenderSpriteSheetSystem) Run(dt time.Duration) {
 				),
 			}
 
-			s.textureRenders.Create(entity, newRender)
+			s.TextureRenders.Create(entity, newRender)
 		} else {
 			// Run spriteRender
 			tr.Texture = spriteSheet.Texture

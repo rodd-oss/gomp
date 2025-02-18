@@ -12,34 +12,26 @@ import (
 	"time"
 )
 
-func NewAnimationSpriteMatrixSystem(world *ecs.World,
-	animationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer],
-	animationStates *ecs.ComponentManager[stdcomponents.AnimationState],
-	spriteMatrixes *ecs.ComponentManager[stdcomponents.SpriteMatrix]) *AnimationSpriteMatrixSystem {
-	return &AnimationSpriteMatrixSystem{
-		world:            world,
-		animationPlayers: animationPlayers,
-		animationStates:  animationStates,
-		spriteMatrixes:   spriteMatrixes,
-	}
+func NewAnimationSpriteMatrixSystem() AnimationSpriteMatrixSystem {
+	return AnimationSpriteMatrixSystem{}
 }
 
 type AnimationSpriteMatrixSystem struct {
-	world            *ecs.World
-	animationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]
-	animationStates  *ecs.ComponentManager[stdcomponents.AnimationState]
-	spriteMatrixes   *ecs.ComponentManager[stdcomponents.SpriteMatrix]
+	World            *ecs.World
+	AnimationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]
+	AnimationStates  *ecs.ComponentManager[stdcomponents.AnimationState]
+	SpriteMatrixes   *ecs.ComponentManager[stdcomponents.SpriteMatrix]
 }
 
 func (s *AnimationSpriteMatrixSystem) Init() {}
 func (s *AnimationSpriteMatrixSystem) Run(dt time.Duration) {
-	s.animationPlayers.AllParallel(func(e ecs.Entity, animationPlayer *stdcomponents.AnimationPlayer) bool {
-		spriteMatrix := s.spriteMatrixes.Get(e)
+	s.AnimationPlayers.AllParallel(func(e ecs.Entity, animationPlayer *stdcomponents.AnimationPlayer) bool {
+		spriteMatrix := s.SpriteMatrixes.Get(e)
 		if spriteMatrix == nil {
 			return true
 		}
 
-		animationStatePtr := s.animationStates.Get(e)
+		animationStatePtr := s.AnimationStates.Get(e)
 		if animationStatePtr == nil {
 			return true
 		}

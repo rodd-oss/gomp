@@ -13,41 +13,33 @@ import (
 	"time"
 )
 
-func NewTextureRenderMatrixSystem(
-	spriteMatrixes *stdcomponents.SpriteMatrixComponentManager,
-	textureRenders *stdcomponents.TextureRenderComponentManager,
-	animationStates *stdcomponents.AnimationStateComponentManager,
-) *TextureRenderMatrixSystem {
-	return &TextureRenderMatrixSystem{
-		spriteMatrixes:  spriteMatrixes,
-		textureRenders:  textureRenders,
-		animationStates: animationStates,
-	}
+func NewTextureRenderMatrixSystem() TextureRenderMatrixSystem {
+	return TextureRenderMatrixSystem{}
 }
 
 // TextureRenderMatrixSystem is a system that prepares SpriteSheet to be rendered
 type TextureRenderMatrixSystem struct {
-	spriteMatrixes  *stdcomponents.SpriteMatrixComponentManager
-	textureRenders  *stdcomponents.TextureRenderComponentManager
-	animationStates *stdcomponents.AnimationStateComponentManager
+	SpriteMatrixes  *stdcomponents.SpriteMatrixComponentManager
+	TextureRenders  *stdcomponents.TextureRenderComponentManager
+	AnimationStates *stdcomponents.AnimationStateComponentManager
 }
 
 func (s *TextureRenderMatrixSystem) Init() {}
 func (s *TextureRenderMatrixSystem) Run(dt time.Duration) {
 	// Run sprites and spriteRenders
-	s.spriteMatrixes.AllParallel(func(entity ecs.Entity, spriteMatrix *stdcomponents.SpriteMatrix) bool {
+	s.SpriteMatrixes.AllParallel(func(entity ecs.Entity, spriteMatrix *stdcomponents.SpriteMatrix) bool {
 		if spriteMatrix == nil {
 			return true
 		}
 
-		animationState := s.animationStates.Get(entity)
+		animationState := s.AnimationStates.Get(entity)
 		if animationState == nil {
 			return true
 		}
 
 		currentAnimationFrame := spriteMatrix.Animations[*animationState].Frame
 
-		tr := s.textureRenders.Get(entity)
+		tr := s.TextureRenders.Get(entity)
 		if tr == nil {
 			// Create new spriteRender
 			newRender := stdcomponents.TextureRender{
@@ -60,7 +52,7 @@ func (s *TextureRenderMatrixSystem) Run(dt time.Duration) {
 				},
 			}
 
-			s.textureRenders.Create(entity, newRender)
+			s.TextureRenders.Create(entity, newRender)
 		} else {
 			// Run spriteRender
 			tr.Texture = spriteMatrix.Texture

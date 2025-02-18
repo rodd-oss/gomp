@@ -12,31 +12,25 @@ import (
 	"time"
 )
 
-func NewTextureRenderFlipSystem(
-	flips *stdcomponents.FlipComponentManager,
-	textureRenders *stdcomponents.TextureRenderComponentManager,
-) *TextureRenderFlipSystem {
-	return &TextureRenderFlipSystem{
-		flips:          flips,
-		textureRenders: textureRenders,
-	}
+func NewTextureRenderFlipSystem() TextureRenderFlipSystem {
+	return TextureRenderFlipSystem{}
 }
 
 // TextureRenderFlipSystem is a system that sets Scale of textureRender
 type TextureRenderFlipSystem struct {
-	flips          *stdcomponents.FlipComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	Flips          *stdcomponents.FlipComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderFlipSystem) Init() {}
 func (s *TextureRenderFlipSystem) Run(dt time.Duration) {
 	// Run sprites and spriteRenders
-	s.textureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
+	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true
 		}
 
-		mirrored := s.flips.Get(entity)
+		mirrored := s.Flips.Get(entity)
 		if mirrored == nil {
 			return true
 		}

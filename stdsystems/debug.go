@@ -16,8 +16,8 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-func NewDebugSystem() *DebugSystem {
-	return &DebugSystem{}
+func NewDebugSystem() DebugSystem {
+	return DebugSystem{}
 }
 
 type DebugSystem struct {

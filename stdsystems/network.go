@@ -28,8 +28,8 @@ const (
 	Client
 )
 
-func NewNetworkSystem() *NetworkSystem {
-	return &NetworkSystem{}
+func NewNetworkSystem() NetworkSystem {
+	return NetworkSystem{}
 }
 
 type NetworkSystem struct {

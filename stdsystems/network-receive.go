@@ -16,8 +16,8 @@ package stdsystems
 
 import "time"
 
-func NewNetworkReceiveSystem() *NetworkReceiveSystem {
-	return &NetworkReceiveSystem{}
+func NewNetworkReceiveSystem() NetworkReceiveSystem {
+	return NetworkReceiveSystem{}
 }
 
 type NetworkReceiveSystem struct{}

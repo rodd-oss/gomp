@@ -15,19 +15,17 @@ import (
 	"github.com/negrel/assert"
 )
 
-type AnimationPlayerSystem struct {
-	animationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]
+func NewAnimationPlayerSystem() AnimationPlayerSystem {
+	return AnimationPlayerSystem{}
 }
 
-func NewAnimationPlayerSystem(animationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]) *AnimationPlayerSystem {
-	return &AnimationPlayerSystem{
-		animationPlayers: animationPlayers,
-	}
+type AnimationPlayerSystem struct {
+	AnimationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]
 }
 
 func (s *AnimationPlayerSystem) Init() {}
 func (s *AnimationPlayerSystem) Run(dt time.Duration) {
-	s.animationPlayers.AllDataParallel(func(animation *stdcomponents.AnimationPlayer) bool {
+	s.AnimationPlayers.AllDataParallel(func(animation *stdcomponents.AnimationPlayer) bool {
 		animation.ElapsedTime += time.Duration(float32(dt.Microseconds())*animation.Speed) * time.Microsecond
 
 		assert.True(animation.FrameDuration > 0, fmt.Errorf("frame duration must be greater than 0 (got %v)", animation.FrameDuration))

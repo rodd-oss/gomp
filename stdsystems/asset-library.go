@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-func NewAssetLibSystem(assets []ecs.AnyAssetLibrary) *AssetLibSystem {
-	return &AssetLibSystem{
+func NewAssetLibSystem(assets []ecs.AnyAssetLibrary) AssetLibSystem {
+	return AssetLibSystem{
 		assets: assets,
 	}
 }

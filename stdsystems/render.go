@@ -14,16 +14,13 @@ import (
 	"time"
 )
 
-type RenderSystem struct {
-	world          *ecs.World
-	textureRenders *ecs.ComponentManager[stdcomponents.TextureRender]
+func NewRenderSystem() RenderSystem {
+	return RenderSystem{}
 }
 
-func NewRenderSystem(world *ecs.World, textureRenders *ecs.ComponentManager[stdcomponents.TextureRender]) *RenderSystem {
-	return &RenderSystem{
-		world:          world,
-		textureRenders: textureRenders,
-	}
+type RenderSystem struct {
+	World          *ecs.World
+	TextureRenders *ecs.ComponentManager[stdcomponents.TextureRender]
 }
 
 func (s *RenderSystem) Init() {
@@ -31,16 +28,16 @@ func (s *RenderSystem) Init() {
 	//currentMonitorRefreshRate := int32(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 	//rl.SetTargetFPS(currentMonitorRefreshRate)
 }
-func (s *RenderSystem) Run(dt time.Duration) error {
+func (s *RenderSystem) Run(dt time.Duration) bool {
 	if rl.WindowShouldClose() {
-		return fmt.Errorf("window closed")
+		return false
 	}
 
 	rl.BeginDrawing()
 
 	rl.ClearBackground(rl.Black)
 
-	s.textureRenders.AllData(func(tr *stdcomponents.TextureRender) bool {
+	s.TextureRenders.AllData(func(tr *stdcomponents.TextureRender) bool {
 		texture := *tr.Texture
 		rl.DrawTexturePro(texture, tr.Frame, tr.Dest, tr.Origin, tr.Rotation, tr.Tint)
 		return true
@@ -48,12 +45,12 @@ func (s *RenderSystem) Run(dt time.Duration) error {
 
 	// rl.DrawRectangle(0, 0, 120, 120, rl.DarkGray)
 	rl.DrawFPS(10, 10)
-	rl.DrawText(fmt.Sprintf("%d", s.world.Size()), 10, 30, 20, rl.Red)
+	rl.DrawText(fmt.Sprintf("%d", s.World.Size()), 10, 30, 20, rl.Red)
 	rl.DrawText(fmt.Sprintf("%s", dt), 10, 50, 20, rl.Red)
-	rl.DrawText(fmt.Sprintf("%s", s.world.DtFixedUpdate()), 10, 70, 20, rl.Red)
+	rl.DrawText(fmt.Sprintf("%s", s.World.DtFixedUpdate()), 10, 70, 20, rl.Red)
 
 	rl.EndDrawing()
-	return nil
+	return true
 }
 
 func (s *RenderSystem) Destroy() {

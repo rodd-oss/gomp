@@ -12,28 +12,25 @@ import (
 	"time"
 )
 
-func NewTextureRenderRotationSystem(rotation *ecs.ComponentManager[stdcomponents.Rotation], render *ecs.ComponentManager[stdcomponents.TextureRender]) *TextureRenderRotationSystem {
-	return &TextureRenderRotationSystem{
-		rotations:      rotation,
-		textureRenders: render,
-	}
+func NewTextureRenderRotationSystem() TextureRenderRotationSystem {
+	return TextureRenderRotationSystem{}
 }
 
 // TextureRenderRotationSystem is a system that sets Rotation of textureRender
 type TextureRenderRotationSystem struct {
-	rotations      *stdcomponents.RotationComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	Rotations      *stdcomponents.RotationComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderRotationSystem) Init() {}
 func (s *TextureRenderRotationSystem) Run(dt time.Duration) {
 	// Run sprites and spriteRenders
-	s.textureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
+	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true
 		}
 
-		rotation := s.rotations.Get(entity)
+		rotation := s.Rotations.Get(entity)
 		if rotation == nil {
 			return true
 		}

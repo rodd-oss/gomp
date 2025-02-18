@@ -16,27 +16,13 @@ package main
 
 import (
 	"gomp"
-	"gomp/examples/new-api/components"
 	"gomp/examples/new-api/scenes"
-	"gomp/pkg/ecs"
 )
 
 func main() {
-	// Initializing ECS world
-	world := ecs.CreateWorld("main")
-	defer world.Destroy()
-
-	// Initializing components
-	desktopComponents := gomp.NewDesktopComponents(world)
-	gameComponents := components.NewGameComponents(world, &desktopComponents)
-
-	// Initializing scenes
-	sceneSet := scenes.NewSceneSet(world, &gameComponents)
-
-	// Initializing systems
-	systems := gomp.NewDesktopSystems(world, &desktopComponents)
-
-	game := gomp.NewDesktopGame(&systems, sceneSet)
+	game := gomp.NewGame(
+		scenes.NewMainScene(),
+	)
 	game.CurrentSceneId = scenes.MainSceneId
 
 	engine := gomp.NewEngine(&game)

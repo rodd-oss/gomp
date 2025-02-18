@@ -17,7 +17,7 @@ const (
 	PREALLOC_DELETED_ENTITIES uint32 = 1 << 10
 )
 
-func CreateWorld(title string) *World {
+func CreateWorld(title string) World {
 	id := generateWorldID()
 	maskSet := NewSparseSet[ComponentBitArray256, Entity]()
 
@@ -33,7 +33,7 @@ func CreateWorld(title string) *World {
 		components:          make(map[ComponentID]AnyComponentManagerPtr),
 	}
 
-	return &world
+	return world
 }
 
 func CreateComponentService[T any](id ComponentID) ComponentService[T] {

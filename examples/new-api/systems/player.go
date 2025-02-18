@@ -14,58 +14,36 @@ import (
 	"time"
 )
 
-func NewPlayerSystem(
-	world *ecs.World,
-	spriteMatrixes *stdcomponents.SpriteMatrixComponentManager,
-	positions *stdcomponents.PositionComponentManager,
-	rotations *stdcomponents.RotationComponentManager,
-	scales *stdcomponents.ScaleComponentManager,
-	velocities *stdcomponents.VelocityComponentManager,
-	animationPlayers *stdcomponents.AnimationPlayerComponentManager,
-	animationStates *stdcomponents.AnimationStateComponentManager,
-	tints *stdcomponents.TintComponentManager,
-	flips *stdcomponents.FlipComponentManager,
-) *PlayerSystem {
-	return &PlayerSystem{
-		world:            world,
-		spriteMatrixes:   spriteMatrixes,
-		positions:        positions,
-		rotations:        rotations,
-		scales:           scales,
-		velocities:       velocities,
-		animationPlayers: animationPlayers,
-		animationStates:  animationStates,
-		tints:            tints,
-		flips:            flips,
-	}
+func NewPlayerSystem() PlayerSystem {
+	return PlayerSystem{}
 }
 
 type PlayerSystem struct {
-	world            *ecs.World
-	player           entities.Player
-	spriteMatrixes   *stdcomponents.SpriteMatrixComponentManager
-	positions        *stdcomponents.PositionComponentManager
-	rotations        *stdcomponents.RotationComponentManager
-	scales           *stdcomponents.ScaleComponentManager
-	velocities       *stdcomponents.VelocityComponentManager
-	animationPlayers *stdcomponents.AnimationPlayerComponentManager
-	animationStates  *stdcomponents.AnimationStateComponentManager
-	tints            *stdcomponents.TintComponentManager
-	flips            *stdcomponents.FlipComponentManager
+	World            *ecs.World
+	Player           entities.Player
+	SpriteMatrixes   *stdcomponents.SpriteMatrixComponentManager
+	Positions        *stdcomponents.PositionComponentManager
+	Rotations        *stdcomponents.RotationComponentManager
+	Scales           *stdcomponents.ScaleComponentManager
+	Velocities       *stdcomponents.VelocityComponentManager
+	AnimationPlayers *stdcomponents.AnimationPlayerComponentManager
+	AnimationStates  *stdcomponents.AnimationStateComponentManager
+	Tints            *stdcomponents.TintComponentManager
+	Flips            *stdcomponents.FlipComponentManager
 }
 
 func (s *PlayerSystem) Init() {
-	s.player = entities.CreatePlayer(s.world, s.spriteMatrixes, s.positions, s.rotations, s.scales, s.velocities, s.animationPlayers, s.animationStates, s.tints, s.flips)
-	s.player.Position.X = 100
-	s.player.Position.Y = 100
+	s.Player = entities.CreatePlayer(s.World, s.SpriteMatrixes, s.Positions, s.Rotations, s.Scales, s.Velocities, s.AnimationPlayers, s.AnimationStates, s.Tints, s.Flips)
+	s.Player.Position.X = 100
+	s.Player.Position.Y = 100
 }
 func (s *PlayerSystem) Run(dt time.Duration) {
-	animationState := s.animationStates.Get(s.player.Entity)
+	animationState := s.AnimationStates.Get(s.Player.Entity)
 
 	var speed float32 = 300
 
-	s.player.Velocity.X = 0
-	s.player.Velocity.Y = 0
+	s.Player.Velocity.X = 0
+	s.Player.Velocity.Y = 0
 
 	if rl.IsKeyDown(rl.KeySpace) {
 		*animationState = entities.PlayerStateJump
@@ -73,21 +51,21 @@ func (s *PlayerSystem) Run(dt time.Duration) {
 		*animationState = entities.PlayerStateIdle
 		if rl.IsKeyDown(rl.KeyD) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Velocity.X = speed
-			s.player.Flip.X = false
+			s.Player.Velocity.X = speed
+			s.Player.Flip.X = false
 		}
 		if rl.IsKeyDown(rl.KeyA) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Velocity.X = -speed
-			s.player.Flip.X = true
+			s.Player.Velocity.X = -speed
+			s.Player.Flip.X = true
 		}
 		if rl.IsKeyDown(rl.KeyW) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Velocity.Y = -speed
+			s.Player.Velocity.Y = -speed
 		}
 		if rl.IsKeyDown(rl.KeyS) {
 			*animationState = entities.PlayerStateWalk
-			s.player.Velocity.Y = speed
+			s.Player.Velocity.Y = speed
 		}
 	}
 }

@@ -12,21 +12,25 @@ import (
 	"time"
 )
 
+func NewTextureRenderAnimationSystem() TextureRenderAnimationSystem {
+	return TextureRenderAnimationSystem{}
+}
+
 // TextureRenderAnimationSystem is a system that sets Position of textureRender
 type TextureRenderAnimationSystem struct {
-	animations     *stdcomponents.AnimationPlayerComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	Animations     *stdcomponents.AnimationPlayerComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderAnimationSystem) Init() {}
 func (s *TextureRenderAnimationSystem) Run(dt time.Duration) {
 	// Run sprites and spriteRenders
-	s.textureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
+	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true
 		}
 
-		animation := s.animations.Get(entity)
+		animation := s.Animations.Get(entity)
 		if animation == nil {
 			return true
 		}
@@ -42,13 +46,3 @@ func (s *TextureRenderAnimationSystem) Run(dt time.Duration) {
 	})
 }
 func (s *TextureRenderAnimationSystem) Destroy() {}
-
-func NewTextureRenderAnimationSystem(
-	animations *stdcomponents.AnimationPlayerComponentManager,
-	textureRenders *stdcomponents.TextureRenderComponentManager,
-) *TextureRenderAnimationSystem {
-	return &TextureRenderAnimationSystem{
-		animations:     animations,
-		textureRenders: textureRenders,
-	}
-}

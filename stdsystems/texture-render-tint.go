@@ -12,27 +12,24 @@ import (
 	"time"
 )
 
-func NewTextureRenderTintSystem(tint *ecs.ComponentManager[stdcomponents.Tint], render *ecs.ComponentManager[stdcomponents.TextureRender]) *TextureRenderTintSystem {
-	return &TextureRenderTintSystem{
-		tints:          tint,
-		textureRenders: render,
-	}
+func NewTextureRenderTintSystem() TextureRenderTintSystem {
+	return TextureRenderTintSystem{}
 }
 
 // TextureRenderTintSystem is a system that sets Scale of textureRender
 type TextureRenderTintSystem struct {
-	tints          *stdcomponents.TintComponentManager
-	textureRenders *stdcomponents.TextureRenderComponentManager
+	Tints          *stdcomponents.TintComponentManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderTintSystem) Init() {}
 func (s *TextureRenderTintSystem) Run(dt time.Duration) {
-	s.textureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
+	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true
 		}
 
-		tint := s.tints.Get(entity)
+		tint := s.Tints.Get(entity)
 		if tint == nil {
 			return true
 		}
