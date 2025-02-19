@@ -62,15 +62,13 @@ func (e *Engine) Run(tickrate uint, framerate uint) {
 
 	for !e.Game.ShouldDestroy() {
 		// Update
-		dt := time.Since(e.lastUpdateAt)
-		e.Game.Update(dt)
+		e.Game.Update(time.Since(e.lastUpdateAt))
 		e.lastUpdateAt = time.Now()
 
 		// Fixed Update
 		select {
 		case <-fixedUpdTicker.C:
-			dt := time.Since(e.lastFixedUpdateAt)
-			e.Game.FixedUpdate(dt)
+			e.Game.FixedUpdate(time.Since(e.lastFixedUpdateAt))
 			e.lastFixedUpdateAt = time.Now()
 		default:
 			break
@@ -79,8 +77,7 @@ func (e *Engine) Run(tickrate uint, framerate uint) {
 		// Render
 		select {
 		case <-renderTicker.C:
-			dt := time.Since(e.lastRenderAt)
-			e.Game.Render(dt)
+			e.Game.Render(time.Since(e.lastRenderAt))
 			e.lastRenderAt = time.Now()
 		default:
 			break
