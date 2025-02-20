@@ -14,9 +14,9 @@ import (
 // TextureRenderScale is a system that sets Scale of textureRender
 type trMirroredController struct{}
 
-func (s *trMirroredController) Init(world *ecs2.World)        {}
-func (s *trMirroredController) FixedUpdate(world *ecs2.World) {}
-func (s *trMirroredController) Update(world *ecs2.World) {
+func (s *trMirroredController) Init(world *ecs2.EntityManager)        {}
+func (s *trMirroredController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trMirroredController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	mirroreds := components.MirroredService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -42,4 +42,4 @@ func (s *trMirroredController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trMirroredController) Destroy(world *ecs2.World) {}
+func (s *trMirroredController) Destroy(world *ecs2.EntityManager) {}

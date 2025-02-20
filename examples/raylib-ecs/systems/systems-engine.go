@@ -15,6 +15,7 @@ Thank you for your support!
 package systems
 
 import (
+	"gomp"
 	"gomp/examples/raylib-ecs/assets"
 	"gomp/pkg/ecs"
 )
@@ -47,7 +48,7 @@ var TRTintService = ecs.CreateSystemService(&trTintController{}, &TRSpriteServic
 // Engine Render Systems
 
 var AssetLibService = ecs.CreateSystemService(&assetLibController{
-	assets: []ecs.AnyAssetLibrary{assets.Textures},
+	assets: []gomp.AnyAssetLibrary{assets.Textures},
 })
 var RenderService = ecs.CreateSystemService(&renderController{
 	windowWidth:  1024,

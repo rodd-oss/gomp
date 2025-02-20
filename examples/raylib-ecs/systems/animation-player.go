@@ -17,8 +17,8 @@ import (
 
 type animationPlayerController struct{}
 
-func (s *animationPlayerController) Init(world *ecs.World) {}
-func (s *animationPlayerController) Update(world *ecs.World) {
+func (s *animationPlayerController) Init(world *ecs.EntityManager) {}
+func (s *animationPlayerController) Update(world *ecs.EntityManager) {
 	animationPlayers := components.AnimationPlayerService.GetManager(world)
 
 	animationPlayers.AllDataParallel(func(animation *components.AnimationPlayer) bool {
@@ -58,5 +58,5 @@ func (s *animationPlayerController) Update(world *ecs.World) {
 		return true
 	})
 }
-func (s *animationPlayerController) FixedUpdate(world *ecs.World) {}
-func (s *animationPlayerController) Destroy(world *ecs.World)     {}
+func (s *animationPlayerController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *animationPlayerController) Destroy(world *ecs.EntityManager)     {}

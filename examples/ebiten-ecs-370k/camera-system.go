@@ -33,7 +33,7 @@ type cameraSystem struct {
 	p         *message.Printer
 }
 
-func (s *cameraSystem) Init(world *ecs2.World) {
+func (s *cameraSystem) Init(world *ecs2.EntityManager) {
 	s.transformComponent = transformComponentType.GetManager(world)
 	s.healthComponent = healthComponentType.GetManager(world)
 	s.colorComponent = colorComponentType.GetManager(world)
@@ -43,7 +43,7 @@ func (s *cameraSystem) Init(world *ecs2.World) {
 
 	s.p = message.NewPrinter(language.Russian)
 
-	newcamera := world.CreateEntity("camera")
+	newcamera := world.Create()
 	s.cameraComponent.Create(newcamera, camera{
 		mainLayer: cameraLayer{
 			image: ebiten.NewImage(width, height),
@@ -59,7 +59,7 @@ func (s *cameraSystem) Init(world *ecs2.World) {
 	s.debugInfo = make([]string, 0)
 }
 
-func (s *cameraSystem) Run(world *ecs2.World) {
+func (s *cameraSystem) Run(world *ecs2.EntityManager) {
 	_, dy := ebiten.Wheel()
 
 	draw.Draw(s.buffer, s.buffer.Bounds(), &image.Uniform{color.Transparent}, image.Point{}, draw.Src)
@@ -111,4 +111,4 @@ func (s *cameraSystem) Run(world *ecs2.World) {
 	ebitenutil.DebugPrint(mainCamera.debugLayer.image, strings.Join(s.debugInfo, "\n"))
 	s.debugInfo = s.debugInfo[:0]
 }
-func (s *cameraSystem) Destroy(world *ecs2.World) {}
+func (s *cameraSystem) Destroy(world *ecs2.EntityManager) {}

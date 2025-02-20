@@ -13,8 +13,8 @@ import (
 type initController struct {
 }
 
-func (s *initController) Init(world *ecs.World) {}
+func (s *initController) Init(world *ecs.EntityManager) {}
 
-func (s *initController) Update(world *ecs.World)      {}
-func (s *initController) FixedUpdate(world *ecs.World) {}
-func (s *initController) Destroy(world *ecs.World)     {}
+func (s *initController) Update(world *ecs.EntityManager)      {}
+func (s *initController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *initController) Destroy(world *ecs.EntityManager)     {}

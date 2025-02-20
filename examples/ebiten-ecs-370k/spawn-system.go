@@ -35,17 +35,17 @@ const (
 var entityCount = 0
 var pprofEnabled = false
 
-func (s *spawnSystem) Init(world *ecs2.World) {
+func (s *spawnSystem) Init(world *ecs2.EntityManager) {
 	s.transformComponent = transformComponentType.GetManager(world)
 	s.healthComponent = healthComponentType.GetManager(world)
 	s.colorComponent = colorComponentType.GetManager(world)
 	s.movementComponent = movementComponentType.GetManager(world)
 }
-func (s *spawnSystem) Run(world *ecs2.World) {
+func (s *spawnSystem) Run(world *ecs2.EntityManager) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		for range rand.Intn(1000) {
 
-			newCreature := world.CreateEntity("Creature")
+			newCreature := world.Create("Creature")
 
 			t := transform{
 				x: rand.Int31n(1000),
@@ -102,4 +102,4 @@ func (s *spawnSystem) Run(world *ecs2.World) {
 		}
 	}
 }
-func (s *spawnSystem) Destroy(world *ecs2.World) {}
+func (s *spawnSystem) Destroy(world *ecs2.EntityManager) {}

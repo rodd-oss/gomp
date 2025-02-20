@@ -14,9 +14,9 @@ import (
 // TextureRenderRotation is a system that sets Rotation of textureRender
 type trRotationController struct{}
 
-func (s *trRotationController) Init(world *ecs2.World)        {}
-func (s *trRotationController) FixedUpdate(world *ecs2.World) {}
-func (s *trRotationController) Update(world *ecs2.World) {
+func (s *trRotationController) Init(world *ecs2.EntityManager)        {}
+func (s *trRotationController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trRotationController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	rotations := components.RotationService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -37,4 +37,4 @@ func (s *trRotationController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trRotationController) Destroy(world *ecs2.World) {}
+func (s *trRotationController) Destroy(world *ecs2.EntityManager) {}

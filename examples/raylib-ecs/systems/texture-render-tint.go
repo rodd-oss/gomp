@@ -14,9 +14,9 @@ import (
 // TextureRenderScale is a system that sets Scale of textureRender
 type trTintController struct{}
 
-func (s *trTintController) Init(world *ecs2.World)        {}
-func (s *trTintController) FixedUpdate(world *ecs2.World) {}
-func (s *trTintController) Update(world *ecs2.World) {
+func (s *trTintController) Init(world *ecs2.EntityManager)        {}
+func (s *trTintController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trTintController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	tints := components.TintService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -41,4 +41,4 @@ func (s *trTintController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trTintController) Destroy(world *ecs2.World) {}
+func (s *trTintController) Destroy(world *ecs2.EntityManager) {}
