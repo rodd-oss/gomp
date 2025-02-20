@@ -25,6 +25,6 @@ type Network struct {
 
 type NetworkComponentManager = ecs.ComponentManager[Network]
 
-func NewNetworkComponentManager(world *ecs.World) NetworkComponentManager {
+func NewNetworkComponentManager(world *ecs.EntityManager) NetworkComponentManager {
 	return ecs.NewComponentManager[Network](world, NETWORK_ID)
 }

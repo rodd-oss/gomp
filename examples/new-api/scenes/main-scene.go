@@ -22,24 +22,20 @@ import (
 )
 
 func NewMainScene() *MainScene {
-	world := ecs.CreateWorld("Main")
-	comps := instances.NewComponentList(&world)
-	sys := instances.NewSystemList(&world, &comps)
+	scene := new(MainScene)
 
-	scene := MainScene{
-		World:      world,
-		Components: comps,
-		Systems:    sys,
-	}
+	scene.EntityManager = ecs.NewEntityManager()
+	scene.ComponentList = instances.NewComponentList(&scene.EntityManager)
+	scene.SystemList = instances.NewSystemList(&scene.EntityManager, &scene.ComponentList)
 
-	return &scene
+	return scene
 }
 
 type MainScene struct {
-	Game       *gomp.Game
-	World      ecs.World
-	Components instances.ComponentList
-	Systems    instances.SystemList
+	Game          *gomp.Game
+	EntityManager ecs.EntityManager
+	ComponentList instances.ComponentList
+	SystemList    instances.SystemList
 }
 
 func (s *MainScene) Id() gomp.SceneId {
@@ -48,83 +44,80 @@ func (s *MainScene) Id() gomp.SceneId {
 
 func (s *MainScene) Init() {
 	// Network receive
-	s.Systems.Network.Init()
-	s.Systems.NetworkReceive.Init()
+	s.SystemList.Network.Init()
+	s.SystemList.NetworkReceive.Init()
 
 	// Scenes
-	s.Systems.Player.Init()
+	s.SystemList.Player.Init()
 
-	s.Systems.Velocity.Init()
+	s.SystemList.Velocity.Init()
 
 	// Network patches
-	s.Systems.NetworkSend.Init()
+	s.SystemList.NetworkSend.Init()
 
 	// Animation
-	s.Systems.AnimationSpriteMatrix.Init()
-	s.Systems.AnimationPlayer.Init()
+	s.SystemList.AnimationSpriteMatrix.Init()
+	s.SystemList.AnimationPlayer.Init()
 
 	// Prerender init
-	s.Systems.TextureRenderSprite.Init()
-	s.Systems.TextureRenderSpriteSheet.Init()
-	s.Systems.TextureRenderMatrix.Init()
+	s.SystemList.TextureRenderSprite.Init()
+	s.SystemList.TextureRenderSpriteSheet.Init()
+	s.SystemList.TextureRenderMatrix.Init()
 
 	// Prerender fill
-	s.Systems.TextureRenderAnimation.Init()
-	s.Systems.TextureRenderFlip.Init()
-	s.Systems.TextureRenderPosition.Init()
-	s.Systems.TextureRenderRotation.Init()
-	s.Systems.TextureRenderScale.Init()
-	s.Systems.TextureRenderTint.Init()
+	s.SystemList.TextureRenderAnimation.Init()
+	s.SystemList.TextureRenderFlip.Init()
+	s.SystemList.TextureRenderPosition.Init()
+	s.SystemList.TextureRenderRotation.Init()
+	s.SystemList.TextureRenderScale.Init()
+	s.SystemList.TextureRenderTint.Init()
 
 	// Render
-	s.Systems.Render.Init()
-	s.Systems.Debug.Init()
-	s.Systems.AssetLib.Init()
+	s.SystemList.Render.Init()
+	s.SystemList.Debug.Init()
+	s.SystemList.AssetLib.Init()
 }
 
 func (s *MainScene) Update(dt time.Duration) gomp.SceneId {
 
 	// Network receive
-	s.Systems.Network.Run(dt)
-	s.Systems.NetworkReceive.Run(dt)
+	s.SystemList.Network.Run(dt)
+	s.SystemList.NetworkReceive.Run(dt)
 
-	s.Systems.Player.Run(dt)
+	s.SystemList.Player.Run(dt)
 
-	// Network patches
-	s.Systems.NetworkSend.Run(dt)
-
-	s.Systems.Debug.Run(dt)
+	s.SystemList.Debug.Run(dt)
 	return MainSceneId
 }
 
 func (s *MainScene) FixedUpdate(dt time.Duration) {
 	// Network send
-	s.Systems.NetworkSend.Run(dt)
+	s.SystemList.NetworkSend.Run(dt)
 }
 
 func (s *MainScene) Render(dt time.Duration) {
-	s.Systems.Velocity.Run(dt)
+	s.SystemList.Velocity.Run(dt)
 
 	// Animation
-	s.Systems.AnimationSpriteMatrix.Run(dt)
-	s.Systems.AnimationPlayer.Run(dt)
+	s.SystemList.AnimationSpriteMatrix.Run(dt)
+	s.SystemList.AnimationPlayer.Run(dt)
 
 	// Prerender init
-	s.Systems.TextureRenderSprite.Run(dt)
-	s.Systems.TextureRenderSpriteSheet.Run(dt)
-	s.Systems.TextureRenderMatrix.Run(dt)
+	s.SystemList.TextureRenderSprite.Run(dt)
+	s.SystemList.TextureRenderSpriteSheet.Run(dt)
+	s.SystemList.TextureRenderMatrix.Run(dt)
 
 	// Prerender fill
-	s.Systems.TextureRenderAnimation.Run(dt)
-	s.Systems.TextureRenderFlip.Run(dt)
-	s.Systems.TextureRenderPosition.Run(dt)
-	s.Systems.TextureRenderRotation.Run(dt)
-	s.Systems.TextureRenderScale.Run(dt)
-	s.Systems.TextureRenderTint.Run(dt)
+	s.SystemList.TextureRenderAnimation.Run(dt)
+	s.SystemList.TextureRenderFlip.Run(dt)
+	s.SystemList.TextureRenderPosition.Run(dt)
+	s.SystemList.TextureRenderRotation.Run(dt)
+	s.SystemList.TextureRenderScale.Run(dt)
+	s.SystemList.TextureRenderTint.Run(dt)
 
 	// Render
-	s.Systems.AssetLib.Run(dt)
-	shouldContinue := s.Systems.Render.Run(dt)
+	s.SystemList.AssetLib.Run(dt)
+	shouldContinue := s.SystemList.Render.Run(dt)
 	if !shouldContinue {
 		s.Game.SetShouldDestroy(true)
 		return
@@ -133,36 +126,35 @@ func (s *MainScene) Render(dt time.Duration) {
 
 func (s *MainScene) Destroy() {
 	// Network intents
-	s.Systems.Network.Destroy()
-	s.Systems.NetworkReceive.Destroy()
+	s.SystemList.Network.Destroy()
+	s.SystemList.NetworkReceive.Destroy()
 
-	s.Systems.Player.Destroy()
+	s.SystemList.Player.Destroy()
 
 	// Network patches
-	s.Systems.NetworkSend.Destroy()
+	s.SystemList.NetworkSend.Destroy()
 
 	// Animation
-	s.Systems.AnimationSpriteMatrix.Destroy()
-	s.Systems.AnimationPlayer.Destroy()
+	s.SystemList.AnimationSpriteMatrix.Destroy()
+	s.SystemList.AnimationPlayer.Destroy()
 
 	// Prerender init
-	s.Systems.TextureRenderSprite.Destroy()
-	s.Systems.TextureRenderSpriteSheet.Destroy()
-	s.Systems.TextureRenderMatrix.Destroy()
+	s.SystemList.TextureRenderSprite.Destroy()
+	s.SystemList.TextureRenderSpriteSheet.Destroy()
+	s.SystemList.TextureRenderMatrix.Destroy()
 
 	// Prerender fill
-	s.Systems.TextureRenderAnimation.Destroy()
-	s.Systems.TextureRenderFlip.Destroy()
-	s.Systems.TextureRenderPosition.Destroy()
-	s.Systems.TextureRenderRotation.Destroy()
-	s.Systems.TextureRenderScale.Destroy()
-	s.Systems.TextureRenderTint.Destroy()
+	s.SystemList.TextureRenderAnimation.Destroy()
+	s.SystemList.TextureRenderFlip.Destroy()
+	s.SystemList.TextureRenderPosition.Destroy()
+	s.SystemList.TextureRenderRotation.Destroy()
+	s.SystemList.TextureRenderScale.Destroy()
+	s.SystemList.TextureRenderTint.Destroy()
 
 	// Render
-	s.Systems.Debug.Destroy()
-	s.Systems.AssetLib.Destroy()
-	s.Systems.Render.Destroy()
-
+	s.SystemList.Debug.Destroy()
+	s.SystemList.AssetLib.Destroy()
+	s.SystemList.Render.Destroy()
 }
 
 func (s *MainScene) OnEnter() {

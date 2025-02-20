@@ -16,11 +16,11 @@ type colorController struct {
 	baseColor color.RGBA
 }
 
-func (s *colorController) Init(world *ecs2.World) {
+func (s *colorController) Init(world *ecs2.EntityManager) {
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
-func (s *colorController) Update(world *ecs2.World) {}
-func (s *colorController) FixedUpdate(world *ecs2.World) {
+func (s *colorController) Update(world *ecs2.EntityManager) {}
+func (s *colorController) FixedUpdate(world *ecs2.EntityManager) {
 	sprites := components.SpriteService.GetManager(world)
 	hps := components.HealthService.GetManager(world)
 
@@ -41,4 +41,4 @@ func (s *colorController) FixedUpdate(world *ecs2.World) {
 		return true
 	})
 }
-func (s *colorController) Destroy(world *ecs2.World) {}
+func (s *colorController) Destroy(world *ecs2.EntityManager) {}

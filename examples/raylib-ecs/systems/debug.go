@@ -20,8 +20,8 @@ type debugController struct {
 	pprofEnabled bool
 }
 
-func (s *debugController) Init(world *ecs.World) {}
-func (s *debugController) Update(world *ecs.World) {
+func (s *debugController) Init(world *ecs.EntityManager) {}
+func (s *debugController) Update(world *ecs.EntityManager) {
 	if rl.IsKeyPressed(rl.KeyF9) {
 		if s.pprofEnabled {
 			pprof.StopCPUProfile()
@@ -38,5 +38,5 @@ func (s *debugController) Update(world *ecs.World) {
 		s.pprofEnabled = !s.pprofEnabled
 	}
 }
-func (s *debugController) FixedUpdate(world *ecs.World) {}
-func (s *debugController) Destroy(world *ecs.World)     {}
+func (s *debugController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *debugController) Destroy(world *ecs.EntityManager)     {}

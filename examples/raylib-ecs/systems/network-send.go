@@ -23,7 +23,7 @@ import (
 
 type networkSendController struct{}
 
-func (s *networkSendController) Init(world *ecs.World) {
+func (s *networkSendController) Init(world *ecs.EntityManager) {
 	positions := components.PositionService.GetManager(world)
 	rotations := components.RotationService.GetManager(world)
 	mirroreds := components.MirroredService.GetManager(world)
@@ -60,8 +60,8 @@ func (s *networkSendController) Init(world *ecs.World) {
 		return data
 	})
 }
-func (s *networkSendController) Update(world *ecs.World) {}
-func (s *networkSendController) FixedUpdate(world *ecs.World) {
+func (s *networkSendController) Update(world *ecs.EntityManager) {}
+func (s *networkSendController) FixedUpdate(world *ecs.EntityManager) {
 	//patch := world.PatchGet()
 	//world.PatchReset()
 	//log.Printf("%v", patch)
@@ -69,4 +69,4 @@ func (s *networkSendController) FixedUpdate(world *ecs.World) {
 		network.Quic.Send([]byte("patch"), 0)
 	}
 }
-func (s *networkSendController) Destroy(world *ecs.World) {}
+func (s *networkSendController) Destroy(world *ecs.EntityManager) {}

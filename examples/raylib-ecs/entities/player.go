@@ -64,7 +64,7 @@ var playerSpriteMatrix = components.SpriteMatrix{
 	},
 }
 
-func CreatePlayer(world *ecs2.World) (player Player) {
+func CreatePlayer(world *ecs2.EntityManager) (player Player) {
 	// Getting managers
 	spriteMatrixes := components.SpriteMatrixService.GetManager(world)
 	positions := components.PositionService.GetManager(world)
@@ -77,7 +77,7 @@ func CreatePlayer(world *ecs2.World) (player Player) {
 
 	// Creating new player
 
-	entity := world.CreateEntity("player")
+	entity := world.Create("player")
 	player.Entity = entity
 
 	// Adding position component

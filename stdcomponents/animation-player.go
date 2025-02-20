@@ -34,6 +34,6 @@ type AnimationPlayer struct {
 
 type AnimationPlayerComponentManager = ecs.ComponentManager[AnimationPlayer]
 
-func NewAnimationPlayerComponentManager(world *ecs.World) AnimationPlayerComponentManager {
+func NewAnimationPlayerComponentManager(world *ecs.EntityManager) AnimationPlayerComponentManager {
 	return ecs.NewComponentManager[AnimationPlayer](world, ANIMATION_PLAYER_ID)
 }

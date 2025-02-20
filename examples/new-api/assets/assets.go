@@ -9,10 +9,10 @@ package assets
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/negrel/assert"
-	"gomp/pkg/ecs"
+	"gomp"
 )
 
-var Textures = ecs.CreateAssetLibrary(
+var Textures = gomp.CreateAssetLibrary(
 	func(path string) rl.Texture2D {
 		assert.True(rl.IsWindowReady(), "Window is not initialized")
 		return rl.LoadTexture(path)

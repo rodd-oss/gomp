@@ -7,21 +7,22 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
+	"gomp"
 	ecs2 "gomp/pkg/ecs"
 )
 
 type assetLibController struct {
-	assets []ecs2.AnyAssetLibrary
+	assets []gomp.AnyAssetLibrary
 }
 
-func (s *assetLibController) Init(world *ecs2.World) {}
-func (s *assetLibController) Update(world *ecs2.World) {
+func (s *assetLibController) Init(world *ecs2.EntityManager) {}
+func (s *assetLibController) Update(world *ecs2.EntityManager) {
 	for _, asset := range s.assets {
 		asset.LoadAll()
 	}
 }
-func (s *assetLibController) FixedUpdate(world *ecs2.World) {}
-func (s *assetLibController) Destroy(world *ecs2.World) {
+func (s *assetLibController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *assetLibController) Destroy(world *ecs2.EntityManager) {
 	for _, asset := range s.assets {
 		asset.UnloadAll()
 	}

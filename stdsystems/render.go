@@ -19,7 +19,7 @@ func NewRenderSystem() RenderSystem {
 }
 
 type RenderSystem struct {
-	World          *ecs.World
+	World          *ecs.EntityManager
 	TextureRenders *ecs.ComponentManager[stdcomponents.TextureRender]
 }
 
@@ -47,7 +47,6 @@ func (s *RenderSystem) Run(dt time.Duration) bool {
 	rl.DrawFPS(10, 10)
 	rl.DrawText(fmt.Sprintf("%d", s.World.Size()), 10, 30, 20, rl.Red)
 	rl.DrawText(fmt.Sprintf("%s", dt), 10, 50, 20, rl.Red)
-	rl.DrawText(fmt.Sprintf("%s", s.World.DtFixedUpdate()), 10, 70, 20, rl.Red)
 
 	rl.EndDrawing()
 	return true

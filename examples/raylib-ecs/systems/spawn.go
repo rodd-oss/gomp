@@ -25,8 +25,8 @@ const (
 	maxMaxHp        = 2000
 )
 
-func (s *spawnController) Init(world *ecs.World) {}
-func (s *spawnController) Update(world *ecs.World) {
+func (s *spawnController) Init(world *ecs.EntityManager) {}
+func (s *spawnController) Update(world *ecs.EntityManager) {
 	sprites := components.SpriteService.GetManager(world)
 	healths := components.HealthService.GetManager(world)
 	positions := components.PositionService.GetManager(world)
@@ -39,7 +39,7 @@ func (s *spawnController) Update(world *ecs.World) {
 				break
 			}
 
-			newCreature := world.CreateEntity("Creature")
+			newCreature := world.Create("Creature")
 
 			// Adding position component
 			t := components.Position{
@@ -83,7 +83,7 @@ func (s *spawnController) Update(world *ecs.World) {
 		}
 	}
 }
-func (s *spawnController) FixedUpdate(world *ecs.World) {
+func (s *spawnController) FixedUpdate(world *ecs.EntityManager) {
 }
 
-func (s *spawnController) Destroy(world *ecs.World) {}
+func (s *spawnController) Destroy(world *ecs.EntityManager) {}

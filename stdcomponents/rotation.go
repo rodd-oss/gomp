@@ -22,6 +22,6 @@ type Rotation struct {
 
 type RotationComponentManager = ecs.ComponentManager[Rotation]
 
-func NewRotationComponentManager(world *ecs.World) RotationComponentManager {
+func NewRotationComponentManager(world *ecs.EntityManager) RotationComponentManager {
 	return ecs.NewComponentManager[Rotation](world, ROTATION_ID)
 }

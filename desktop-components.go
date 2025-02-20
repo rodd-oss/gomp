@@ -19,7 +19,7 @@ import (
 	"gomp/stdcomponents"
 )
 
-func NewDesktopComponents(world *ecs.World) DesktopComponents {
+func NewDesktopComponents(world *ecs.EntityManager) DesktopComponents {
 	return DesktopComponents{
 		Position:        stdcomponents.NewPositionComponentManager(world),
 		Rotation:        stdcomponents.NewRotationComponentManager(world),

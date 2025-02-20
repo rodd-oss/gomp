@@ -17,13 +17,13 @@ type playerController struct {
 	player entities.Player
 }
 
-func (s *playerController) Init(world *ecs.World) {
+func (s *playerController) Init(world *ecs.EntityManager) {
 	s.player = entities.CreatePlayer(world)
 	s.player.Position.X = 100
 	s.player.Position.Y = 100
 
 }
-func (s *playerController) Update(world *ecs.World) {
+func (s *playerController) Update(world *ecs.EntityManager) {
 	animationStates := components.AnimationStateService.GetManager(world)
 
 	animationState := animationStates.Get(s.player.Entity)
@@ -52,5 +52,5 @@ func (s *playerController) Update(world *ecs.World) {
 		}
 	}
 }
-func (s *playerController) FixedUpdate(world *ecs.World) {}
-func (s *playerController) Destroy(world *ecs.World)     {}
+func (s *playerController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *playerController) Destroy(world *ecs.EntityManager)     {}

@@ -13,19 +13,19 @@ import (
 
 type hpController struct{}
 
-func (s *hpController) Init(world *ecs2.World)   {}
-func (s *hpController) Update(world *ecs2.World) {}
-func (s *hpController) FixedUpdate(world *ecs2.World) {
+func (s *hpController) Init(world *ecs2.EntityManager)   {}
+func (s *hpController) Update(world *ecs2.EntityManager) {}
+func (s *hpController) FixedUpdate(world *ecs2.EntityManager) {
 	healths := components.HealthService.GetManager(world)
 
 	healths.All(func(entity ecs2.Entity, h *components.Health) bool {
 		h.Hp--
 
 		if h.Hp <= 0 {
-			world.DestroyEntity(entity)
+			world.Delete(entity)
 		}
 
 		return true
 	})
 }
-func (s *hpController) Destroy(world *ecs2.World) {}
+func (s *hpController) Destroy(world *ecs2.EntityManager) {}

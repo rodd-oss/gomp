@@ -23,9 +23,9 @@ import (
 // TextureRenderSprite is a system that prepares Sprite to be rendered
 type trSpriteController struct{}
 
-func (s *trSpriteController) Init(world *ecs2.World)        {}
-func (s *trSpriteController) FixedUpdate(world *ecs2.World) {}
-func (s *trSpriteController) Update(world *ecs2.World) {
+func (s *trSpriteController) Init(world *ecs2.EntityManager)        {}
+func (s *trSpriteController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trSpriteController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	sprites := components.SpriteService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -83,4 +83,4 @@ func (s *trSpriteController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trSpriteController) Destroy(world *ecs2.World) {}
+func (s *trSpriteController) Destroy(world *ecs2.EntityManager) {}

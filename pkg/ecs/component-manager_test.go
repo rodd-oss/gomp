@@ -23,8 +23,8 @@ type pixel struct {
 var pixelComponentType = CreateComponentService[pixel](1)
 
 // Commonly used functions in both benchmarks.
-func PrepareWorld(description string, system AnySystemServicePtr) *World {
-	world := CreateWorld(description)
+func PrepareWorld(description string, system AnySystemServicePtr) *EntityManager {
+	world := NewEntityManager(description)
 
 	world.RegisterComponentServices(
 		&pixelComponentType,
@@ -37,13 +37,13 @@ func PrepareWorld(description string, system AnySystemServicePtr) *World {
 	return world
 }
 
-func InitPixelComponent(pixelComponent *ComponentManager[pixel], world *World) {
+func InitPixelComponent(pixelComponent *ComponentManager[pixel], world *EntityManager) {
 	pixelComponent = pixelComponentType.GetManager(world)
 	determRand := rand.New(rand.NewSource(42))
 
 	for i := range 1000 {
 		for j := range 1000 {
-			newPixel := world.CreateEntity("Pixel")
+			newPixel := world.Create("Pixel")
 
 			randomGreen := uint8(135 / (determRand.Intn(10) + 1))
 			randomBlue := uint8(135 / (determRand.Intn(10) + 1))
@@ -67,14 +67,14 @@ type pixelSystem struct {
 	pixelComponent ComponentManager[pixel]
 }
 
-func (s *pixelSystem) Init(world *World) {
+func (s *pixelSystem) Init(world *EntityManager) {
 	InitPixelComponent(&s.pixelComponent, world)
 }
 
-func (s *pixelSystem) Destroy(world *World) {}
+func (s *pixelSystem) Destroy(world *EntityManager) {}
 
-func (s *pixelSystem) Update(world *World) {}
-func (s *pixelSystem) FixedUpdate(world *World) {
+func (s *pixelSystem) Update(world *EntityManager) {}
+func (s *pixelSystem) FixedUpdate(world *EntityManager) {
 	for pixel := range s.pixelComponent.AllData {
 		// Note: was not extracted to separate function to simulate
 		// real-world interaction between range loop and inner code.
@@ -117,13 +117,13 @@ type pixelSystemDirectCall struct {
 	pixelComponent ComponentManager[pixel]
 }
 
-func (s *pixelSystemDirectCall) Init(world *World) {
+func (s *pixelSystemDirectCall) Init(world *EntityManager) {
 	InitPixelComponent(&s.pixelComponent, world)
 }
 
-func (s *pixelSystemDirectCall) Destroy(world *World) {}
-func (s *pixelSystemDirectCall) Update(world *World)  {}
-func (s *pixelSystemDirectCall) FixedUpdate(world *World) {
+func (s *pixelSystemDirectCall) Destroy(world *EntityManager) {}
+func (s *pixelSystemDirectCall) Update(world *EntityManager)  {}
+func (s *pixelSystemDirectCall) FixedUpdate(world *EntityManager) {
 	s.pixelComponent.AllDataParallel(func(pixel *pixel) bool {
 		color := &pixel.color
 

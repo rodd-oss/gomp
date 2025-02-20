@@ -29,6 +29,6 @@ type Sprite struct {
 
 type SpriteComponentManager = ecs.ComponentManager[Sprite]
 
-func NewSpriteComponentManager(world *ecs.World) SpriteComponentManager {
+func NewSpriteComponentManager(world *ecs.EntityManager) SpriteComponentManager {
 	return ecs.NewComponentManager[Sprite](world, SPRITE_ID)
 }

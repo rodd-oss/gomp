@@ -19,7 +19,7 @@ func NewPlayerSystem() PlayerSystem {
 }
 
 type PlayerSystem struct {
-	World            *ecs.World
+	World            *ecs.EntityManager
 	Player           entities.Player
 	SpriteMatrixes   *stdcomponents.SpriteMatrixComponentManager
 	Positions        *stdcomponents.PositionComponentManager

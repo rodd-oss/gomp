@@ -14,9 +14,9 @@ import (
 // TextureRenderPosition is a system that sets Position of textureRender
 type trPositionController struct{}
 
-func (s *trPositionController) Init(world *ecs2.World)        {}
-func (s *trPositionController) FixedUpdate(world *ecs2.World) {}
-func (s *trPositionController) Update(world *ecs2.World) {
+func (s *trPositionController) Init(world *ecs2.EntityManager)        {}
+func (s *trPositionController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trPositionController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	positions := components.PositionService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -38,4 +38,4 @@ func (s *trPositionController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trPositionController) Destroy(world *ecs2.World) {}
+func (s *trPositionController) Destroy(world *ecs2.EntityManager) {}

@@ -38,11 +38,11 @@ type TransformSystem struct {
 	transform *ComponentManager[Transform]
 }
 
-func (s *TransformSystem) Init(world *World) {
+func (s *TransformSystem) Init(world *EntityManager) {
 	s.transform = transformComponent.GetManager(world)
 }
-func (s *TransformSystem) Destroy(world *World) {}
-func (s *TransformSystem) Run(world *World) {
+func (s *TransformSystem) Destroy(world *EntityManager) {}
+func (s *TransformSystem) Run(world *EntityManager) {
 	s.n++
 	for _, t := range s.transform.All {
 		t.X += 1
@@ -58,13 +58,13 @@ type BulletSpawnSystem struct {
 	bullet        *ComponentManager[Bullet]
 }
 
-func (s *BulletSpawnSystem) Init(world *World) {
+func (s *BulletSpawnSystem) Init(world *EntityManager) {
 	s.bulletSpawner = bulletSpawnerComponent.GetManager(world)
 	s.transform = transformComponent.GetManager(world)
 	s.bullet = bulletComponent.GetManager(world)
 }
-func (s *BulletSpawnSystem) Destroy(world *World) {}
-func (s *BulletSpawnSystem) Run(world *World) {
+func (s *BulletSpawnSystem) Destroy(world *EntityManager) {}
+func (s *BulletSpawnSystem) Run(world *EntityManager) {
 	s.n++
 
 	var bulletData Bullet
@@ -76,7 +76,7 @@ func (s *BulletSpawnSystem) Run(world *World) {
 			continue
 		}
 
-		newBullet := world.CreateEntity("bullet")
+		newBullet := world.Create()
 		s.transform.Create(newBullet, *tr)
 		s.bullet.Create(newBullet, bulletData)
 	}
@@ -86,15 +86,15 @@ type BulletSystem struct {
 	bullet *ComponentManager[Bullet]
 }
 
-func (s *BulletSystem) Init(world *World) {
+func (s *BulletSystem) Init(world *EntityManager) {
 	s.bullet = bulletComponent.GetManager(world)
 }
-func (s *BulletSystem) Destroy(world *World) {}
-func (s *BulletSystem) Run(world *World) {
+func (s *BulletSystem) Destroy(world *EntityManager) {}
+func (s *BulletSystem) Run(world *EntityManager) {
 	for entId, b := range s.bullet.All {
 		b.HP -= 1
 		if b.HP <= 0 {
-			world.DestroyEntity(entId)
+			world.Delete(entId)
 		}
 	}
 }
@@ -104,7 +104,7 @@ type PlayerSpawnSystem struct {
 	transform     *ComponentManager[Transform]
 }
 
-func (s *PlayerSpawnSystem) Init(world *World) {
+func (s *PlayerSpawnSystem) Init(world *EntityManager) {
 	s.bulletSpawner = bulletSpawnerComponent.GetManager(world)
 	s.transform = transformComponent.GetManager(world)
 
@@ -114,7 +114,7 @@ func (s *PlayerSpawnSystem) Init(world *World) {
 
 	var player Entity
 	for i := 0; i < count; i++ {
-		player = world.CreateEntity("Player")
+		player = world.Create()
 		s.transform.Create(player, tra)
 
 		if i%2 == 0 {
@@ -122,5 +122,5 @@ func (s *PlayerSpawnSystem) Init(world *World) {
 		}
 	}
 }
-func (s *PlayerSpawnSystem) Destroy(world *World) {}
-func (s *PlayerSpawnSystem) Run(world *World)     {}
+func (s *PlayerSpawnSystem) Destroy(world *EntityManager) {}
+func (s *PlayerSpawnSystem) Run(world *EntityManager)     {}

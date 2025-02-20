@@ -15,6 +15,7 @@ Thank you for your support!
 package instances
 
 import (
+	"gomp"
 	"gomp/examples/new-api/assets"
 	"gomp/examples/new-api/systems"
 	"gomp/pkg/ecs"
@@ -22,7 +23,7 @@ import (
 	"reflect"
 )
 
-func NewSystemList(world *ecs.World, components *ComponentList) SystemList {
+func NewSystemList(entityManager *ecs.EntityManager, componentList *ComponentList) SystemList {
 	newSystemList := SystemList{
 		Player:                   systems.NewPlayerSystem(),
 		Debug:                    stdsystems.NewDebugSystem(),
@@ -41,11 +42,11 @@ func NewSystemList(world *ecs.World, components *ComponentList) SystemList {
 		TextureRenderRotation:    stdsystems.NewTextureRenderRotationSystem(),
 		TextureRenderScale:       stdsystems.NewTextureRenderScaleSystem(),
 		TextureRenderTint:        stdsystems.NewTextureRenderTintSystem(),
-		AssetLib:                 stdsystems.NewAssetLibSystem([]ecs.AnyAssetLibrary{assets.Textures}),
+		AssetLib:                 stdsystems.NewAssetLibSystem([]gomp.AnyAssetLibrary{assets.Textures}),
 		Render:                   stdsystems.NewRenderSystem(),
 	}
 
-	InjectECSToSystems(&newSystemList, world, components)
+	InjectECSToSystems(&newSystemList, entityManager, componentList)
 
 	return newSystemList
 }
@@ -75,7 +76,7 @@ type SystemList struct {
 type AnySystemList interface{}
 type AnyComponentList interface{}
 
-func InjectECSToSystems(systemList AnySystemList, world *ecs.World, componentList AnyComponentList) {
+func InjectECSToSystems(systemList AnySystemList, world *ecs.EntityManager, componentList AnyComponentList) {
 	reflectedSystemList := reflect.ValueOf(systemList).Elem()
 	systemsLen := reflectedSystemList.NumField()
 

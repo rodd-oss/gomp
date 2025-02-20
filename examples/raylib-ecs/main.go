@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	world := ecs.CreateWorld("main-raylib")
+	world := ecs.NewEntityManager("main-raylib")
 	defer world.Destroy()
 
 	// world.ApplyPatch(patch)

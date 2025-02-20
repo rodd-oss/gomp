@@ -20,7 +20,7 @@ import (
 
 type networkReceiveController struct{}
 
-func (s *networkReceiveController) Init(world *ecs.World)        {}
-func (s *networkReceiveController) Update(world *ecs.World)      {}
-func (s *networkReceiveController) FixedUpdate(world *ecs.World) {}
-func (s *networkReceiveController) Destroy(world *ecs.World)     {}
+func (s *networkReceiveController) Init(world *ecs.EntityManager)        {}
+func (s *networkReceiveController) Update(world *ecs.EntityManager)      {}
+func (s *networkReceiveController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *networkReceiveController) Destroy(world *ecs.EntityManager)     {}

@@ -7,18 +7,18 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package stdsystems
 
 import (
-	"gomp/pkg/ecs"
+	"gomp"
 	"time"
 )
 
-func NewAssetLibSystem(assets []ecs.AnyAssetLibrary) AssetLibSystem {
+func NewAssetLibSystem(assets []gomp.AnyAssetLibrary) AssetLibSystem {
 	return AssetLibSystem{
 		assets: assets,
 	}
 }
 
 type AssetLibSystem struct {
-	assets []ecs.AnyAssetLibrary
+	assets []gomp.AnyAssetLibrary
 }
 
 func (s *AssetLibSystem) Init() {}

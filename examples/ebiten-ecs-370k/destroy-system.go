@@ -21,7 +21,7 @@ type destroySystem struct {
 	n int
 }
 
-func (s *destroySystem) Init(world *ecs2.World) {
+func (s *destroySystem) Init(world *ecs2.EntityManager) {
 	s.transformComponent = transformComponentType.GetManager(world)
 	s.healthComponent = healthComponentType.GetManager(world)
 	s.colorComponent = colorComponentType.GetManager(world)
@@ -29,13 +29,13 @@ func (s *destroySystem) Init(world *ecs2.World) {
 	s.destroyComponent = destroyComponentType.GetManager(world)
 
 }
-func (s *destroySystem) Run(world *ecs2.World) {
+func (s *destroySystem) Run(world *ecs2.EntityManager) {
 	s.n = 0
 	s.destroyComponent.All(func(e ecs2.Entity, h *empty) bool {
-		world.DestroyEntity(e)
+		world.Delete(e)
 		entityCount--
 
 		return true
 	})
 }
-func (s *destroySystem) Destroy(world *ecs2.World) {}
+func (s *destroySystem) Destroy(world *ecs2.EntityManager) {}

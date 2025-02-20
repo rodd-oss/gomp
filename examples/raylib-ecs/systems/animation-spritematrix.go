@@ -14,8 +14,8 @@ import (
 
 type animationSpriteMatrixController struct{}
 
-func (s *animationSpriteMatrixController) Init(world *ecs2.World) {}
-func (s *animationSpriteMatrixController) Update(world *ecs2.World) {
+func (s *animationSpriteMatrixController) Init(world *ecs2.EntityManager) {}
+func (s *animationSpriteMatrixController) Update(world *ecs2.EntityManager) {
 	animationPlayers := components.AnimationPlayerService.GetManager(world)
 	animationStates := components.AnimationStateService.GetManager(world)
 	spriteMatrixes := components.SpriteMatrixService.GetManager(world)
@@ -51,5 +51,5 @@ func (s *animationSpriteMatrixController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *animationSpriteMatrixController) FixedUpdate(world *ecs2.World) {}
-func (s *animationSpriteMatrixController) Destroy(world *ecs2.World)     {}
+func (s *animationSpriteMatrixController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *animationSpriteMatrixController) Destroy(world *ecs2.EntityManager)     {}

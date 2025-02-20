@@ -20,7 +20,7 @@ type colorSystem struct {
 	baseColor color.RGBA
 }
 
-func (s *colorSystem) Init(world *ecs2.World) {
+func (s *colorSystem) Init(world *ecs2.EntityManager) {
 	s.transformComponent = transformComponentType.GetManager(world)
 	s.healthComponent = healthComponentType.GetManager(world)
 	s.colorComponent = colorComponentType.GetManager(world)
@@ -28,7 +28,7 @@ func (s *colorSystem) Init(world *ecs2.World) {
 
 	s.baseColor = color.RGBA{25, 220, 200, 255}
 }
-func (s *colorSystem) Run(world *ecs2.World) {
+func (s *colorSystem) Run(world *ecs2.EntityManager) {
 	s.colorComponent.AllParallel(func(ei ecs2.Entity, c *color.RGBA) bool {
 		health := s.healthComponent.Get(ei)
 		if health == nil {
@@ -45,4 +45,4 @@ func (s *colorSystem) Run(world *ecs2.World) {
 		return true
 	})
 }
-func (s *colorSystem) Destroy(world *ecs2.World) {}
+func (s *colorSystem) Destroy(world *ecs2.EntityManager) {}

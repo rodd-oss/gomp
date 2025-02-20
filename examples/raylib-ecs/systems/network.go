@@ -31,9 +31,9 @@ const (
 type networkController struct {
 }
 
-func (s *networkController) Init(world *ecs.World) {
+func (s *networkController) Init(world *ecs.EntityManager) {
 }
-func (s *networkController) Update(world *ecs.World) {
+func (s *networkController) Update(world *ecs.EntityManager) {
 	if rl.IsKeyPressed(rl.KeyP) {
 		network.Quic.Host("127.0.0.1:27015")
 	}
@@ -42,5 +42,5 @@ func (s *networkController) Update(world *ecs.World) {
 		network.Quic.Connect("127.0.0.1:27015")
 	}
 }
-func (s *networkController) FixedUpdate(world *ecs.World) {}
-func (s *networkController) Destroy(world *ecs.World)     {}
+func (s *networkController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *networkController) Destroy(world *ecs.EntityManager)     {}

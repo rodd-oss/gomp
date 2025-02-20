@@ -37,7 +37,7 @@ type ComponentList struct {
 	Health          components.HealthComponentManager
 }
 
-func NewComponentList(world *ecs.World) ComponentList {
+func NewComponentList(world *ecs.EntityManager) ComponentList {
 	return ComponentList{
 		Position:        stdcomponents.NewPositionComponentManager(world),
 		Rotation:        stdcomponents.NewRotationComponentManager(world),

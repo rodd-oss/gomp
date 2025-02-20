@@ -22,6 +22,6 @@ type Position struct {
 
 type PositionComponentManager = ecs.ComponentManager[Position]
 
-func NewPositionComponentManager(world *ecs.World) PositionComponentManager {
+func NewPositionComponentManager(world *ecs.EntityManager) PositionComponentManager {
 	return ecs.NewComponentManager[Position](world, POSITION_ID)
 }

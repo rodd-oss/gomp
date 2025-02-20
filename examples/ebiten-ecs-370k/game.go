@@ -12,13 +12,13 @@ import (
 )
 
 type game struct {
-	world            *ecs2.World
+	world            *ecs2.EntityManager
 	cameraComponents *ecs2.ComponentManager[camera]
 	op               *ebiten.DrawImageOptions
 }
 
 func newGame() game {
-	world := ecs2.CreateWorld("1 mil pixel")
+	world := ecs2.NewEntityManager("1 mil pixel")
 
 	world.RegisterComponentServices(
 		&destroyComponentType,

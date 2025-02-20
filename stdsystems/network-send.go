@@ -27,7 +27,7 @@ func NewNetworkSendSystem() NetworkSendSystem {
 }
 
 type NetworkSendSystem struct {
-	World     *ecs.World
+	World     *ecs.EntityManager
 	Positions *stdcomponents.PositionComponentManager
 	Rotations *stdcomponents.RotationComponentManager
 	Mirroreds *stdcomponents.FlipComponentManager

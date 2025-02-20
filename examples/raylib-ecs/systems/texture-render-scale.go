@@ -14,9 +14,9 @@ import (
 // TextureRenderScale is a system that sets Scale of textureRender
 type trScaleController struct{}
 
-func (s *trScaleController) Init(world *ecs2.World)        {}
-func (s *trScaleController) FixedUpdate(world *ecs2.World) {}
-func (s *trScaleController) Update(world *ecs2.World) {
+func (s *trScaleController) Init(world *ecs2.EntityManager)        {}
+func (s *trScaleController) FixedUpdate(world *ecs2.EntityManager) {}
+func (s *trScaleController) Update(world *ecs2.EntityManager) {
 	// Get component managers
 	scales := components.ScaleService.GetManager(world)
 	textureRenders := components.TextureRenderService.GetManager(world)
@@ -38,4 +38,4 @@ func (s *trScaleController) Update(world *ecs2.World) {
 		return true
 	})
 }
-func (s *trScaleController) Destroy(world *ecs2.World) {}
+func (s *trScaleController) Destroy(world *ecs2.EntityManager) {}

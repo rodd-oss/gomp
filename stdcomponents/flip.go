@@ -22,6 +22,6 @@ type Flip struct {
 
 type FlipComponentManager = ecs.ComponentManager[Flip]
 
-func NewFlipComponentManager(world *ecs.World) FlipComponentManager {
+func NewFlipComponentManager(world *ecs.EntityManager) FlipComponentManager {
 	return ecs.NewComponentManager[Flip](world, FLIP_ID)
 }

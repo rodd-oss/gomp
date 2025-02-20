@@ -66,7 +66,7 @@ var playerSpriteMatrix = stdcomponents.SpriteMatrix{
 }
 
 func CreatePlayer(
-	world *ecs.World,
+	world *ecs.EntityManager,
 	spriteMatrixes *stdcomponents.SpriteMatrixComponentManager,
 	positions *stdcomponents.PositionComponentManager,
 	rotations *stdcomponents.RotationComponentManager,
@@ -79,7 +79,7 @@ func CreatePlayer(
 ) (player Player) {
 	// Creating new player
 
-	entity := world.CreateEntity("player")
+	entity := world.Create()
 	player.Entity = entity
 
 	// Adding position component

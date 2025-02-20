@@ -20,7 +20,7 @@ import (
 
 type exampleController struct{}
 
-func (s *exampleController) Init(world *ecs.World)        {}
-func (s *exampleController) Update(world *ecs.World)      {}
-func (s *exampleController) FixedUpdate(world *ecs.World) {}
-func (s *exampleController) Destroy(world *ecs.World)     {}
+func (s *exampleController) Init(world *ecs.EntityManager)        {}
+func (s *exampleController) Update(world *ecs.EntityManager)      {}
+func (s *exampleController) FixedUpdate(world *ecs.EntityManager) {}
+func (s *exampleController) Destroy(world *ecs.EntityManager)     {}
