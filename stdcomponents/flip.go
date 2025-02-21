@@ -23,5 +23,5 @@ type Flip struct {
 type FlipComponentManager = ecs.ComponentManager[Flip]
 
 func NewFlipComponentManager() FlipComponentManager {
-	return ecs.NewComponentManager[Flip](FLIP_ID)
+	return ecs.NewComponentManager[Flip](FlipComponentId)
 }

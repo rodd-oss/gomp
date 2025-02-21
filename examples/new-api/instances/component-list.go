@@ -33,7 +33,9 @@ type ComponentList struct {
 	AnimationState  stdcomponents.AnimationStateComponentManager
 	TextureRender   stdcomponents.TextureRenderComponentManager
 	Network         stdcomponents.NetworkComponentManager
-	Health          components.HealthComponentManager
+
+	Health     components.HealthComponentManager
+	Controller components.ControllerComponentManager
 }
 
 func NewComponentList() ComponentList {
@@ -51,6 +53,8 @@ func NewComponentList() ComponentList {
 		AnimationState:  stdcomponents.NewAnimationStateComponentManager(),
 		TextureRender:   stdcomponents.NewTextureRenderComponentManager(),
 		Network:         stdcomponents.NewNetworkComponentManager(),
-		Health:          components.NewHealthComponentManager(),
+
+		Health:     components.NewHealthComponentManager(),
+		Controller: components.NewControllerComponentManager(),
 	}
 }

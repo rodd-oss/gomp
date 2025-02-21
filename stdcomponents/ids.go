@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	INVALID_ID ecs.ComponentId = iota + 128
-	POSITION_ID
-	ROTATION_ID
-	SCALE_ID
-	FLIP_ID
-	VELOCITY_ID
-	SPRITE_ID
-	SPRITE_SHEET_ID
-	SPRITE_MATRIX_ID
-	TEXTURE_RENDER_ID
-	ANIMATION_PLAYER_ID
-	ANIMATION_STATE_ID
-	TINT_ID
-	NETWORK_ID
+	InvalidComponentId ecs.ComponentId = 1<<16 - 1 - iota
+	PositionComponentId
+	RotationComponentId
+	ScaleComponentId
+	FlipComponentId
+	VelocityComponentId
+	SpriteComponentId
+	SpriteSheetComponentId
+	SpriteMatrixComponentId
+	TextureRenderComponentId
+	AnimationPlayerComponentId
+	AnimationStateComponentId
+	TintComponentId
+	NetworkComponentId
 )

@@ -16,7 +16,7 @@ import (
 // Contracts
 // ================
 
-type ComponentId uint
+type ComponentId uint16
 type AnyComponentList interface{}
 type AnyComponentListPtr interface{}
 

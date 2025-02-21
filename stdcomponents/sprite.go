@@ -30,5 +30,5 @@ type Sprite struct {
 type SpriteComponentManager = ecs.ComponentManager[Sprite]
 
 func NewSpriteComponentManager() SpriteComponentManager {
-	return ecs.NewComponentManager[Sprite](SPRITE_ID)
+	return ecs.NewComponentManager[Sprite](SpriteComponentId)
 }

@@ -31,5 +31,5 @@ type SpriteSheet struct {
 type SpriteSheetComponentManager = ecs.ComponentManager[SpriteSheet]
 
 func NewSpriteSheetComponentManager() SpriteSheetComponentManager {
-	return ecs.NewComponentManager[SpriteSheet](SPRITE_SHEET_ID)
+	return ecs.NewComponentManager[SpriteSheet](SpriteSheetComponentId)
 }

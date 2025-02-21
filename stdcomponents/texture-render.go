@@ -32,5 +32,5 @@ type TextureRender struct {
 type TextureRenderComponentManager = ecs.ComponentManager[TextureRender]
 
 func NewTextureRenderComponentManager() TextureRenderComponentManager {
-	return ecs.NewComponentManager[TextureRender](TEXTURE_RENDER_ID)
+	return ecs.NewComponentManager[TextureRender](TextureRenderComponentId)
 }

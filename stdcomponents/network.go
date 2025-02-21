@@ -26,5 +26,5 @@ type Network struct {
 type NetworkComponentManager = ecs.ComponentManager[Network]
 
 func NewNetworkComponentManager() NetworkComponentManager {
-	return ecs.NewComponentManager[Network](NETWORK_ID)
+	return ecs.NewComponentManager[Network](NetworkComponentId)
 }

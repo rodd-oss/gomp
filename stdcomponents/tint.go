@@ -24,5 +24,5 @@ type Tint = color.RGBA
 type TintComponentManager = ecs.ComponentManager[Tint]
 
 func NewTintComponentManager() TintComponentManager {
-	return ecs.NewComponentManager[Tint](TINT_ID)
+	return ecs.NewComponentManager[Tint](TintComponentId)
 }

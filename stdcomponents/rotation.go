@@ -23,5 +23,5 @@ type Rotation struct {
 type RotationComponentManager = ecs.ComponentManager[Rotation]
 
 func NewRotationComponentManager() RotationComponentManager {
-	return ecs.NewComponentManager[Rotation](ROTATION_ID)
+	return ecs.NewComponentManager[Rotation](RotationComponentId)
 }

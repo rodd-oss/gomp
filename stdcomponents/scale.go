@@ -23,5 +23,5 @@ type Scale struct {
 type ScaleComponentManager = ecs.ComponentManager[Scale]
 
 func NewScaleComponentManager() ScaleComponentManager {
-	return ecs.NewComponentManager[Scale](SCALE_ID)
+	return ecs.NewComponentManager[Scale](ScaleComponentId)
 }

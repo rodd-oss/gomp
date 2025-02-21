@@ -37,5 +37,5 @@ type SpriteMatrix struct {
 type SpriteMatrixComponentManager = ecs.ComponentManager[SpriteMatrix]
 
 func NewSpriteMatrixComponentManager() SpriteMatrixComponentManager {
-	return ecs.NewComponentManager[SpriteMatrix](SPRITE_MATRIX_ID)
+	return ecs.NewComponentManager[SpriteMatrix](SpriteMatrixComponentId)
 }

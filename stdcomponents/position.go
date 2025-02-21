@@ -23,5 +23,5 @@ type Position struct {
 type PositionComponentManager = ecs.ComponentManager[Position]
 
 func NewPositionComponentManager() PositionComponentManager {
-	return ecs.NewComponentManager[Position](POSITION_ID)
+	return ecs.NewComponentManager[Position](PositionComponentId)
 }

@@ -35,5 +35,5 @@ type AnimationPlayer struct {
 type AnimationPlayerComponentManager = ecs.ComponentManager[AnimationPlayer]
 
 func NewAnimationPlayerComponentManager() AnimationPlayerComponentManager {
-	return ecs.NewComponentManager[AnimationPlayer](ANIMATION_PLAYER_ID)
+	return ecs.NewComponentManager[AnimationPlayer](AnimationPlayerComponentId)
 }

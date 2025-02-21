@@ -12,16 +12,14 @@ none :)
 Thank you for your support!
 */
 
-package stdcomponents
+package components
 
 import "gomp/pkg/ecs"
 
-type Velocity struct {
-	X, Y float32
-}
+type Controller struct{}
 
-type VelocityComponentManager = ecs.ComponentManager[Velocity]
+type ControllerComponentManager = ecs.ComponentManager[Controller]
 
-func NewVelocityComponentManager() VelocityComponentManager {
-	return ecs.NewComponentManager[Velocity](VelocityComponentId)
+func NewControllerComponentManager() ControllerComponentManager {
+	return ecs.NewComponentManager[Controller](ControllerComponentId)
 }

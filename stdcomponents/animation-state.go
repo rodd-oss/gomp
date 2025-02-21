@@ -23,5 +23,5 @@ type AnimationState int32
 type AnimationStateComponentManager = ecs.ComponentManager[AnimationState]
 
 func NewAnimationStateComponentManager() AnimationStateComponentManager {
-	return ecs.NewComponentManager[AnimationState](ANIMATION_STATE_ID)
+	return ecs.NewComponentManager[AnimationState](AnimationStateComponentId)
 }
