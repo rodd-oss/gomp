@@ -15,25 +15,24 @@ Thank you for your support!
 package gomp
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
 )
 
-func NewDesktopComponents(world *ecs.EntityManager) DesktopComponents {
+func NewDesktopComponents() DesktopComponents {
 	return DesktopComponents{
-		Position:        stdcomponents.NewPositionComponentManager(world),
-		Rotation:        stdcomponents.NewRotationComponentManager(world),
-		Scale:           stdcomponents.NewScaleComponentManager(world),
-		Velocity:        stdcomponents.NewVelocityComponentManager(world),
-		Flip:            stdcomponents.NewFlipComponentManager(world),
-		Sprite:          stdcomponents.NewSpriteComponentManager(world),
-		SpriteSheet:     stdcomponents.NewSpriteSheetComponentManager(world),
-		SpriteMatrix:    stdcomponents.NewSpriteMatrixComponentManager(world),
-		Tint:            stdcomponents.NewTintComponentManager(world),
-		AnimationPlayer: stdcomponents.NewAnimationPlayerComponentManager(world),
-		AnimationState:  stdcomponents.NewAnimationStateComponentManager(world),
-		TextureRender:   stdcomponents.NewTextureRenderComponentManager(world),
-		Network:         stdcomponents.NewNetworkComponentManager(world),
+		Position:        stdcomponents.NewPositionComponentManager(),
+		Rotation:        stdcomponents.NewRotationComponentManager(),
+		Scale:           stdcomponents.NewScaleComponentManager(),
+		Velocity:        stdcomponents.NewVelocityComponentManager(),
+		Flip:            stdcomponents.NewFlipComponentManager(),
+		Sprite:          stdcomponents.NewSpriteComponentManager(),
+		SpriteSheet:     stdcomponents.NewSpriteSheetComponentManager(),
+		SpriteMatrix:    stdcomponents.NewSpriteMatrixComponentManager(),
+		Tint:            stdcomponents.NewTintComponentManager(),
+		AnimationPlayer: stdcomponents.NewAnimationPlayerComponentManager(),
+		AnimationState:  stdcomponents.NewAnimationStateComponentManager(),
+		TextureRender:   stdcomponents.NewTextureRenderComponentManager(),
+		Network:         stdcomponents.NewNetworkComponentManager(),
 	}
 }
 

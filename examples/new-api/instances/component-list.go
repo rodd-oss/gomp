@@ -16,7 +16,6 @@ package instances
 
 import (
 	"gomp/examples/new-api/components"
-	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
 )
 
@@ -37,21 +36,21 @@ type ComponentList struct {
 	Health          components.HealthComponentManager
 }
 
-func NewComponentList(world *ecs.EntityManager) ComponentList {
+func NewComponentList() ComponentList {
 	return ComponentList{
-		Position:        stdcomponents.NewPositionComponentManager(world),
-		Rotation:        stdcomponents.NewRotationComponentManager(world),
-		Scale:           stdcomponents.NewScaleComponentManager(world),
-		Velocity:        stdcomponents.NewVelocityComponentManager(world),
-		Flip:            stdcomponents.NewFlipComponentManager(world),
-		Sprite:          stdcomponents.NewSpriteComponentManager(world),
-		SpriteSheet:     stdcomponents.NewSpriteSheetComponentManager(world),
-		SpriteMatrix:    stdcomponents.NewSpriteMatrixComponentManager(world),
-		Tint:            stdcomponents.NewTintComponentManager(world),
-		AnimationPlayer: stdcomponents.NewAnimationPlayerComponentManager(world),
-		AnimationState:  stdcomponents.NewAnimationStateComponentManager(world),
-		TextureRender:   stdcomponents.NewTextureRenderComponentManager(world),
-		Network:         stdcomponents.NewNetworkComponentManager(world),
-		Health:          components.NewHealthComponentManager(world),
+		Position:        stdcomponents.NewPositionComponentManager(),
+		Rotation:        stdcomponents.NewRotationComponentManager(),
+		Scale:           stdcomponents.NewScaleComponentManager(),
+		Velocity:        stdcomponents.NewVelocityComponentManager(),
+		Flip:            stdcomponents.NewFlipComponentManager(),
+		Sprite:          stdcomponents.NewSpriteComponentManager(),
+		SpriteSheet:     stdcomponents.NewSpriteSheetComponentManager(),
+		SpriteMatrix:    stdcomponents.NewSpriteMatrixComponentManager(),
+		Tint:            stdcomponents.NewTintComponentManager(),
+		AnimationPlayer: stdcomponents.NewAnimationPlayerComponentManager(),
+		AnimationState:  stdcomponents.NewAnimationStateComponentManager(),
+		TextureRender:   stdcomponents.NewTextureRenderComponentManager(),
+		Network:         stdcomponents.NewNetworkComponentManager(),
+		Health:          components.NewHealthComponentManager(),
 	}
 }

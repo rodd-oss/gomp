@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	INVALID_ID ecs.ComponentID = iota + 128
+	INVALID_ID ecs.ComponentId = iota + 128
 	POSITION_ID
 	ROTATION_ID
 	SCALE_ID

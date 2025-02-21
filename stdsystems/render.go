@@ -19,8 +19,9 @@ func NewRenderSystem() RenderSystem {
 }
 
 type RenderSystem struct {
-	World          *ecs.EntityManager
-	TextureRenders *ecs.ComponentManager[stdcomponents.TextureRender]
+	EntityManager  *ecs.EntityManager
+	TextureRenders *stdcomponents.TextureRenderComponentManager
+	Positions      *stdcomponents.PositionComponentManager
 }
 
 func (s *RenderSystem) Init() {
@@ -32,7 +33,6 @@ func (s *RenderSystem) Run(dt time.Duration) bool {
 	if rl.WindowShouldClose() {
 		return false
 	}
-
 	rl.BeginDrawing()
 
 	rl.ClearBackground(rl.Black)
@@ -45,7 +45,13 @@ func (s *RenderSystem) Run(dt time.Duration) bool {
 
 	// rl.DrawRectangle(0, 0, 120, 120, rl.DarkGray)
 	rl.DrawFPS(10, 10)
-	rl.DrawText(fmt.Sprintf("%d", s.World.Size()), 10, 30, 20, rl.Red)
+	rl.DrawText(fmt.Sprintf("%d", s.EntityManager.Size()), 10, 30, 20, rl.Red)
+
+	s.Positions.AllData(func(p *stdcomponents.Position) bool {
+		rl.DrawCircle(int32(p.X), int32(p.Y), 10, rl.Red)
+		return true
+	})
+
 	rl.DrawText(fmt.Sprintf("%s", dt), 10, 50, 20, rl.Red)
 
 	rl.EndDrawing()

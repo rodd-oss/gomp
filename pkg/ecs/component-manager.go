@@ -7,7 +7,6 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package ecs
 
 import (
-	"math/big"
 	"sync"
 
 	"github.com/negrel/assert"
@@ -17,9 +16,12 @@ import (
 // Contracts
 // ================
 
+type ComponentId uint
+type AnyComponentList interface{}
+type AnyComponentListPtr interface{}
+
 type AnyComponentManagerPtr interface {
-	registerComponentMask(mask *ComponentManager[big.Int])
-	getId() ComponentID
+	Id() ComponentId
 	Remove(Entity)
 	Clean()
 	Has(Entity) bool
@@ -28,21 +30,19 @@ type AnyComponentManagerPtr interface {
 	PatchApply(patch ComponentPatch)
 	PatchReset()
 	IsTrackingChanges() bool
+	registerEntityManager(*EntityManager)
 }
 
 // ================
 // Service
 // ================
 
-func NewComponentManager[T any](entityManager *EntityManager, id ComponentID) ComponentManager[T] {
+func NewComponentManager[T any](id ComponentId) ComponentManager[T] {
 	newManager := ComponentManager[T]{
-		mx: new(sync.Mutex),
-
 		components: NewPagedArray[T](),
 		entities:   NewPagedArray[Entity](),
 		lookup:     NewPagedMap[Entity, int32](),
 
-		maskComponent: entityManager.entityComponentMask,
 		id:            id,
 		isInitialized: true,
 
@@ -56,14 +56,16 @@ func NewComponentManager[T any](entityManager *EntityManager, id ComponentID) Co
 }
 
 type ComponentManager[T any] struct {
-	mx *sync.Mutex
+	mx sync.Mutex
 
 	components *PagedArray[T]
 	entities   *PagedArray[Entity]
 	lookup     *PagedMap[Entity, int32]
 
-	maskComponent *SparseSet[ComponentBitArray256, Entity]
-	id            ComponentID
+	entityManager         *EntityManager
+	entityComponentBitSet *ComponentBitSet
+
+	id            ComponentId
 	isInitialized bool
 
 	// Patch
@@ -86,17 +88,19 @@ type ComponentChanges struct {
 
 // ComponentPatch with byte encoded Created, Patched and Deleted components
 type ComponentPatch struct {
-	ID      ComponentID
+	ID      ComponentId
 	Created ComponentChanges
 	Patched ComponentChanges
 	Deleted ComponentChanges
 }
 
-func (c *ComponentManager[T]) getId() ComponentID {
+func (c *ComponentManager[T]) Id() ComponentId {
 	return c.id
 }
 
-func (c *ComponentManager[T]) registerComponentMask(*ComponentManager[big.Int]) {
+func (c *ComponentManager[T]) registerEntityManager(entityManager *EntityManager) {
+	c.entityManager = entityManager
+	c.entityComponentBitSet = &entityManager.componentBitSet
 }
 
 //=====================================
@@ -118,8 +122,7 @@ func (c *ComponentManager[T]) Create(entity Entity, value T) (component *T) {
 	c.entities.Append(entity)
 	component = c.components.Append(value)
 
-	mask := c.maskComponent.GetPtr(entity)
-	mask.Set(c.id)
+	c.entityComponentBitSet.Set(entity, c.id)
 
 	c.createdEntities.Append(entity)
 
@@ -178,8 +181,7 @@ func (c *ComponentManager[T]) Remove(entity Entity) {
 	c.entities.SoftReduce()
 
 	c.lookup.Delete(entity)
-	mask := c.maskComponent.GetPtr(entity)
-	mask.Unset(c.id)
+	c.entityComponentBitSet.Unset(entity, c.id)
 
 	c.deletedEntities.Append(entity)
 
@@ -357,7 +359,7 @@ func (c *ComponentManager[T]) Len() int32 {
 }
 
 func (c *ComponentManager[T]) Clean() {
-	c.maskComponent.Clean()
+	// c.entityComponentBitSet.Clean()
 	// c.components.Clean()
 	// c.entities.Clean()
 }

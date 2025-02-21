@@ -43,85 +43,87 @@ import (
 	"sync/atomic"
 )
 
+const (
+	PREALLOC_DELETED_ENTITIES uint32 = 1 << 10
+)
+
+func NewEntityManager() EntityManager {
+	entityManager := EntityManager{
+		deletedEntityIDs: make([]Entity, 0, PREALLOC_DELETED_ENTITIES),
+		components:       make(map[ComponentId]AnyComponentManagerPtr),
+	}
+
+	return entityManager
+}
+
 type EntityManager struct {
 	lastId Entity
 	size   uint32
 
-	components          map[ComponentID]AnyComponentManagerPtr
-	deletedEntityIDs    []Entity
-	entityComponentMask *SparseSet[ComponentBitArray256, Entity]
-	mx                  sync.Mutex
+	groups           map[string][]Entity
+	components       map[ComponentId]AnyComponentManagerPtr
+	deletedEntityIDs []Entity
+	componentBitSet  ComponentBitSet
+	mx               sync.Mutex
 
 	patch Patch
 }
 
 type Patch []ComponentPatch
 
-func (w *EntityManager) RegisterComponentServices(componentPtr ...AnyComponentServicePtr) {
-	for i := 0; i < len(componentPtr); i++ {
-		w.components[componentPtr[i].getId()] = componentPtr[i].register(w)
-	}
-}
+func (e *EntityManager) Create() Entity {
+	var newId = e.generateEntityID()
 
-func (w *EntityManager) Create() Entity {
-	var newId = w.generateEntityID()
-
-	w.entityComponentMask.Set(newId, ComponentBitArray256{})
-	w.size++
+	e.size++
 
 	return newId
 }
 
-func (w *EntityManager) Delete(entity Entity) {
-	mask := w.entityComponentMask.GetPtr(entity)
-	if mask == nil {
-		panic(fmt.Sprintf("Entity %d does not exist", entity))
-	}
+func (e *EntityManager) Delete(entity Entity) {
+	e.componentBitSet.AllSet(entity, func(id ComponentId) bool {
+		e.components[id].Remove(entity)
+		return true
+	})
 
-	for i := range mask.AllSet {
-		w.components[i].Remove(entity)
-	}
-
-	w.entityComponentMask.SoftDelete(entity)
-	w.deletedEntityIDs = append(w.deletedEntityIDs, entity)
-	w.size--
+	e.deletedEntityIDs = append(e.deletedEntityIDs, entity)
+	e.size--
 }
 
-func (w *EntityManager) Clean() {
-	for i := range w.components {
-		w.components[i].Clean()
+func (e *EntityManager) Clean() {
+	for i := range e.components {
+		e.components[i].Clean()
 	}
 }
 
-func (w *EntityManager) Size() uint32 {
-	return w.size
+func (e *EntityManager) Size() uint32 {
+	return e.size
 }
 
-func (w *EntityManager) LastId() Entity {
-	return w.lastId
+func (e *EntityManager) LastId() Entity {
+	return e.lastId
 }
 
-func (w *EntityManager) Destroy() {
-	w.Clean()
+func (e *EntityManager) Destroy() {
+	e.Clean()
 }
 
-func (w *EntityManager) PatchGet() Patch {
-	patch := w.patch
+func (e *EntityManager) PatchGet() Patch {
+	patch := e.patch
 
-	for _, component := range w.components {
+	for _, component := range e.components {
 		if !component.IsTrackingChanges() {
 			continue
 		}
 
-		w.patch[component.getId()] = component.PatchGet()
+		e.patch[component.Id()] = component.PatchGet()
 	}
 
 	return patch
 }
 
-func (w *EntityManager) PatchApply(patch Patch) {
+func (e *EntityManager) PatchApply(patch Patch) {
 	for _, componentPatch := range patch {
-		component := w.components[componentPatch.ID]
+		component := e.components[componentPatch.ID]
 		if component == nil {
 			panic(fmt.Sprintf("Component %d does not exist", componentPatch.ID))
 		}
@@ -134,8 +136,8 @@ func (w *EntityManager) PatchApply(patch Patch) {
 	}
 }
 
-func (w *EntityManager) PatchReset() {
-	for i, component := range w.components {
+func (e *EntityManager) PatchReset() {
+	for i, component := range e.components {
 		if component == nil {
 			panic(fmt.Sprintf("Component %d does not exist", i))
 		}
@@ -148,16 +150,21 @@ func (w *EntityManager) PatchReset() {
 	}
 }
 
-func (w *EntityManager) init() {
-	w.patch = make(Patch, len(w.components))
+func (e *EntityManager) init() {
+	e.componentBitSet = NewComponentBitSet()
+	e.patch = make(Patch, len(e.components))
 }
 
-func (w *EntityManager) generateEntityID() (newId Entity) {
-	if len(w.deletedEntityIDs) == 0 {
-		newId = Entity(atomic.AddUint32((*entityType)(&w.lastId), 1))
+func (e *EntityManager) generateEntityID() (newId Entity) {
+	if len(e.deletedEntityIDs) == 0 {
+		newId = Entity(atomic.AddUint32((*entityType)(&e.lastId), 1))
 	} else {
-		newId = w.deletedEntityIDs[len(w.deletedEntityIDs)-1]
-		w.deletedEntityIDs = w.deletedEntityIDs[:len(w.deletedEntityIDs)-1]
+		newId = e.deletedEntityIDs[len(e.deletedEntityIDs)-1]
+		e.deletedEntityIDs = e.deletedEntityIDs[:len(e.deletedEntityIDs)-1]
 	}
 	return newId
+}
+
+func (e *EntityManager) registerComponent(c AnyComponentManagerPtr) {
+	e.components[c.Id()] = c
 }

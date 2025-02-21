@@ -12,16 +12,14 @@ none :)
 Thank you for your support!
 */
 
-package components
+package scenes
 
-import "gomp/pkg/ecs"
-
-type Health struct {
-	Hp, MaxHp int32
+func NewSceneList() SceneList {
+	return SceneList{
+		Main: NewMainScene(),
+	}
 }
 
-type HealthComponentManager = ecs.ComponentManager[Health]
-
-func NewHealthComponentManager() HealthComponentManager {
-	return ecs.NewComponentManager[Health](HEALTH_ID)
+type SceneList struct {
+	Main MainScene
 }

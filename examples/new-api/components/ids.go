@@ -17,6 +17,6 @@ package components
 import "gomp/pkg/ecs"
 
 const (
-	INVALID_ID ecs.ComponentID = iota
+	INVALID_ID ecs.ComponentId = iota
 	HEALTH_ID
 )

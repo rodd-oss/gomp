@@ -35,7 +35,10 @@ func (s *DebugSystem) Run(dt time.Duration) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			pprof.StartCPUProfile(f)
+			err = pprof.StartCPUProfile(f)
+			if err != nil {
+				log.Fatal(err)
+			}
 			fmt.Println("CPU Profile Started")
 		}
 

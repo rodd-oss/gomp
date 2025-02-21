@@ -20,8 +20,10 @@ import (
 )
 
 func main() {
+	sceneList := scenes.NewSceneList()
+
 	game := gomp.NewGame(
-		scenes.NewMainScene(),
+		&sceneList.Main,
 	)
 	game.CurrentSceneId = scenes.MainSceneId
 

@@ -18,12 +18,10 @@ import (
 	"gomp"
 	"gomp/examples/new-api/assets"
 	"gomp/examples/new-api/systems"
-	"gomp/pkg/ecs"
 	"gomp/stdsystems"
-	"reflect"
 )
 
-func NewSystemList(entityManager *ecs.EntityManager, componentList *ComponentList) SystemList {
+func NewSystemList() SystemList {
 	newSystemList := SystemList{
 		Player:                   systems.NewPlayerSystem(),
 		Debug:                    stdsystems.NewDebugSystem(),
@@ -45,8 +43,6 @@ func NewSystemList(entityManager *ecs.EntityManager, componentList *ComponentLis
 		AssetLib:                 stdsystems.NewAssetLibSystem([]gomp.AnyAssetLibrary{assets.Textures}),
 		Render:                   stdsystems.NewRenderSystem(),
 	}
-
-	InjectECSToSystems(&newSystemList, entityManager, componentList)
 
 	return newSystemList
 }
@@ -71,52 +67,4 @@ type SystemList struct {
 	TextureRenderTint        stdsystems.TextureRenderTintSystem
 	AssetLib                 stdsystems.AssetLibSystem
 	Render                   stdsystems.RenderSystem
-}
-
-type AnySystemList interface{}
-type AnyComponentList interface{}
-
-func InjectECSToSystems(systemList AnySystemList, world *ecs.EntityManager, componentList AnyComponentList) {
-	reflectedSystemList := reflect.ValueOf(systemList).Elem()
-	systemsLen := reflectedSystemList.NumField()
-
-	reflectedComponentList := reflect.ValueOf(componentList).Elem()
-	componentsLen := reflectedComponentList.NumField()
-
-	worldType := reflect.TypeOf(world)
-
-	for i := range systemsLen {
-		system := reflectedSystemList.Field(i)
-		systemLen := system.NumField()
-
-		for j := range systemLen {
-			systemField := system.Field(j)
-			systemFieldType := systemField.Type()
-
-			if systemFieldType.Kind() != reflect.Ptr {
-				continue
-			}
-
-			if systemFieldType == worldType {
-				system.Field(j).Set(reflect.ValueOf(world))
-				continue
-			}
-
-			// TODO: refactor to component list indexed map to speed up assignment
-			shouldEscape := false
-			for k := range componentsLen {
-				component := reflectedComponentList.Field(k)
-				componentType := component.Type()
-
-				if systemFieldType.Elem() == componentType {
-					system.Field(j).Set(component.Addr())
-					shouldEscape = true
-				}
-
-				if shouldEscape {
-					break
-				}
-			}
-		}
-	}
 }

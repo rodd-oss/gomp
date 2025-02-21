@@ -19,7 +19,7 @@ func NewPlayerSystem() PlayerSystem {
 }
 
 type PlayerSystem struct {
-	World            *ecs.EntityManager
+	EntityManager    *ecs.EntityManager
 	Player           entities.Player
 	SpriteMatrixes   *stdcomponents.SpriteMatrixComponentManager
 	Positions        *stdcomponents.PositionComponentManager
@@ -30,11 +30,12 @@ type PlayerSystem struct {
 	AnimationStates  *stdcomponents.AnimationStateComponentManager
 	Tints            *stdcomponents.TintComponentManager
 	Flips            *stdcomponents.FlipComponentManager
+	isDeleted        bool
 }
 
 func (s *PlayerSystem) Init() {
 	s.Player = entities.CreatePlayer(
-		s.World, s.SpriteMatrixes, s.Positions, s.Rotations, s.Scales,
+		s.EntityManager, s.SpriteMatrixes, s.Positions, s.Rotations, s.Scales,
 		s.Velocities, s.AnimationPlayers, s.AnimationStates, s.Tints, s.Flips,
 	)
 	s.Player.Position.X = 100
@@ -48,6 +49,9 @@ func (s *PlayerSystem) Run(dt time.Duration) {
 	s.Player.Velocity.X = 0
 	s.Player.Velocity.Y = 0
 
+	if s.isDeleted {
+		return
+	}
 	if rl.IsKeyDown(rl.KeySpace) {
 		*animationState = entities.PlayerStateJump
 	} else {
@@ -70,6 +74,11 @@ func (s *PlayerSystem) Run(dt time.Duration) {
 			*animationState = entities.PlayerStateWalk
 			s.Player.Velocity.Y = speed
 		}
+	}
+
+	if rl.IsKeyPressed(rl.KeyK) {
+		s.EntityManager.Delete(s.Player.Entity)
+		s.isDeleted = true
 	}
 }
 func (s *PlayerSystem) Destroy() {}

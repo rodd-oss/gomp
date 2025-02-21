@@ -22,6 +22,6 @@ type Velocity struct {
 
 type VelocityComponentManager = ecs.ComponentManager[Velocity]
 
-func NewVelocityComponentManager(world *ecs.EntityManager) VelocityComponentManager {
-	return ecs.NewComponentManager[Velocity](world, VELOCITY_ID)
+func NewVelocityComponentManager() VelocityComponentManager {
+	return ecs.NewComponentManager[Velocity](VELOCITY_ID)
 }

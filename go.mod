@@ -1,6 +1,6 @@
 module gomp
 
-go 1.24.0
+go 1.23.5
 
 replace github.com/ugorji/go v1.1.4 => github.com/ugorji/go v1.1.7
 

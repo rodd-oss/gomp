@@ -12,9 +12,12 @@ type AnySystemPtrDeprecated[W any] interface {
 	Destroy(*W)
 }
 
-type AnySystemPointer interface {
+type AnySystemPtr interface {
 	Init(manager *EntityManager)
 	Update(manager *EntityManager)
 	FixedUpdate(manager *EntityManager)
 	Destroy(manager *EntityManager)
 }
+
+type AnySystemListPtr interface{}
+type AnySystemList interface{}

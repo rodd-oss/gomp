@@ -31,6 +31,6 @@ type TextureRender struct {
 
 type TextureRenderComponentManager = ecs.ComponentManager[TextureRender]
 
-func NewTextureRenderComponentManager(world *ecs.EntityManager) TextureRenderComponentManager {
-	return ecs.NewComponentManager[TextureRender](world, TEXTURE_RENDER_ID)
+func NewTextureRenderComponentManager() TextureRenderComponentManager {
+	return ecs.NewComponentManager[TextureRender](TEXTURE_RENDER_ID)
 }

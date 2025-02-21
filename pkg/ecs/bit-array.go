@@ -52,34 +52,34 @@ const bit_array_size = 256 / bits.UintSize
 type ComponentBitArray256 [bit_array_size]uint
 
 // Set sets the bit at the given index to 1.
-func (b *ComponentBitArray256) Set(index ComponentID) {
+func (b *ComponentBitArray256) Set(index ComponentId) {
 	b[index/bits.UintSize] |= 1 << (index % bits.UintSize)
 }
 
 // Unset clears the bit at the given index (sets it to 0).
-func (b *ComponentBitArray256) Unset(index ComponentID) {
+func (b *ComponentBitArray256) Unset(index ComponentId) {
 	b[index/bits.UintSize] &^= 1 << (index % bits.UintSize)
 }
 
 // Toggle toggles the bit at the given index.
-func (b *ComponentBitArray256) Toggle(index ComponentID) {
+func (b *ComponentBitArray256) Toggle(index ComponentId) {
 	b[index/bits.UintSize] ^= 1 << (index % bits.UintSize)
 }
 
 // IsSet checks if the bit at the given index is set (1). Automatically resizes if the index is out of bounds.
-func (b *ComponentBitArray256) IsSet(index ComponentID) bool {
+func (b *ComponentBitArray256) IsSet(index ComponentId) bool {
 	return (b[index/bits.UintSize] & (1 << (index % bits.UintSize))) != 0
 }
 
-func (b *ComponentBitArray256) AllSet(yield func(ComponentID) bool) {
-	var id ComponentID
+func (b *ComponentBitArray256) AllSet(yield func(ComponentId) bool) {
+	var id ComponentId
 	var raisedBitsCount int
 	for i, v := range b {
 		raisedBitsCount = bits.OnesCount(v)
 		for range raisedBitsCount {
 			index := bits.Len(v) - 1
 			v &^= 1 << index
-			id = ComponentID(i*bits.UintSize + index)
+			id = ComponentId(i*bits.UintSize + index)
 			if !yield(id) {
 				return
 			}

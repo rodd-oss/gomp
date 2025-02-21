@@ -12,16 +12,8 @@ none :)
 Thank you for your support!
 */
 
-package components
+package instances
 
 import "gomp/pkg/ecs"
 
-type Health struct {
-	Hp, MaxHp int32
-}
-
-type HealthComponentManager = ecs.ComponentManager[Health]
-
-func NewHealthComponentManager() HealthComponentManager {
-	return ecs.NewComponentManager[Health](HEALTH_ID)
-}
+type World = ecs.World[ComponentList, SystemList]
