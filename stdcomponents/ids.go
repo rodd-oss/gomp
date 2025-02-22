@@ -15,6 +15,7 @@ const (
 	PositionComponentId
 	RotationComponentId
 	ScaleComponentId
+	ViewPositionId
 	FlipComponentId
 	VelocityComponentId
 	SpriteComponentId

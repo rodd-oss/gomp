@@ -10,7 +10,6 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
-	"time"
 )
 
 func NewTextureRenderSpriteSheetSystem() TextureRenderSpriteSheetSystem {
@@ -24,7 +23,7 @@ type TextureRenderSpriteSheetSystem struct {
 }
 
 func (s *TextureRenderSpriteSheetSystem) Init() {}
-func (s *TextureRenderSpriteSheetSystem) Run(dt time.Duration) {
+func (s *TextureRenderSpriteSheetSystem) Run() {
 	s.SpriteSheets.AllParallel(func(entity ecs.Entity, spriteSheet *stdcomponents.SpriteSheet) bool {
 		if spriteSheet == nil {
 			return true

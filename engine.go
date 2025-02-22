@@ -15,17 +15,13 @@ Thank you for your support!
 package gomp
 
 import (
+	"log"
 	"time"
 )
 
-type AnyGame interface {
-	Init()
-	Update(dt time.Duration)
-	FixedUpdate(dt time.Duration)
-	Render(dt time.Duration)
-	Destroy()
-	ShouldDestroy() bool
-}
+const (
+	MaxFrameSkips = 10
+)
 
 func NewEngine(game AnyGame) Engine {
 	engine := Engine{
@@ -38,49 +34,50 @@ func NewEngine(game AnyGame) Engine {
 type Engine struct {
 	Game AnyGame
 
-	lastUpdateAt      time.Time
 	lastFixedUpdateAt time.Time
-	lastRenderAt      time.Time
 }
 
 func (e *Engine) Run(tickrate uint, framerate uint) {
+
 	fixedUpdDuration := time.Second / time.Duration(tickrate)
-	framerateDuration := time.Second / time.Duration(framerate)
 
-	fixedUpdTicker := time.NewTicker(fixedUpdDuration)
-	defer fixedUpdTicker.Stop()
-
-	renderTicker := time.NewTicker(framerateDuration)
-	defer renderTicker.Stop()
+	var renderTicker *time.Ticker
+	if framerate > 0 {
+		renderTicker = time.NewTicker(time.Second / time.Duration(framerate))
+		defer renderTicker.Stop()
+	}
 
 	e.Game.Init()
 	defer e.Game.Destroy()
 
-	e.lastUpdateAt = time.Now()
-	e.lastFixedUpdateAt = time.Now()
-	e.lastRenderAt = time.Now()
+	lastUpdateAt := time.Now() // TODO: REMOVE?
+	nextFixedUpdateAt := time.Now()
 
 	for !e.Game.ShouldDestroy() {
+		if renderTicker != nil {
+			<-renderTicker.C
+		}
+
 		// Update
-		e.Game.Update(time.Since(e.lastUpdateAt))
-		e.lastUpdateAt = time.Now()
+		e.Game.Update(time.Since(lastUpdateAt))
 
 		// Fixed Update
-		select {
-		case <-fixedUpdTicker.C:
-			e.Game.FixedUpdate(time.Since(e.lastFixedUpdateAt))
-			e.lastFixedUpdateAt = time.Now()
-		default:
-			break
+		loops := 0
+		for nextFixedUpdateAt.Compare(time.Now()) == -1 && loops < MaxFrameSkips {
+			e.Game.FixedUpdate(fixedUpdDuration)
+			e.lastFixedUpdateAt = nextFixedUpdateAt
+			nextFixedUpdateAt = nextFixedUpdateAt.Add(fixedUpdDuration)
+			loops++
+		}
+		if loops >= MaxFrameSkips {
+			log.Println("Too many updates detected")
 		}
 
 		// Render
-		select {
-		case <-renderTicker.C:
-			e.Game.Render(time.Since(e.lastRenderAt))
-			e.lastRenderAt = time.Now()
-		default:
-			break
-		}
+
+		sinceLastFixedUpdateAt := time.Since(e.lastFixedUpdateAt)
+		interpolation := float32(sinceLastFixedUpdateAt.Microseconds()) / float32(fixedUpdDuration.Microseconds())
+		e.Game.Render(interpolation)
+		lastUpdateAt = time.Now()
 	}
 }

@@ -9,7 +9,6 @@ package stdsystems
 import (
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
-	"time"
 )
 
 func NewTextureRenderScaleSystem() TextureRenderScaleSystem {
@@ -23,7 +22,7 @@ type TextureRenderScaleSystem struct {
 }
 
 func (s *TextureRenderScaleSystem) Init() {}
-func (s *TextureRenderScaleSystem) Run(dt time.Duration) {
+func (s *TextureRenderScaleSystem) Run(interpolation float32) {
 	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true

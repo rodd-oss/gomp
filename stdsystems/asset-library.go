@@ -8,7 +8,6 @@ package stdsystems
 
 import (
 	"gomp"
-	"time"
 )
 
 func NewAssetLibSystem(assets []gomp.AnyAssetLibrary) AssetLibSystem {
@@ -22,7 +21,7 @@ type AssetLibSystem struct {
 }
 
 func (s *AssetLibSystem) Init() {}
-func (s *AssetLibSystem) Run(dt time.Duration) {
+func (s *AssetLibSystem) Run() {
 	for _, asset := range s.assets {
 		asset.LoadAll()
 	}

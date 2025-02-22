@@ -20,6 +20,15 @@ import (
 	"time"
 )
 
+type AnyGame interface {
+	Init()
+	Update(dt time.Duration)
+	FixedUpdate(dt time.Duration)
+	Render(interpolation float32)
+	Destroy()
+	ShouldDestroy() bool
+}
+
 func NewGame(scenes ...AnyScene) Game {
 	sceneSet := make(map[SceneId]AnyScene, len(scenes))
 
@@ -70,10 +79,10 @@ func (g *Game) FixedUpdate(dt time.Duration) {
 	scene.FixedUpdate(dt)
 }
 
-func (g *Game) Render(dt time.Duration) {
+func (g *Game) Render(interpolation float32) {
 	scene, ok := g.Scenes[g.CurrentSceneId]
 	assert.True(ok, "Scene not found")
-	scene.Render(dt)
+	scene.Render(interpolation)
 }
 
 func (g *Game) Destroy() {

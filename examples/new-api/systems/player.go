@@ -12,7 +12,6 @@ import (
 	"gomp/examples/new-api/entities"
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
-	"time"
 )
 
 func NewPlayerSystem() PlayerSystem {
@@ -46,7 +45,7 @@ func (s *PlayerSystem) Init() {
 	s.Player.Position.X = 100
 	s.Player.Position.Y = 100
 }
-func (s *PlayerSystem) Run(dt time.Duration) {
+func (s *PlayerSystem) Run() {
 	animationState := s.AnimationStates.Get(s.Player.Entity)
 
 	var speed float32 = 300

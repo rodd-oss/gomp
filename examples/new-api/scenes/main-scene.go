@@ -77,44 +77,43 @@ func (s *MainScene) Init() {
 func (s *MainScene) Update(dt time.Duration) gomp.SceneId {
 	// Network receive
 	s.World.Systems.NetworkReceive.Run(dt)
+	s.World.Systems.Player.Run()
 
 	return MainSceneId
 }
 
 func (s *MainScene) FixedUpdate(dt time.Duration) {
 	// Network send
+	s.World.Systems.Network.Run(dt)
+
+	s.World.Systems.Velocity.Run(dt)
+	s.World.Systems.ViewPosition.Run()
 	s.World.Systems.NetworkSend.Run(dt)
 }
 
-func (s *MainScene) Render(dt time.Duration) {
-	s.World.Systems.Network.Run(dt)
-
-	s.World.Systems.Player.Run(dt)
-
-	s.World.Systems.Velocity.Run(dt)
-
+func (s *MainScene) Render(interpolation float32) {
 	// Animation
-	s.World.Systems.AnimationSpriteMatrix.Run(dt)
-	s.World.Systems.AnimationPlayer.Run(dt)
+	s.World.Systems.AnimationSpriteMatrix.Run()
+	s.World.Systems.AnimationPlayer.Run()
 
 	// Prerender init
-	s.World.Systems.TextureRenderSprite.Run(dt)
-	s.World.Systems.TextureRenderSpriteSheet.Run(dt)
-	s.World.Systems.TextureRenderMatrix.Run(dt)
+	s.World.Systems.TextureRenderSprite.Run()
+	s.World.Systems.TextureRenderSpriteSheet.Run()
+	s.World.Systems.TextureRenderMatrix.Run()
 
 	// Prerender fill
-	s.World.Systems.TextureRenderAnimation.Run(dt)
-	s.World.Systems.TextureRenderFlip.Run(dt)
-	s.World.Systems.TextureRenderPosition.Run(dt)
-	s.World.Systems.TextureRenderRotation.Run(dt)
-	s.World.Systems.TextureRenderScale.Run(dt)
-	s.World.Systems.TextureRenderTint.Run(dt)
+	s.World.Systems.TextureRenderAnimation.Run()
+	s.World.Systems.TextureRenderFlip.Run()
+	s.World.Systems.TextureRenderPosition.Run(interpolation)
+	s.World.Systems.TextureRenderRotation.Run(interpolation)
+	s.World.Systems.TextureRenderScale.Run(interpolation)
+	s.World.Systems.TextureRenderTint.Run(interpolation)
 
 	// Render
-	s.World.Systems.Debug.Run(dt)
+	s.World.Systems.Debug.Run()
 
-	s.World.Systems.AssetLib.Run(dt)
-	shouldContinue := s.World.Systems.Render.Run(dt)
+	s.World.Systems.AssetLib.Run()
+	shouldContinue := s.World.Systems.Render.Run()
 	if !shouldContinue {
 		s.Game.SetShouldDestroy(true)
 		return

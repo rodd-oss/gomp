@@ -8,12 +8,10 @@ package stdsystems
 
 import (
 	"fmt"
+	rl "github.com/gen2brain/raylib-go/raylib"
 	"log"
 	"os"
 	"runtime/pprof"
-	"time"
-
-	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func NewDebugSystem() DebugSystem {
@@ -25,7 +23,7 @@ type DebugSystem struct {
 }
 
 func (s *DebugSystem) Init() {}
-func (s *DebugSystem) Run(dt time.Duration) {
+func (s *DebugSystem) Run() {
 	if rl.IsKeyPressed(rl.KeyF9) {
 		if s.pprofEnabled {
 			pprof.StopCPUProfile()

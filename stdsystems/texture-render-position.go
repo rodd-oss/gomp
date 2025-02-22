@@ -9,7 +9,6 @@ package stdsystems
 import (
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
-	"time"
 )
 
 func NewTextureRenderPositionSystem() TextureRenderPositionSystem {
@@ -18,24 +17,27 @@ func NewTextureRenderPositionSystem() TextureRenderPositionSystem {
 
 // TextureRenderPositionSystem is a system that sets Position of textureRender
 type TextureRenderPositionSystem struct {
-	Positions      *stdcomponents.PositionComponentManager
+	ViewPositions  *stdcomponents.ViewPositionComponentManager
 	TextureRenders *stdcomponents.TextureRenderComponentManager
 }
 
 func (s *TextureRenderPositionSystem) Init() {}
-func (s *TextureRenderPositionSystem) Run(dt time.Duration) {
+func (s *TextureRenderPositionSystem) Run(interpolation float32) {
 	s.TextureRenders.AllParallel(func(entity ecs.Entity, tr *stdcomponents.TextureRender) bool {
 		if tr == nil {
 			return true
 		}
 
-		position := s.Positions.Get(entity)
-		if position == nil {
+		viewPosition := s.ViewPositions.Get(entity)
+		if viewPosition == nil {
 			return true
 		}
 
-		tr.Dest.X = position.X
-		tr.Dest.Y = position.Y
+		// Lerp(start, end, amount float32) start + amount*(end-start)
+		interpolationX := interpolation * (viewPosition.CurrentPositionX - viewPosition.LastPositionX)
+		interpolationY := interpolation * (viewPosition.CurrentPositionY - viewPosition.LastPositionY)
+		tr.Dest.X = viewPosition.LastPositionX + interpolationX
+		tr.Dest.Y = viewPosition.LastPositionY + interpolationY
 
 		return true
 	})

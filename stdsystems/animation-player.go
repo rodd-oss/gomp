@@ -21,10 +21,14 @@ func NewAnimationPlayerSystem() AnimationPlayerSystem {
 
 type AnimationPlayerSystem struct {
 	AnimationPlayers *ecs.ComponentManager[stdcomponents.AnimationPlayer]
+	lastRunAt        time.Time
 }
 
-func (s *AnimationPlayerSystem) Init() {}
-func (s *AnimationPlayerSystem) Run(dt time.Duration) {
+func (s *AnimationPlayerSystem) Init() {
+	s.lastRunAt = time.Now()
+}
+func (s *AnimationPlayerSystem) Run() {
+	dt := time.Since(s.lastRunAt)
 	s.AnimationPlayers.AllDataParallel(func(animation *stdcomponents.AnimationPlayer) bool {
 		animation.ElapsedTime += time.Duration(float32(dt.Microseconds())*animation.Speed) * time.Microsecond
 
@@ -61,5 +65,6 @@ func (s *AnimationPlayerSystem) Run(dt time.Duration) {
 
 		return true
 	})
+	s.lastRunAt = time.Now()
 }
 func (s *AnimationPlayerSystem) Destroy() {}

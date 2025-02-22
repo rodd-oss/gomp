@@ -23,6 +23,7 @@ type ComponentList struct {
 	Position        stdcomponents.PositionComponentManager
 	Rotation        stdcomponents.RotationComponentManager
 	Scale           stdcomponents.ScaleComponentManager
+	ViewPosition    stdcomponents.ViewPositionComponentManager
 	Velocity        stdcomponents.VelocityComponentManager
 	Flip            stdcomponents.FlipComponentManager
 	Sprite          stdcomponents.SpriteComponentManager
@@ -43,6 +44,7 @@ func NewComponentList() ComponentList {
 		Position:        stdcomponents.NewPositionComponentManager(),
 		Rotation:        stdcomponents.NewRotationComponentManager(),
 		Scale:           stdcomponents.NewScaleComponentManager(),
+		ViewPosition:    stdcomponents.NewViewPositionComponentManager(),
 		Velocity:        stdcomponents.NewVelocityComponentManager(),
 		Flip:            stdcomponents.NewFlipComponentManager(),
 		Sprite:          stdcomponents.NewSpriteComponentManager(),
