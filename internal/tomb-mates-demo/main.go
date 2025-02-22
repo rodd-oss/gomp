@@ -172,7 +172,7 @@ package tomb_mates_demo
 // 	// }
 
 // 	g.Mx.Lock()
-// 	components.Render.Each(g.World, func(e *ecs.Entry) {
+// 	components.Render.Each(g.EntityManager, func(e *ecs.Entry) {
 // 		body := components.Transform.GetValue(e)
 
 // 		op.GeoM.Reset()
@@ -180,7 +180,7 @@ package tomb_mates_demo
 // 		screen.DrawImage(dotBlue, op)
 // 	})
 
-// 	components.NetworkEntity.Each(g.World, func(e *ecs.Entry) {
+// 	components.NetworkEntity.Each(g.EntityManager, func(e *ecs.Entry) {
 // 		ne := components.NetworkEntity.GetValue(e)
 
 // 		op.GeoM.Reset()
