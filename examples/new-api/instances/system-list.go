@@ -52,6 +52,7 @@ func NewSystemList() SystemList {
 		SpaceshipIntents: systems.NewSpaceshipIntentsSystem(),
 		SpaceSpawner:     systems.NewSpaceSpawnerSystem(),
 		Hp:               systems.NewHpSystem(),
+		Camera:           systems.NewCameraSystem(),
 	}
 
 	return newSystemList
@@ -87,4 +88,5 @@ type SystemList struct {
 	SpaceshipIntents systems.SpaceshipIntentsSystem
 	SpaceSpawner     systems.SpaceSpawnerSystem
 	Hp               systems.HpSystem
+	Camera           systems.CameraSystem
 }

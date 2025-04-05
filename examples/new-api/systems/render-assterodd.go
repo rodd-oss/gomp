@@ -20,6 +20,7 @@ import (
 	"gomp/examples/new-api/components"
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
+	"gomp/vectors"
 	"math"
 	"slices"
 	"sync"
@@ -52,10 +53,17 @@ type RenderAssteroddSystem struct {
 	Collisions                         *stdcomponents.CollisionComponentManager
 	ColliderSleepStateComponentManager *stdcomponents.ColliderSleepStateComponentManager
 	BvhTrees                           *stdcomponents.BvhTreeComponentManager
+	MainCamera                         *stdcomponents.MainCameraComponentManager
+	PipCamera                          *stdcomponents.PipCameraComponentManager
+	MinimapCamera                      *stdcomponents.MinimapCameraComponentManager
 	renderList                         []renderEntry
 	instanceData                       []stdcomponents.RLTexturePro
-	camera                             rl.Camera2D
-	SceneManager                       *components.AsteroidSceneManagerComponentManager
+	//Game logic, cache cameras, we should be sure no one delete or move them
+	mainCamera    *stdcomponents.Camera
+	pipCamera     *stdcomponents.PipCamera
+	minimapCamera *stdcomponents.MinimapCamera
+
+	SceneManager *components.AsteroidSceneManagerComponentManager
 
 	monitorWidth  int
 	monitorHeight int
@@ -67,12 +75,38 @@ type RenderAssteroddSystem struct {
 func (s *RenderAssteroddSystem) Init() {
 	s.monitorWidth = rl.GetScreenWidth()
 	s.monitorHeight = rl.GetScreenHeight()
-	s.camera = rl.Camera2D{
-		Target:   rl.NewVector2(float32(s.monitorWidth/2), float32(s.monitorHeight/2)),
-		Offset:   rl.NewVector2(float32(s.monitorWidth/2), float32(s.monitorHeight/2)),
-		Rotation: 0,
-		Zoom:     1,
-	}
+
+	s.MainCamera.EachComponent(func(c *stdcomponents.Camera) bool {
+		c.Camera2D = stdcomponents.Camera2D{
+			Target:   vectors.Vec2{X: float32(s.monitorWidth / 2), Y: float32(s.monitorHeight / 2)},
+			Offset:   vectors.Vec2{X: float32(s.monitorWidth / 2), Y: float32(s.monitorHeight / 2)},
+			Rotation: 0,
+			Zoom:     1,
+		}
+		s.mainCamera = c
+		return false
+	})
+	s.PipCamera.EachComponent(func(c *stdcomponents.PipCamera) bool {
+		c.Camera2D = stdcomponents.Camera2D{
+			Target:   vectors.Vec2{X: float32(s.monitorWidth) * 0.1, Y: float32(s.monitorHeight) * 0.05},
+			Offset:   vectors.Vec2{X: float32(s.monitorWidth) * 0.1, Y: float32(s.monitorHeight) * 0.05},
+			Rotation: 0,
+			Zoom:     1,
+		}
+		s.pipCamera = c
+		return false
+	})
+	s.MinimapCamera.EachComponent(func(c *stdcomponents.MinimapCamera) bool {
+		c.Camera2D = stdcomponents.Camera2D{
+			Target:   vectors.Vec2{X: float32(s.monitorWidth) * 0.1, Y: float32(s.monitorHeight) * 0.1},
+			Offset:   vectors.Vec2{X: float32(s.monitorWidth) * 0.98, Y: float32(s.monitorHeight) * 0.98},
+			Rotation: 0,
+			Zoom:     1,
+		}
+		s.minimapCamera = c
+		return false
+	})
+
 }
 func (s *RenderAssteroddSystem) Run(dt time.Duration) bool {
 	if rl.WindowShouldClose() {
@@ -117,7 +151,7 @@ func (s *RenderAssteroddSystem) render() {
 	// DEBUG
 	// ==========
 	if s.debug {
-		rl.BeginMode2D(s.camera)
+		rl.BeginMode2D(s.mainCamera.ToRaylibCamera())
 		s.BoxColliders.EachEntity(func(e ecs.Entity) bool {
 			col := s.BoxColliders.Get(e)
 			scale := s.Scales.Get(e)
@@ -210,7 +244,7 @@ func (s *RenderAssteroddSystem) render() {
 	// DEBUG
 	// ==========
 	if s.debug {
-		rl.BeginMode2D(s.camera)
+		rl.BeginMode2D(s.mainCamera.ToRaylibCamera())
 		s.AABBs.EachEntity(func(e ecs.Entity) bool {
 			aabb := s.AABBs.Get(e)
 			clr := rl.Green
@@ -236,7 +270,7 @@ func (s *RenderAssteroddSystem) render() {
 }
 
 func (s *RenderAssteroddSystem) submitBatch(data []stdcomponents.RLTexturePro) {
-	rl.BeginMode2D(s.camera)
+	rl.BeginMode2D(s.mainCamera.ToRaylibCamera())
 	if s.debug {
 		for i := range data {
 			rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
@@ -318,8 +352,8 @@ func (s *RenderAssteroddSystem) preparePositions(wg *sync.WaitGroup, dt time.Dur
 		texturePro.Dest.Y = y
 		player := s.Player.Get(entity)
 		if player != nil {
-			s.camera.Target.X = x
-			s.camera.Target.Y = y
+			s.mainCamera.Target.X = x
+			s.mainCamera.Target.Y = y
 		}
 
 		return true

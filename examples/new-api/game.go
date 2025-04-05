@@ -16,6 +16,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"gomp"
 	"gomp/examples/new-api/instances"
 	"gomp/pkg/ecs"
@@ -25,10 +26,12 @@ import (
 
 func NewGame(initialScene gomp.AnyScene) Game {
 	game := Game{
-		worlds:       make([]instances.World, 0),
-		scenes:       make([]gomp.AnyScene, 0),
-		lookup:       make(map[gomp.SceneId]int),
-		renderSystem: stdsystems.NewRenderSystem(),
+		worlds:            make([]instances.World, 0),
+		scenes:            make([]gomp.AnyScene, 0),
+		lookup:            make(map[gomp.SceneId]int),
+		renderSystem:      stdsystems.NewRenderSystem(),
+		minimapSystem:     stdsystems.NewMinimapRenderSystem(),
+		finalRenderSystem: stdsystems.NewRenderTexture2DRenderSystem(),
 	}
 
 	game.LoadScene(initialScene)
@@ -45,14 +48,19 @@ type Game struct {
 	currentSceneId gomp.SceneId
 
 	// Systems
-	renderSystem stdsystems.RenderSystem
+	renderSystem  stdsystems.RenderSystem
+	minimapSystem stdsystems.MinimapRenderSystem
 
 	// Utils
-	shouldClose bool
+	shouldClose       bool
+	finalRenderSystem stdsystems.RenderTexture2DRenderSystem
 }
 
 func (g *Game) Init() {
-	g.renderSystem.Init()
+	err := g.injectWorldToRender()
+	if err != nil {
+		panic(fmt.Sprint("injectWorldToRender failed: ", err.Error()))
+	}
 
 	for i := range g.scenes {
 		world := &g.worlds[i]
@@ -74,6 +82,9 @@ func (g *Game) Init() {
 
 		g.scenes[i].Init(world)
 	}
+	g.renderSystem.Init()
+	g.minimapSystem.Init()
+	g.finalRenderSystem.Init()
 }
 
 func (g *Game) Update(dt time.Duration) {
@@ -96,10 +107,6 @@ func (g *Game) FixedUpdate(dt time.Duration) {
 }
 
 func (g *Game) Render(dt time.Duration) {
-	err := g.injectWorldToRender()
-	if err != nil {
-		panic("jfdk")
-	}
 
 	id := g.lookup[g.currentSceneId]
 	world := &g.worlds[id]
@@ -118,6 +125,8 @@ func (g *Game) Render(dt time.Duration) {
 	scene.Render(dt)
 
 	g.shouldClose = g.renderSystem.Run(dt)
+	g.minimapSystem.Run(dt)
+	g.finalRenderSystem.Run(dt)
 }
 
 func (g *Game) Destroy() {
@@ -146,6 +155,8 @@ func (g *Game) Destroy() {
 		world.Destroy()
 	}
 
+	g.finalRenderSystem.Destroy()
+	g.minimapSystem.Destroy()
 	g.renderSystem.Destroy()
 }
 
@@ -192,6 +203,37 @@ func (g *Game) injectWorldToRender() error {
 			Collisions:                         &world.Components.Collision,
 			ColliderSleepStateComponentManager: &world.Components.ColliderSleepState,
 			BvhTrees:                           &world.Components.BvhTree,
+			MainCameras:                        &world.Components.MainCamera,
+			RenderTexture2D:                    &world.Components.RenderTexture2D,
+		})
+	g.minimapSystem.InjectWorld(
+		&stdsystems.MinimapRenderInjector{
+			EntityManager:                      &world.Entities,
+			RlTexturePros:                      &world.Components.RLTexturePro,
+			Positions:                          &world.Components.Position,
+			Rotations:                          &world.Components.Rotation,
+			Scales:                             &world.Components.Scale,
+			AnimationPlayers:                   &world.Components.AnimationPlayer,
+			Tints:                              &world.Components.Tint,
+			Flips:                              &world.Components.Flip,
+			Renderables:                        &world.Components.Renderable,
+			AnimationStates:                    &world.Components.AnimationState,
+			Sprites:                            &world.Components.Sprite,
+			SpriteMatrixes:                     &world.Components.SpriteMatrix,
+			RenderOrders:                       &world.Components.RenderOrder,
+			BoxColliders:                       &world.Components.ColliderBox,
+			CircleColliders:                    &world.Components.ColliderCircle,
+			AABBs:                              &world.Components.AABB,
+			Collisions:                         &world.Components.Collision,
+			ColliderSleepStateComponentManager: &world.Components.ColliderSleepState,
+			BvhTrees:                           &world.Components.BvhTree,
+			MinimapCameras:                     &world.Components.MinimapCamera,
+			RenderTexture2D:                    &world.Components.RenderTexture2D,
+		})
+	g.finalRenderSystem.InjectWorld(
+		&stdsystems.RenderTexture2DRenderInjector{
+			EntityManager:   &world.Entities,
+			RenderTexture2D: &world.Components.RenderTexture2D,
 		})
 
 	return nil

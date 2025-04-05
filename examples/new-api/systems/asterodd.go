@@ -101,7 +101,7 @@ func (s *AssteroddSystem) Init() {
 	entities.CreateWall(&wallManager, -1000, -1000, 0, 1000, 7000)
 	entities.CreateWall(&wallManager, 5000, -1000, 0, 1000, 7000)
 
-	for range 30000 {
+	for range 1000 {
 		randPos := vectors.Vec2{
 			X: float32(rand.Intn(5000)) + float32(rand.Intn(1000))/10000,
 			Y: float32(rand.Intn(5000)) + float32(rand.Intn(1000))/10000,

@@ -19,6 +19,7 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
+	"gomp/vectors"
 	"math"
 	"slices"
 	"sync"
@@ -51,15 +52,18 @@ type RenderSystem struct {
 	Collisions                         *stdcomponents.CollisionComponentManager
 	ColliderSleepStateComponentManager *stdcomponents.ColliderSleepStateComponentManager
 	BvhTrees                           *stdcomponents.BvhTreeComponentManager
+	MainCameras                        *stdcomponents.MainCameraComponentManager
 
 	renderList   []renderEntry
 	instanceData []stdcomponents.RLTexturePro
-	camera       rl.Camera2D
+	screenCamera rl.RenderTexture2D
 
 	monitorWidth  int
 	monitorHeight int
 
-	debug bool
+	debug           bool
+	RenderTexture2D *stdcomponents.RenderTexture2DComponentManager
+	renderTexture2D *stdcomponents.RenderTexture2D
 }
 
 type renderEntry struct {
@@ -72,12 +76,24 @@ func (s *RenderSystem) Init() {
 	rl.InitWindow(1280, 720, "GOMP")
 	s.monitorWidth = rl.GetScreenWidth()
 	s.monitorHeight = rl.GetScreenHeight()
-	s.camera = rl.Camera2D{
-		Target:   rl.NewVector2(float32(s.monitorWidth/2), float32(s.monitorHeight/2)),
-		Offset:   rl.NewVector2(float32(s.monitorWidth/2), float32(s.monitorHeight/2)),
-		Rotation: 0,
-		Zoom:     1,
-	}
+	s.monitorWidth = rl.GetScreenWidth()
+	s.monitorHeight = rl.GetScreenHeight()
+
+	s.MainCameras.EachComponent(func(c *stdcomponents.Camera) bool {
+		//c.Camera2D = stdcomponents.Camera2D{
+		c.Target = vectors.Vec2{X: float32(s.monitorWidth / 2), Y: float32(s.monitorHeight / 2)}
+		c.Offset = vectors.Vec2{X: float32(s.monitorWidth / 2), Y: float32(s.monitorHeight / 2)}
+		c.Rotation = 0
+		c.Zoom = 1
+		//}
+		return false
+	})
+	s.screenCamera = rl.LoadRenderTexture(int32(s.monitorWidth), int32(s.monitorHeight))
+
+	screenCamera := s.EntityManager.Create()
+	s.renderTexture2D = s.RenderTexture2D.Create(screenCamera, stdcomponents.RenderTexture2D{})
+	s.renderTexture2D.Texture = s.screenCamera
+	s.renderTexture2D.Frame = rl.NewRectangle(0, 0, float32(s.monitorWidth), float32(s.monitorHeight))
 }
 
 func (s *RenderSystem) Run(dt time.Duration) bool {
@@ -89,15 +105,26 @@ func (s *RenderSystem) Run(dt time.Duration) bool {
 		s.debug = !s.debug
 	}
 
+	var mainCamera *stdcomponents.Camera
+	s.MainCameras.EachComponent(func(c *stdcomponents.Camera) bool {
+		mainCamera = c
+		return false
+	})
+
 	s.prepareRender(dt)
 
-	rl.BeginDrawing()
+	rl.BeginTextureMode(s.renderTexture2D.Texture)
+	rl.BeginMode2D(mainCamera.ToRaylibCamera())
+
 	rl.ClearBackground(rl.Black)
+
 	s.render()
+	rl.EndMode2D()
 
 	rl.DrawFPS(10, 10)
 	rl.DrawText(fmt.Sprintf("%d entities", s.EntityManager.Size()), 10, 30, 20, rl.RayWhite)
-	rl.EndDrawing()
+
+	rl.EndTextureMode()
 
 	return false
 }
@@ -126,6 +153,8 @@ type RenderInjector struct {
 	Collisions                         *stdcomponents.CollisionComponentManager
 	ColliderSleepStateComponentManager *stdcomponents.ColliderSleepStateComponentManager
 	BvhTrees                           *stdcomponents.BvhTreeComponentManager
+	MainCameras                        *stdcomponents.MainCameraComponentManager
+	RenderTexture2D                    *stdcomponents.RenderTexture2DComponentManager
 }
 
 func (s *RenderSystem) InjectWorld(injector *RenderInjector) {
@@ -148,6 +177,8 @@ func (s *RenderSystem) InjectWorld(injector *RenderInjector) {
 	s.Collisions = injector.Collisions
 	s.ColliderSleepStateComponentManager = injector.ColliderSleepStateComponentManager
 	s.BvhTrees = injector.BvhTrees
+	s.MainCameras = injector.MainCameras
+	s.RenderTexture2D = injector.RenderTexture2D
 }
 
 func (s *RenderSystem) render() {
@@ -155,7 +186,6 @@ func (s *RenderSystem) render() {
 	// DEBUG
 	// ==========
 	if s.debug {
-		rl.BeginMode2D(s.camera)
 		s.BoxColliders.EachEntity(func(e ecs.Entity) bool {
 			col := s.BoxColliders.Get(e)
 			scale := s.Scales.Get(e)
@@ -248,7 +278,6 @@ func (s *RenderSystem) render() {
 	// DEBUG
 	// ==========
 	if s.debug {
-		rl.BeginMode2D(s.camera)
 		s.AABBs.EachEntity(func(e ecs.Entity) bool {
 			aabb := s.AABBs.Get(e)
 			clr := rl.Green
@@ -269,12 +298,10 @@ func (s *RenderSystem) render() {
 			rl.DrawRectangle(int32(pos.XY.X-8), int32(pos.XY.Y-8), 16, 16, rl.Red)
 			return true
 		})
-		rl.EndMode2D()
 	}
 }
 
 func (s *RenderSystem) submitBatch(data []stdcomponents.RLTexturePro) {
-	rl.BeginMode2D(s.camera)
 	if s.debug {
 		for i := range data {
 			rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
@@ -285,7 +312,6 @@ func (s *RenderSystem) submitBatch(data []stdcomponents.RLTexturePro) {
 			rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
 		}
 	}
-	rl.EndMode2D()
 }
 
 func (s *RenderSystem) getInstanceData(e ecs.Entity) stdcomponents.RLTexturePro {

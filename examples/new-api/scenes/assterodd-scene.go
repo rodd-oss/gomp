@@ -73,10 +73,12 @@ func (s *AssteroddScene) Init(world ecs.AnyWorld) {
 	s.World.Systems.AssteroddSystem.Init()
 	s.World.Systems.CollisionHandler.Init()
 	s.World.Systems.SpaceshipIntents.Init()
+	s.World.Systems.Camera.Init()
 }
 
 func (s *AssteroddScene) Update(dt time.Duration) gomp.SceneId {
 	s.World.Systems.AssteroddSystem.Run(dt)
+	s.World.Systems.Camera.Run(dt)
 
 	return AssteroddSceneId
 }

@@ -56,6 +56,10 @@ type ComponentList struct {
 	SpaceshipIntent      components.SpaceshipIntentComponentManager
 	AsteroidSceneManager components.AsteroidSceneManagerComponentManager
 	SoundEffects         components.SoundEffectsComponentManager
+	MainCamera           stdcomponents.MainCameraComponentManager
+	PipCamera            stdcomponents.PipCameraComponentManager
+	MinimapCamera        stdcomponents.MinimapCameraComponentManager
+	RenderTexture2D      stdcomponents.RenderTexture2DComponentManager
 }
 
 func NewComponentList() ComponentList {
@@ -96,5 +100,9 @@ func NewComponentList() ComponentList {
 		SpaceshipIntent:      components.NewSpaceshipIntentComponentManager(),
 		AsteroidSceneManager: components.NewAsteroidSceneManagerComponentManager(),
 		SoundEffects:         components.NewSoundEffectsComponentManager(),
+		MainCamera:           stdcomponents.NewMainCameraComponentManager(),
+		PipCamera:            stdcomponents.NewPipCameraComponentManager(),
+		MinimapCamera:        stdcomponents.NewMinimapCameraComponentManager(),
+		RenderTexture2D:      stdcomponents.NewRenderTexture2DComponentManager(),
 	}
 }
