@@ -41,9 +41,9 @@ var Textures = gomp.CreateAssetLibrary(
 		rlImg := rl.NewImageFromImage(img)
 		return rl.LoadTextureFromImage(rlImg)
 	},
-	func(path string, asset *rl.Texture2D) {
+	func(path string, asset rl.Texture2D) {
 		assert.True(rl.IsWindowReady(), "Window is not initialized")
-		rl.UnloadTexture(*asset)
+		rl.UnloadTexture(asset)
 	},
 )
 
@@ -72,7 +72,7 @@ var Audio = gomp.CreateAssetLibrary(
 
 		return sound
 	},
-	func(path string, asset *rl.Sound) {
-		rl.UnloadSound(*asset)
+	func(path string, asset rl.Sound) {
+		rl.UnloadSound(asset)
 	},
 )

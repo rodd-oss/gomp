@@ -28,7 +28,7 @@ type SpriteMatrixAnimation struct {
 }
 
 type SpriteMatrix struct {
-	Texture    *rl.Texture2D
+	Texture    rl.Texture2D
 	Origin     rl.Vector2
 	FPS        int32
 	Animations []SpriteMatrixAnimation

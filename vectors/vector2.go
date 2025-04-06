@@ -104,3 +104,10 @@ func (v Vec2) Dot(other Vec2) float32 {
 func (v Vec2) ToVec3() Vec3 {
 	return Vec3{v.X, v.Y, 0}
 }
+
+type Rectangle struct {
+	X      float32
+	Y      float32
+	Width  float32
+	Height float32
+}

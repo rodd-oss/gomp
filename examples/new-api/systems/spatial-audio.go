@@ -61,7 +61,7 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 
 		clip := soundEffect.Clip
 
-		if clip == nil {
+		if clip.FrameCount == 0 {
 			return true
 		}
 
@@ -76,7 +76,7 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 		}
 
 		pan := s.calculatePan(playerPos.XY, position.XY)
-		rl.SetSoundPan(*clip, pan)
+		rl.SetSoundPan(clip, pan)
 
 		return true
 	})

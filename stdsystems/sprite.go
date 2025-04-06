@@ -43,7 +43,9 @@ func (s *SpriteSystem) Run() {
 
 		renderable := s.Renderables.Get(entity)
 		if renderable == nil {
-			renderable = s.Renderables.Create(entity, stdcomponents.SpriteRenderableType)
+			renderable = s.Renderables.Create(entity, stdcomponents.Renderable{
+				Type: stdcomponents.SpriteRenderableType,
+			})
 		}
 
 		renderOrder := s.RenderOrder.Get(entity)

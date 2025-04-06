@@ -41,35 +41,35 @@ func (s *AudioSystem) Run(dt time.Duration) {
 		clip := soundEffect.Clip
 
 		// check if clip is valid
-		if clip == nil || clip.FrameCount == 0 {
+		if clip.FrameCount == 0 {
 			return true
 		}
 
 		if !soundEffect.IsPlaying {
-			if rl.IsSoundPlaying(*clip) {
-				rl.StopSound(*clip)
+			if rl.IsSoundPlaying(clip) {
+				rl.StopSound(clip)
 				return true
 			} else {
-				*clip = rl.LoadSoundAlias(*clip)
+				clip = rl.LoadSoundAlias(clip)
 
-				rl.SetSoundVolume(*clip, soundEffect.Volume)
-				rl.SetSoundPitch(*clip, soundEffect.Pitch)
-				rl.SetSoundPan(*clip, soundEffect.Pan)
+				rl.SetSoundVolume(clip, soundEffect.Volume)
+				rl.SetSoundPitch(clip, soundEffect.Pitch)
+				rl.SetSoundPan(clip, soundEffect.Pan)
 
-				rl.PlaySound(*clip)
+				rl.PlaySound(clip)
 				soundEffect.IsPlaying = true
 				return true
 			}
 		}
 
-		rl.SetSoundVolume(*clip, soundEffect.Volume)
-		rl.SetSoundPitch(*clip, soundEffect.Pitch)
-		rl.SetSoundPan(*clip, soundEffect.Pan)
+		rl.SetSoundVolume(clip, soundEffect.Volume)
+		rl.SetSoundPitch(clip, soundEffect.Pitch)
+		rl.SetSoundPan(clip, soundEffect.Pan)
 
 		// check if sound is over
-		if !rl.IsSoundPlaying(*clip) && soundEffect.IsPlaying {
+		if !rl.IsSoundPlaying(clip) && soundEffect.IsPlaying {
 			if soundEffect.IsLooping {
-				rl.PlaySound(*clip)
+				rl.PlaySound(clip)
 			} else {
 				// sound is over, remove entity
 				s.EntityManager.Delete(entity)

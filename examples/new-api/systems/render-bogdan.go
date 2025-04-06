@@ -262,7 +262,7 @@ func (s *RenderBogdanSystem) prepareTints(wg *sync.WaitGroup) {
 func (s *RenderBogdanSystem) submitBatch(texID int, data []stdcomponents.RLTexturePro) {
 	rl.BeginMode2D(s.camera)
 	for i := range data {
-		rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
+		rl.DrawTexturePro(data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
 	}
 	rl.EndMode2D()
 }

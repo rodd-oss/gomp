@@ -20,7 +20,7 @@ import (
 )
 
 type SoundEffect struct {
-	Clip      *rl.Sound
+	Clip      rl.Sound
 	IsPlaying bool
 	IsLooping bool
 	// base is 1.0

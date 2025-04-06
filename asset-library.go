@@ -18,9 +18,9 @@ type AnyAssetLibrary interface {
 	UnloadAll()
 }
 
-func CreateAssetLibrary[T any](loader func(path string) T, unloader func(path string, asset *T)) AssetLibrary[T] {
+func CreateAssetLibrary[T any](loader func(path string) T, unloader func(path string, asset T)) AssetLibrary[T] {
 	return AssetLibrary[T]{
-		data:        make(map[string]*T),
+		data:        make(map[string]T),
 		loader:      loader,
 		unloader:    unloader,
 		loaderQueue: make([]string, 0, 1024),
@@ -28,17 +28,17 @@ func CreateAssetLibrary[T any](loader func(path string) T, unloader func(path st
 }
 
 type AssetLibrary[T any] struct {
-	data        map[string]*T
+	data        map[string]T
 	loader      func(path string) T
-	unloader    func(path string, asset *T)
+	unloader    func(path string, asset T)
 	loaderQueue []string
 }
 
-func (r *AssetLibrary[T]) Get(path string) *T {
+func (r *AssetLibrary[T]) Get(path string) T {
 	value, ok := r.data[path]
 	if !ok {
 		r.loaderQueue = append(r.loaderQueue, path)
-		value = new(T)
+		value = *new(T)
 		r.data[path] = value
 	}
 
@@ -50,7 +50,7 @@ func (r *AssetLibrary[T]) Load(path string) {
 	assert.False(ok, fmt.Errorf("asset already loaded: %s", path))
 
 	resource := r.loader(path)
-	r.data[path] = &resource
+	r.data[path] = resource
 }
 
 func (r *AssetLibrary[T]) LoadAll() {
@@ -60,7 +60,7 @@ func (r *AssetLibrary[T]) LoadAll() {
 
 	for _, path := range r.loaderQueue {
 		resource := r.loader(path)
-		*r.data[path] = resource
+		r.data[path] = resource
 	}
 
 	r.loaderQueue = r.loaderQueue[:0]
@@ -78,5 +78,5 @@ func (r *AssetLibrary[T]) UnloadAll() {
 		r.unloader(path, value)
 	}
 
-	r.data = make(map[string]*T)
+	r.data = make(map[string]T)
 }

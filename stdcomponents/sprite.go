@@ -21,7 +21,7 @@ import (
 )
 
 type Sprite struct {
-	Texture *rl.Texture2D
+	Texture rl.Texture2D
 	Frame   rl.Rectangle
 	Origin  rl.Vector2
 	Tint    color.RGBA

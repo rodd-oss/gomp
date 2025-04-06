@@ -239,12 +239,12 @@ func (s *RenderAssteroddSystem) submitBatch(data []stdcomponents.RLTexturePro) {
 	rl.BeginMode2D(s.camera)
 	if s.debug {
 		for i := range data {
-			rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
+			rl.DrawTexturePro(data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
 			rl.DrawRectangle(int32(data[i].Dest.X-2), int32(data[i].Dest.Y-2), 4, 4, rl.Red)
 		}
 	} else {
 		for i := range data {
-			rl.DrawTexturePro(*data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
+			rl.DrawTexturePro(data[i].Texture, data[i].Frame, data[i].Dest, data[i].Origin, data[i].Rotation, data[i].Tint)
 		}
 	}
 	rl.EndMode2D()

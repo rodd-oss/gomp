@@ -180,6 +180,7 @@ func (g *Game) SetActiveScene(id gomp.SceneId) {
 			Collisions:                         &components.Collision,
 			ColliderSleepStateComponentManager: &components.ColliderSleepState,
 			BvhTrees:                           &components.BvhTree,
+			Camera:                             &components.Cameras,
 		})
 }
 

@@ -103,7 +103,7 @@ func CreatePlayer(
 	player.Flip = flips.Create(entity, stdcomponents.Flip{})
 
 	// Adding renderable component
-	player.Renderable = renderables.Create(entity, stdcomponents.SpriteMatrixRenderableType)
+	player.Renderable = renderables.Create(entity, stdcomponents.Renderable{Type: stdcomponents.SpriteMatrixRenderableType})
 
 	// Adding YSort component
 	player.YSort = ySorts.Create(entity, stdcomponents.YSort{})
