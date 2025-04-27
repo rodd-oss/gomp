@@ -20,8 +20,11 @@ import (
 )
 
 type SoundEffect struct {
-	Clip      *rl.Sound
+	// audio clip from assets folder
+	Clip *rl.Sound
+	// internal flag, should be false by default
 	IsPlaying bool
+	// should sound be looped. Default is false. If not looped, entity will be destroyed
 	IsLooping bool
 	// base is 1.0
 	Volume float32
