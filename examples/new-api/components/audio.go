@@ -20,7 +20,7 @@ import (
 )
 
 type SoundEffect struct {
-	// audio clip from assets folder
+	// audio clip from assets
 	Clip *rl.Sound
 	// internal flag, should be false by default
 	IsPlaying bool

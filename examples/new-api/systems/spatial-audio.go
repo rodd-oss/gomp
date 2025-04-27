@@ -17,7 +17,9 @@ package systems
 import (
 	"gomp/examples/new-api/components"
 	"gomp/examples/new-api/config"
+	"gomp/pkg/core"
 	"gomp/pkg/ecs"
+	"gomp/pkg/worker"
 	"gomp/stdcomponents"
 	"gomp/vectors"
 	"math"
@@ -35,15 +37,23 @@ func NewSpatialAudioSystem() SpatialAudioSystem {
 }
 
 type SpatialAudioSystem struct {
-	EntityManager *ecs.EntityManager
-	SoundEffects  *components.SoundEffectsComponentManager
-	Positions     *stdcomponents.PositionComponentManager
-	SpatialAudio  *components.SpatialAudioComponentManager
-	Cameras       *stdcomponents.CameraComponentManager
+	EntityManager         *ecs.EntityManager
+	SoundEffects          *components.SoundEffectsComponentManager
+	Positions             *stdcomponents.PositionComponentManager
+	SpatialAudio          *components.SpatialAudioComponentManager
+	Cameras               *stdcomponents.CameraComponentManager
+	numWorkers            int
+	accSpatialAudioCreate [][]ecs.Entity
+	accSpatialAudioDelete [][]ecs.Entity
+	Engine                *core.Engine
 }
 
 func (s *SpatialAudioSystem) Init() {
+	s.numWorkers = s.Engine.Pool().NumWorkers()
+	s.accSpatialAudioCreate = make([][]ecs.Entity, s.numWorkers)
+	s.accSpatialAudioDelete = make([][]ecs.Entity, s.numWorkers)
 }
+
 func (s *SpatialAudioSystem) Run(dt time.Duration) {
 	var mainCamera ecs.Entity
 
@@ -71,30 +81,41 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 		Y: mainCameraComponent.Camera2D.Target.Y,
 	}
 
-	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
-		soundEffect := s.SoundEffects.GetUnsafe(entity)
-		assert.NotNil(soundEffect)
+	s.SoundEffects.ProcessEntities(func(entity ecs.Entity, workerId worker.WorkerId) {
+		position := s.Positions.Has(entity)
 
-		clip := soundEffect.Clip
-
-		if clip == nil {
-			return true
+		if s.SpatialAudio.Has(entity) {
+			if !position {
+				s.accSpatialAudioDelete[workerId] = append(s.accSpatialAudioDelete[workerId], entity)
+			}
+		} else {
+			if position {
+				s.accSpatialAudioCreate[workerId] = append(s.accSpatialAudioCreate[workerId], entity)
+			}
 		}
+	})
 
-		position := s.Positions.GetUnsafe(entity)
-
-		if position == nil {
-			return true
-		}
-
-		spatialAudio := s.SpatialAudio.GetUnsafe(entity)
-
-		if spatialAudio == nil {
-			spatialAudio = s.SpatialAudio.Create(entity, components.SpatialAudio{
+	for a := range s.accSpatialAudioCreate {
+		for _, entity := range s.accSpatialAudioCreate[a] {
+			s.SpatialAudio.Create(entity, components.SpatialAudio{
 				Volume: 0,
 				Pan:    0.5,
 			})
 		}
+	}
+
+	for a := range s.accSpatialAudioDelete {
+		for _, entity := range s.accSpatialAudioDelete[a] {
+			s.SpatialAudio.Delete(entity)
+		}
+	}
+
+	s.SpatialAudio.ProcessEntities(func(entity ecs.Entity, workerId worker.WorkerId) {
+		spatialAudio := s.SpatialAudio.GetUnsafe(entity)
+		assert.NotNil(spatialAudio)
+
+		position := s.Positions.GetUnsafe(entity)
+		assert.NotNil(position)
 
 		spatialAudio.Volume = s.calculateVolume(
 			mainCameraPosition,
@@ -106,9 +127,16 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 			position.XY,
 			mainCameraComponent.Camera2D.Offset.X*2,
 		)
-
-		return true
 	})
+
+	for i := range s.accSpatialAudioCreate {
+		s.accSpatialAudioCreate[i] = s.accSpatialAudioCreate[i][:0]
+	}
+
+	for i := range s.accSpatialAudioDelete {
+		s.accSpatialAudioDelete[i] = s.accSpatialAudioDelete[i][:0]
+	}
+
 }
 func (s *SpatialAudioSystem) Destroy() {
 }
