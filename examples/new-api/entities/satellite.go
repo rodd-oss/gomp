@@ -15,13 +15,15 @@ Thank you for your support!
 package entities
 
 import (
-	rl "github.com/gen2brain/raylib-go/raylib"
 	"gomp/examples/new-api/assets"
+	"gomp/examples/new-api/components"
 	"gomp/examples/new-api/config"
 	"gomp/pkg/ecs"
 	"gomp/stdcomponents"
 	"gomp/vectors"
 	"image/color"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 type CreateSatelliteManagers struct {
@@ -34,6 +36,7 @@ type CreateSatelliteManagers struct {
 	RigidBodies   *stdcomponents.RigidBodyComponentManager
 	Velocities    *stdcomponents.VelocityComponentManager
 	Renderables   *stdcomponents.RenderableComponentManager
+	SoundEffects  *components.SoundEffectsComponentManager
 }
 
 func CreateSatellite(
@@ -89,6 +92,15 @@ func CreateSatellite(
 	props.Renderables.Create(entity, stdcomponents.Renderable{
 		Type:       stdcomponents.SpriteRenderableType,
 		CameraMask: config.MainCameraLayer | config.MinimapCameraLayer,
+	})
+
+	props.SoundEffects.Create(entity, components.SoundEffect{
+		Clip:      assets.Audio.Get("satellite_main_sound.wav"),
+		IsLooping: true,
+		IsPlaying: false,
+		Volume:    0.05,
+		Pan:       0.5,
+		Pitch:     1.0,
 	})
 
 	return entity

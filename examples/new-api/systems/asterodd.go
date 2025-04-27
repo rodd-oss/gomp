@@ -98,6 +98,7 @@ func (s *AssteroddSystem) Init() {
 		BoxColliders:  s.BoxColliders,
 		RigidBodies:   s.RigidBodies,
 		Renderables:   s.Renderables,
+		SoundEffects:  s.SoundEffects,
 	}, 500, 500, 0)
 
 	entities.CreateSpaceSpawner(entities.CreateSpaceSpawnerManagers{
