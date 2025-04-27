@@ -68,6 +68,9 @@ var Audio = gomp.CreateAssetLibrary(
 
 		assert.True(rl.IsSoundValid(sound), "Error loading sound")
 
+		// Mute sound by default. Later it controlled by Aduio systems
+		rl.SetSoundVolume(sound, 0)
+
 		return sound
 	},
 	func(path string, asset *rl.Sound) {

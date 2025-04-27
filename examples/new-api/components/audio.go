@@ -36,3 +36,16 @@ type SoundEffectsComponentManager = ecs.ComponentManager[SoundEffect]
 func NewSoundEffectsComponentManager() SoundEffectsComponentManager {
 	return ecs.NewComponentManager[SoundEffect](SoundEffectManagerComponentId)
 }
+
+type SpatialAudio struct {
+	// follows raylib rules. Base is 1.0
+	Volume float32
+	// follows raylib rules. Base is 0.5, 1.0 is left, 0.0 is right
+	Pan float32
+}
+
+type SpatialAudioComponentManager = ecs.ComponentManager[SpatialAudio]
+
+func NewSpatialAudioComponentManager() SpatialAudioComponentManager {
+	return ecs.NewComponentManager[SpatialAudio](SpatialAudioManagerComponentId)
+}

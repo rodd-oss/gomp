@@ -52,19 +52,11 @@ func (s *AudioSystem) Run(dt time.Duration) {
 			} else {
 				*clip = rl.LoadSoundAlias(*clip)
 
-				rl.SetSoundVolume(*clip, soundEffect.Volume)
-				rl.SetSoundPitch(*clip, soundEffect.Pitch)
-				rl.SetSoundPan(*clip, soundEffect.Pan)
-
 				rl.PlaySound(*clip)
 				soundEffect.IsPlaying = true
 				return true
 			}
 		}
-
-		rl.SetSoundVolume(*clip, soundEffect.Volume)
-		rl.SetSoundPitch(*clip, soundEffect.Pitch)
-		rl.SetSoundPan(*clip, soundEffect.Pan)
 
 		// check if sound is over
 		if !rl.IsSoundPlaying(*clip) && soundEffect.IsPlaying {
@@ -82,4 +74,43 @@ func (s *AudioSystem) Run(dt time.Duration) {
 }
 func (s *AudioSystem) Destroy() {
 	rl.CloseAudioDevice()
+}
+
+func NewAudioSettingsSystem() AudioSettingsSystem {
+	return AudioSettingsSystem{}
+}
+
+type AudioSettingsSystem struct {
+	EntityManager *ecs.EntityManager
+	SoundEffects  *components.SoundEffectsComponentManager
+	SpatialAudio  *components.SpatialAudioComponentManager
+}
+
+func (s *AudioSettingsSystem) Init() {}
+
+func (s *AudioSettingsSystem) Run(dt time.Duration) {
+	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
+		soundEffect := s.SoundEffects.GetUnsafe(entity)
+		clip := soundEffect.Clip
+
+		// check if clip is loaded
+		if clip == nil {
+			return true
+		}
+
+		spatialSettings := s.SpatialAudio.GetUnsafe(entity)
+
+		if spatialSettings != nil {
+			rl.SetSoundVolume(*clip, spatialSettings.Volume*soundEffect.Volume)
+			rl.SetSoundPan(*clip, spatialSettings.Pan)
+		} else {
+			rl.SetSoundVolume(*clip, soundEffect.Volume)
+			rl.SetSoundPan(*clip, soundEffect.Pan)
+		}
+
+		rl.SetSoundPitch(*clip, soundEffect.Pitch)
+		return true
+	})
+}
+func (s *AudioSettingsSystem) Destroy() {
 }
