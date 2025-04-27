@@ -15,10 +15,13 @@ Thank you for your support!
 package systems
 
 import (
-	"github.com/negrel/assert"
 	"gomp/examples/new-api/components"
+	"gomp/pkg/core"
 	"gomp/pkg/ecs"
+	"gomp/pkg/worker"
 	"time"
+
+	"github.com/negrel/assert"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -28,16 +31,25 @@ func NewAudioSystem() AudioSystem {
 }
 
 type AudioSystem struct {
-	EntityManager *ecs.EntityManager
-	SoundEffects  *components.SoundEffectsComponentManager
+	EntityManager         *ecs.EntityManager
+	SoundEffects          *components.SoundEffectsComponentManager
+	accSoundEffectsDelete [][]ecs.Entity
+	numWorkers            int
+	Engine                *core.Engine
 }
 
 func (s *AudioSystem) Init() {
+	s.numWorkers = s.Engine.Pool().NumWorkers()
+	s.accSoundEffectsDelete = make([][]ecs.Entity, s.numWorkers)
 	rl.InitAudioDevice()
 }
 
 func (s *AudioSystem) Run(dt time.Duration) {
-	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
+	for a := range s.accSoundEffectsDelete {
+		s.accSoundEffectsDelete[a] = s.accSoundEffectsDelete[a][:0]
+	}
+
+	s.SoundEffects.ProcessEntities(func(entity ecs.Entity, workerId worker.WorkerId) {
 		soundEffect := s.SoundEffects.GetUnsafe(entity)
 		assert.NotNil(soundEffect)
 
@@ -45,19 +57,19 @@ func (s *AudioSystem) Run(dt time.Duration) {
 
 		// check if clip is loaded
 		if clip == nil || !rl.IsSoundValid(*clip) {
-			return true
+			return
 		}
 
 		if !soundEffect.IsPlaying {
 			if rl.IsSoundPlaying(*clip) {
 				rl.StopSound(*clip)
-				return true
+				return
 			} else {
 				*clip = rl.LoadSoundAlias(*clip)
 
 				rl.PlaySound(*clip)
 				soundEffect.IsPlaying = true
-				return true
+				return
 			}
 		}
 
@@ -67,13 +79,18 @@ func (s *AudioSystem) Run(dt time.Duration) {
 				rl.PlaySound(*clip)
 			} else {
 				// sound is over, remove entity
-				s.EntityManager.Delete(entity)
+				s.accSoundEffectsDelete[workerId] = append(s.accSoundEffectsDelete[workerId], entity)
+
 				// rl.UnloadSoundAlias(*clip) // TODO: this doesn't work https://github.com/gen2brain/raylib-go/issues/494
 			}
 		}
-
-		return true
 	})
+
+	for a := range s.accSoundEffectsDelete {
+		for _, entity := range s.accSoundEffectsDelete[a] {
+			s.EntityManager.Delete(entity)
+		}
+	}
 }
 func (s *AudioSystem) Destroy() {
 	rl.CloseAudioDevice()
@@ -92,7 +109,7 @@ type AudioSettingsSystem struct {
 func (s *AudioSettingsSystem) Init() {}
 
 func (s *AudioSettingsSystem) Run(dt time.Duration) {
-	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
+	s.SoundEffects.ProcessEntities(func(entity ecs.Entity, workerId worker.WorkerId) {
 		soundEffect := s.SoundEffects.GetUnsafe(entity)
 		assert.NotNil(soundEffect)
 
@@ -100,7 +117,7 @@ func (s *AudioSettingsSystem) Run(dt time.Duration) {
 
 		// check if clip is loaded
 		if clip == nil {
-			return true
+			return
 		}
 
 		spatialSettings := s.SpatialAudio.GetUnsafe(entity)
@@ -114,7 +131,6 @@ func (s *AudioSettingsSystem) Run(dt time.Duration) {
 		}
 
 		rl.SetSoundPitch(*clip, soundEffect.Pitch)
-		return true
 	})
 }
 func (s *AudioSettingsSystem) Destroy() {
