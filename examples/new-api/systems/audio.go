@@ -15,6 +15,7 @@ Thank you for your support!
 package systems
 
 import (
+	"github.com/negrel/assert"
 	"gomp/examples/new-api/components"
 	"gomp/pkg/ecs"
 	"time"
@@ -38,10 +39,12 @@ func (s *AudioSystem) Init() {
 func (s *AudioSystem) Run(dt time.Duration) {
 	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
 		soundEffect := s.SoundEffects.GetUnsafe(entity)
+		assert.NotNil(soundEffect)
+
 		clip := soundEffect.Clip
 
-		// check if clip is valid
-		if clip == nil || clip.FrameCount == 0 {
+		// check if clip is loaded
+		if clip == nil || !rl.IsSoundValid(*clip) {
 			return true
 		}
 
@@ -91,6 +94,8 @@ func (s *AudioSettingsSystem) Init() {}
 func (s *AudioSettingsSystem) Run(dt time.Duration) {
 	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
 		soundEffect := s.SoundEffects.GetUnsafe(entity)
+		assert.NotNil(soundEffect)
+
 		clip := soundEffect.Clip
 
 		// check if clip is loaded

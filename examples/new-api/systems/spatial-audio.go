@@ -22,6 +22,8 @@ import (
 	"gomp/vectors"
 	"math"
 	"time"
+
+	"github.com/negrel/assert"
 )
 
 const (
@@ -68,6 +70,7 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 
 	s.SoundEffects.EachEntity()(func(entity ecs.Entity) bool {
 		soundEffect := s.SoundEffects.GetUnsafe(entity)
+		assert.NotNil(soundEffect)
 
 		clip := soundEffect.Clip
 
