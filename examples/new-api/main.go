@@ -53,5 +53,5 @@ func main() {
 	game := NewGame(&initialScene)
 
 	engine := gomp.NewEngine(&game)
-	engine.Run(50, 0)
+	engine.Run(20, 0)
 }

@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	MembersPerCellSqrt = 2
+	MembersPerCellSqrt = 4
 	membersPerCell     = MembersPerCellSqrt * MembersPerCellSqrt
 )
 
@@ -31,11 +31,17 @@ func NewMemberListPool(workerPool *worker.Pool) MemberListPool {
 	return MemberListPool{
 		pool: sync.Pool{
 			New: func() any {
-				return &MemberList{
+				list := &MemberList{
 					Members:  make([]ecs.Entity, 0, membersPerCell),
 					Lookup:   ecs.NewGenMap[ecs.Entity, int](membersPerCell),
 					InputAcc: make([][]ecs.Entity, workerPool.NumWorkers()),
 				}
+
+				for i := range list.InputAcc {
+					list.InputAcc[i] = make([]ecs.Entity, 0, membersPerCell)
+				}
+
+				return list
 			},
 		},
 	}
@@ -80,7 +86,10 @@ func (ml *MemberList) Delete(member ecs.Entity) {
 
 func (ml *MemberList) Reset() {
 	ml.Lookup.Reset()
-	ml.Members = ml.Members[:0]
+	ml.Members = ml.Members[:0:membersPerCell]
+	for i := range ml.InputAcc {
+		ml.InputAcc[i] = ml.InputAcc[i][:0:membersPerCell]
+	}
 }
 
 func (ml *MemberList) Has(member ecs.Entity) bool {

@@ -47,7 +47,7 @@ func (i SpatialCellIndex) ToVec2() vectors.Vec2 {
 }
 
 // Query returns the EntityIds of Cells that intersect the AABB
-func (g *CollisionGrid) Query(bb AABB, result []ecs.Entity) []ecs.Entity {
+func (g *CollisionGrid) Query(bb AABB, result *ecs.PagedArray[ecs.Entity]) {
 	// get spatial index of aabb
 	minSpatialCellIndex := g.GetCellIndex(bb.Min)
 	maxSpatialCellIndex := g.GetCellIndex(bb.Max)
@@ -60,10 +60,9 @@ func (g *CollisionGrid) Query(bb AABB, result []ecs.Entity) []ecs.Entity {
 			if !exists {
 				continue
 			}
-			result = append(result, cellEntity)
+			result.Append(cellEntity)
 		}
 	}
-	return result
 }
 
 func (g *CollisionGrid) GetCellIndex(position vectors.Vec2) SpatialCellIndex {

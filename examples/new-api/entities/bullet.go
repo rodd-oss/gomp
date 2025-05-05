@@ -56,8 +56,8 @@ func CreateBullet(
 	props.Rotations.Create(entity, stdcomponents.Rotation{}.SetFromDegrees(angle))
 	props.Scales.Create(entity, stdcomponents.Scale{
 		XY: vectors.Vec2{
-			X: 1,
-			Y: 1,
+			X: 0.25,
+			Y: 0.25,
 		},
 	})
 	props.Velocities.Create(entity, stdcomponents.Velocity{
@@ -76,12 +76,12 @@ func CreateBullet(
 	})
 	//props.BoxColliders.Create(entity, stdcomponents.BoxCollider{
 	//	WH: vectors.Vec2{
-	//		X: 16,
-	//		Y: 16,
+	//		X: 12,
+	//		Y: 12,
 	//	},
 	//	Offset: vectors.Vec2{
-	//		X: 8,
-	//		Y: 8,
+	//		X: 6,
+	//		Y: 6,
 	//	},
 	//	Layer:      config.BulletCollisionLayer,
 	//	Mask:       1<<config.EnemyCollisionLayer | 1<<config.WallCollisionLayer | 1<<config.BulletCollisionLayer,

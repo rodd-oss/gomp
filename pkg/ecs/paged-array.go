@@ -21,8 +21,10 @@ func NewPagedArray[T any]() (a PagedArray[T]) {
 	for i := 0; i < initialBookSize; i++ {
 		a.book[i] = &ArrayPage[T]{}
 	}
-	a.edpTasks = make([]EachDataTask[T], initialBookSize)
-	a.edvpTasks = make([]EachDataValueTask[T], initialBookSize)
+	a.edTasks = make([]EachDataTask[T], initialBookSize)
+	a.edvTasks = make([]EachDataValueTask[T], initialBookSize)
+	a.edvpTasks = make([]EachDataValueParallelTask[T], pageSize)
+	a.edpTasks = make([]EachDataParallelTask[T], pageSize)
 	return a
 }
 
@@ -38,8 +40,10 @@ type PagedArray[T any] struct {
 	wg               sync.WaitGroup
 
 	// Cache
-	edvpTasks []EachDataValueTask[T]
-	edpTasks  []EachDataTask[T]
+	edvTasks  []EachDataValueTask[T]
+	edTasks   []EachDataTask[T]
+	edvpTasks []EachDataValueParallelTask[T]
+	edpTasks  []EachDataParallelTask[T]
 }
 
 type ArrayPage[T any] struct {
@@ -93,11 +97,19 @@ func (a *PagedArray[T]) extend() {
 	}
 	a.book = newBooks
 
-	newEdvpTasks := make([]EachDataValueTask[T], newLen)
+	newEdvTasks := make([]EachDataValueTask[T], newLen)
+	copy(newEdvTasks, a.edvTasks)
+	a.edvTasks = newEdvTasks
+
+	newEdTasks := make([]EachDataTask[T], newLen)
+	copy(newEdTasks, a.edTasks)
+	a.edTasks = newEdTasks
+
+	newEdvpTasks := make([]EachDataValueParallelTask[T], pageSize)
 	copy(newEdvpTasks, a.edvpTasks)
 	a.edvpTasks = newEdvpTasks
 
-	newEdpTasks := make([]EachDataTask[T], newLen)
+	newEdpTasks := make([]EachDataParallelTask[T], pageSize)
 	copy(newEdpTasks, a.edpTasks)
 	a.edpTasks = newEdpTasks
 }
@@ -334,9 +346,44 @@ func (a *PagedArray[T]) ProcessDataValue(handler func(T, worker.WorkerId), pool 
 	pool.GroupAdd(a.currentPageIndex + 1)
 	for i := a.currentPageIndex; i >= 0; i-- {
 		j := a.currentPageIndex - i
-		a.edvpTasks[j].page = a.book[i]
-		a.edvpTasks[j].f = handler
-		pool.ProcessGroupTask(&a.edvpTasks[j])
+		a.edvTasks[j].page = a.book[i]
+		a.edvTasks[j].f = handler
+		pool.ProcessGroupTask(&a.edvTasks[j])
+	}
+	pool.GroupWait()
+}
+
+func (a *PagedArray[T]) ProcessData(handler func(*T, worker.WorkerId), pool *worker.Pool) {
+	assert.NotNil(handler)
+	assert.NotNil(pool)
+	pool.GroupAdd(a.currentPageIndex + 1)
+	for i := a.currentPageIndex; i >= 0; i-- {
+		j := a.currentPageIndex - i
+		a.edTasks[j].page = a.book[i]
+		a.edTasks[j].f = handler
+		pool.ProcessGroupTask(&a.edTasks[j])
+	}
+	pool.GroupWait()
+}
+
+func (a *PagedArray[T]) EachDataValueParallel(handler func(T, worker.WorkerId), pool *worker.Pool) {
+	assert.NotNil(handler)
+	assert.NotNil(pool)
+
+	var page *ArrayPage[T]
+	var book = a.book
+
+	pool.GroupAdd(a.len)
+	for i := a.currentPageIndex; i >= 0; i-- {
+		page = book[i]
+		n := (a.currentPageIndex - i) * pageSize
+		for j := page.len - 1; j >= 0; j-- {
+			m := n + (page.len - 1 - j)
+			a.edvpTasks[m].page = page
+			a.edvpTasks[m].index = m
+			a.edvpTasks[m].f = handler
+			pool.ProcessGroupTask(&a.edvpTasks[m])
+		}
 	}
 	pool.GroupWait()
 }
@@ -344,12 +391,21 @@ func (a *PagedArray[T]) ProcessDataValue(handler func(T, worker.WorkerId), pool 
 func (a *PagedArray[T]) EachDataParallel(handler func(*T, worker.WorkerId), pool *worker.Pool) {
 	assert.NotNil(handler)
 	assert.NotNil(pool)
-	pool.GroupAdd(a.currentPageIndex + 1)
+
+	var page *ArrayPage[T]
+	var book = a.book
+
+	pool.GroupAdd(a.len)
 	for i := a.currentPageIndex; i >= 0; i-- {
-		j := a.currentPageIndex - i
-		a.edpTasks[j].page = a.book[i]
-		a.edpTasks[j].f = handler
-		pool.ProcessGroupTask(&a.edpTasks[j])
+		page = book[i]
+		n := (a.currentPageIndex - i) * pageSize
+		for j := page.len - 1; j >= 0; j-- {
+			m := n + (page.len - 1 - j)
+			a.edpTasks[m].page = page
+			a.edpTasks[m].index = m
+			a.edpTasks[m].f = handler
+			pool.ProcessGroupTask(&a.edpTasks[m])
+		}
 	}
 	pool.GroupWait()
 }
@@ -379,5 +435,27 @@ func (t *EachDataTask[T]) Run(workerId worker.WorkerId) error {
 	for i := 0; i < t.page.len; i++ {
 		t.f(&t.page.data[i], workerId)
 	}
+	return nil
+}
+
+type EachDataValueParallelTask[T any] struct {
+	f     func(T, worker.WorkerId)
+	page  *ArrayPage[T]
+	index int
+}
+
+func (t *EachDataValueParallelTask[T]) Run(workerId worker.WorkerId) error {
+	t.f(t.page.data[t.index], workerId)
+	return nil
+}
+
+type EachDataParallelTask[T any] struct {
+	f     func(*T, worker.WorkerId)
+	page  *ArrayPage[T]
+	index int
+}
+
+func (t *EachDataParallelTask[T]) Run(workerId worker.WorkerId) error {
+	t.f(&t.page.data[t.index], workerId)
 	return nil
 }

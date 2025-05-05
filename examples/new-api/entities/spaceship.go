@@ -102,7 +102,7 @@ func CreateSpaceShip(
 
 	props.RigidBodies.Create(entity, stdcomponents.RigidBody{
 		IsStatic: false,
-		Mass:     2,
+		Mass:     10,
 	})
 
 	props.PlayerTags.Create(entity, components.PlayerTag{})

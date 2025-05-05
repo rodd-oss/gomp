@@ -54,13 +54,16 @@ type CollisionDetectionSystem struct {
 	activeCollisions  map[CollisionPair]ecs.Entity // Maps collision pairs to proxy entities
 	currentCollisions map[CollisionPair]struct{}
 	gridLookup        map[stdcomponents.CollisionLayer]*stdcomponents.CollisionGrid
+	potentialEntities []ecs.PagedArray[ecs.Entity]
 }
 
 func (s *CollisionDetectionSystem) Init() {
 	s.gridLookup = make(map[stdcomponents.CollisionLayer]*stdcomponents.CollisionGrid)
 	s.collisionEventAcc = make([]ecs.PagedArray[CollisionEvent], s.Engine.Pool().NumWorkers())
-	for i := 0; i < len(s.collisionEventAcc); i++ {
+	s.potentialEntities = make([]ecs.PagedArray[ecs.Entity], s.Engine.Pool().NumWorkers())
+	for i := 0; i < s.Engine.Pool().NumWorkers(); i++ {
 		s.collisionEventAcc[i] = ecs.NewPagedArray[CollisionEvent]()
+		s.potentialEntities[i] = ecs.NewPagedArray[ecs.Entity]()
 	}
 	s.activeCollisions = make(map[CollisionPair]ecs.Entity)
 }
@@ -78,13 +81,13 @@ func (s *CollisionDetectionSystem) Run(dt time.Duration) {
 	}
 
 	s.GenericCollider.ProcessEntities(func(entity ecs.Entity, workerId worker.WorkerId) {
-		potentialEntities := make([]ecs.Entity, 0, 64)
-		potentialEntities = s.broadPhase(entity, potentialEntities)
-		if len(potentialEntities) == 0 {
+		potentialEntities := &s.potentialEntities[workerId]
+		s.broadPhase(entity, potentialEntities)
+		if potentialEntities.Len() == 0 {
 			return
 		}
-
 		s.narrowPhase(entity, potentialEntities, workerId)
+		potentialEntities.Reset()
 	})
 
 	s.registerCollisionEvents()
@@ -102,12 +105,12 @@ func (s *CollisionDetectionSystem) Destroy() {
 	s.gridLookup = nil
 }
 
-func (s *CollisionDetectionSystem) broadPhase(entityA ecs.Entity, potentialEntities []ecs.Entity) []ecs.Entity {
+func (s *CollisionDetectionSystem) broadPhase(entityA ecs.Entity, potentialEntities *ecs.PagedArray[ecs.Entity]) {
 	colliderA := s.GenericCollider.GetUnsafe(entityA)
 
 	// Early exit for sleeping colliders (moved aabb access after sleep check)
 	if colliderA.AllowSleep && s.ColliderSleepStateComponentManager.Has(entityA) {
-		return potentialEntities
+		return
 	}
 
 	aabbPtr := s.AABB.GetUnsafe(entityA)
@@ -116,7 +119,6 @@ func (s *CollisionDetectionSystem) broadPhase(entityA ecs.Entity, potentialEntit
 
 	// Direct layer bitmask iteration
 	mask := colliderA.Mask
-	var cells []ecs.Entity // Reused across queries
 
 	// Iterate only set bits in mask
 	for mask != 0 {
@@ -128,28 +130,34 @@ func (s *CollisionDetectionSystem) broadPhase(entityA ecs.Entity, potentialEntit
 		grid := s.gridLookup[layer]
 		assert.NotNil(grid)
 
-		// Reuse cells slice with reset
-		cells = grid.Query(bb, cells)
-		for _, cellEntityId := range cells {
-			cell := s.CollisionCellComponentManager.GetUnsafe(cellEntityId)
-			assert.NotNil(cell)
-			potentialEntities = append(potentialEntities, cell.Members.Members...)
-		}
-		cells = cells[:0]
-	}
+		// Query grid
+		minSpatialCellIndex := grid.GetCellIndex(bb.Min)
+		maxSpatialCellIndex := grid.GetCellIndex(bb.Max)
+		// make a list of all spatial indexes that intersect the aabb
+		// get cells that intersect the aabb by spatial indexes
+		for i := minSpatialCellIndex.X; i <= maxSpatialCellIndex.X; i++ {
+			for j := minSpatialCellIndex.Y; j <= maxSpatialCellIndex.Y; j++ {
+				cellEntity, exists := grid.CellMap.Get(stdcomponents.SpatialCellIndex{X: i, Y: j})
+				if !exists {
+					continue
+				}
 
-	// exclude self
-	for i := len(potentialEntities) - 1; i >= 0; i-- {
-		if potentialEntities[i] == entityA {
-			potentialEntities[i] = potentialEntities[len(potentialEntities)-1]
-			potentialEntities = potentialEntities[:len(potentialEntities)-1]
+				cell := s.CollisionCellComponentManager.GetUnsafe(cellEntity)
+				assert.NotNil(cell)
+
+				members := cell.Members.Members
+
+				for _, entityB := range members {
+					if entityB != entityA {
+						potentialEntities.Append(entityB)
+					}
+				}
+			}
 		}
 	}
-
-	return potentialEntities
 }
 
-func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEntities []ecs.Entity, workerId worker.WorkerId) {
+func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEntities *ecs.PagedArray[ecs.Entity], workerId worker.WorkerId) {
 	posA := s.Positions.GetUnsafe(entityA)
 	assert.NotNil(posA)
 
@@ -161,6 +169,9 @@ func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEnti
 
 	rotA := s.Rotations.GetUnsafe(entityA)
 	assert.NotNil(rotA)
+
+	aabbA := s.AABB.GetUnsafe(entityA)
+	assert.NotNil(aabbA)
 
 	colA := s.getGjkCollider(colliderA, entityA)
 
@@ -177,7 +188,15 @@ func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEnti
 		Scale:    scaleA.XY,
 	}
 
-	for _, entityB := range potentialEntities {
+	for entityB := range potentialEntities.EachDataValue() {
+		aabbB := s.AABB.GetUnsafe(entityB)
+		assert.NotNil(aabbB)
+
+		if !(aabbA.Max.X >= aabbB.Min.X && aabbA.Min.X <= aabbB.Max.X &&
+			aabbA.Max.Y >= aabbB.Min.Y && aabbA.Min.Y <= aabbB.Max.Y) {
+			continue
+		}
+
 		positionB := s.Positions.GetUnsafe(entityB)
 		assert.NotNil(positionB)
 		colliderB := s.GenericCollider.GetUnsafe(entityB)

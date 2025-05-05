@@ -282,7 +282,7 @@ func (c *ComponentManager[T]) ProcessEntities(handler func(Entity, worker.Worker
 func (c *ComponentManager[T]) ProcessComponents(handler func(*T, worker.WorkerId)) {
 	c.assertBegin()
 	defer c.assertEnd()
-	c.components.EachDataParallel(handler, c.pool)
+	c.components.ProcessData(handler, c.pool)
 }
 
 func (c *ComponentManager[T]) EachParallel(numWorkers int) func(yield func(Entity, *T, int) bool) {
@@ -296,6 +296,18 @@ func (c *ComponentManager[T]) EachParallel(numWorkers int) func(yield func(Entit
 			return shouldContinue
 		})
 	}
+}
+
+func (c *ComponentManager[T]) EachEntityParallel(handler func(Entity, worker.WorkerId)) {
+	c.assertBegin()
+	defer c.assertEnd()
+	c.entities.EachDataValueParallel(handler, c.pool)
+}
+
+func (c *ComponentManager[T]) EachComponentParallel(handler func(*T, worker.WorkerId)) {
+	c.assertBegin()
+	defer c.assertEnd()
+	c.components.EachDataParallel(handler, c.pool)
 }
 
 // ========================================================

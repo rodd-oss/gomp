@@ -188,7 +188,7 @@ func (s *CollisionSetupSystem) setup() {
 	})
 
 	// Create requested cells
-	s.CollisionGridComponentManager.ProcessEntities(func(gridEntity ecs.Entity, workerId worker.WorkerId) {
+	s.CollisionGridComponentManager.EachEntityParallel(func(gridEntity ecs.Entity, workerId worker.WorkerId) {
 		grid := s.CollisionGridComponentManager.GetUnsafe(gridEntity)
 		assert.NotNil(grid)
 		for i := range grid.CreateCellsAccumulator {
@@ -286,7 +286,8 @@ func (s *CollisionSetupSystem) setup() {
 		for i := range members.InputAcc {
 			acc := members.InputAcc[i]
 			for j := range acc {
-				members.Add(acc[j])
+				members.Members = append(members.Members, acc[j])
+				members.Lookup.Set(acc[j], len(members.Members)-1)
 			}
 			members.InputAcc[i] = acc[:0]
 		}
@@ -300,6 +301,7 @@ func (s *CollisionSetupSystem) setup() {
 		if len(cell.Members.Members) != 0 {
 			return
 		}
+		cell.Members.Reset()
 		s.memberListPool.Put(cell.Members)
 		cell.Members = nil
 		s.clearCellAccumulator[workerId].Append(cellEntity)
@@ -322,7 +324,7 @@ func (s *CollisionSetupSystem) setup() {
 		})
 		v.Reset()
 	}
-	s.CollisionGridComponentManager.ProcessComponents(func(grid *stdcomponents.CollisionGrid, workerId worker.WorkerId) {
+	s.CollisionGridComponentManager.EachComponentParallel(func(grid *stdcomponents.CollisionGrid, workerId worker.WorkerId) {
 		grid.CellMap.Clear()
 	})
 }
