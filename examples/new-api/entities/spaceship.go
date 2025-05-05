@@ -123,7 +123,7 @@ func CreateSpaceShip(
 		IsPlaying: false,
 		IsLooping: true,
 		Pitch:     1.0,
-		Volume:    1.0,
+		Volume:    0.0,
 		Pan:       0.5,
 	})
 

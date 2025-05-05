@@ -30,6 +30,7 @@ const (
 	SpaceshipIntentComponentId
 	AsteroidSceneManagerComponentId
 	SoundEffectManagerComponentId
+	SpatialAudioManagerComponentId
 	TextureRectComponentId
 	TextureCircleComponentId
 )

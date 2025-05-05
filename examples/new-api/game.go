@@ -79,6 +79,7 @@ func (g *Game) Init(engine *core.Engine) {
 		systems.AssetLib.Init()
 		systems.Audio.Init()
 		systems.SpatialAudio.Init()
+		systems.AudioSettings.Init()
 		systems.RenderCameras.Init()
 		systems.Culling.Init()
 		systems.TexturePositionSmooth.Init()
@@ -128,6 +129,7 @@ func (g *Game) Render(dt time.Duration) {
 	systems.YSort.Run()
 	systems.Audio.Run(dt)
 	systems.SpatialAudio.Run(dt)
+	systems.AudioSettings.Run(dt)
 
 	scene.Render(dt)
 
@@ -160,6 +162,7 @@ func (g *Game) Destroy() {
 		systems.AssetLib.Destroy()
 		systems.Audio.Destroy()
 		systems.SpatialAudio.Destroy()
+		systems.AudioSettings.Destroy()
 		systems.RenderCameras.Destroy()
 		systems.Culling.Destroy()
 		systems.TexturePositionSmooth.Destroy()

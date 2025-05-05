@@ -145,6 +145,16 @@ func (s *SpaceshipIntentsSystem) Run(dt time.Duration) {
 					Volume:    1.0,
 					Pan:       0.5,
 				})
+
+				s.Positions.Create(
+					fireSoundEntity,
+					stdcomponents.Position{
+						XY: vectors.Vec2{
+							X: pos.XY.X,
+							Y: pos.XY.Y,
+						},
+					},
+				)
 			}
 		} else {
 			weapon.CooldownLeft -= dt
