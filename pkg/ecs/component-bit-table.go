@@ -122,8 +122,8 @@ func (b *ComponentBitTable) AllSet(entity Entity, yield func(ComponentId) bool) 
 		return
 	}
 	pageId, bitsetId := b.getPageIDAndBitsetIndex(bitsId)
-	for i := 0; i < b.bitsetSize; i++ {
-		set := b.bitsetsBook[pageId][bitsetId+i]
+	bitset := b.bitsetsBook[pageId][bitsetId : bitsetId+b.bitsetSize]
+	for i, set := range bitset {
 		j := 0
 		for set != 0 {
 			if set&1 == 1 {

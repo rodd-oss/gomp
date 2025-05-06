@@ -19,6 +19,7 @@ type OSHandlerSystem struct{}
 
 func (s *OSHandlerSystem) Init() {
 	// TODO: pass parameters, resize or reinit.
+	rl.SetConfigFlags(rl.FlagWindowResizable)
 	rl.InitWindow(1280, 720, "GOMP")
 }
 

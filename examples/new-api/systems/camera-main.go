@@ -111,15 +111,17 @@ func (s *MainCameraSystem) Run(dt time.Duration) {
 		return false
 	})
 
-	//if rl.IsWindowResized() {
-	//	width, height := rl.GetScreenWidth(), rl.GetScreenHeight()
-	//	main := s.Cameras.GetUnsafe(s.mainCamera)
-	//	main.Dst = vectors.Rectangle{X: 0, Y: 0, Width: float32(width), Height: float32(height)}
-	//
-	//	mini := s.Cameras.GetUnsafe(s.minimapCamera)
-	//	mini.Dst = vectors.Rectangle{X: float32(width) - mini.Dst.Width, Y: float32(height) - mini.Dst.Height, Width: mini.Dst.Width, Height: mini.Dst.Height}
-	//}
-
+	if rl.IsWindowResized() {
+		width, height := rl.GetScreenWidth(), rl.GetScreenHeight()
+		c := s.Cameras.GetUnsafe(s.mainCamera)
+		c.Dst = vectors.Rectangle{X: 0, Y: 0, Width: float32(width), Height: float32(height)}
+		c.Camera2D.Offset = rl.Vector2(vectors.Vec2{X: float32(width), Y: float32(height)}.Scale(0.5))
+		fb := s.FrameBuffer2D.GetUnsafe(s.mainCamera)
+		rl.UnloadRenderTexture(fb.Texture)
+		fb.Texture = rl.LoadRenderTexture(int32(width), int32(height))
+		fb.Frame = rl.Rectangle{X: 0, Y: 0, Width: float32(width), Height: float32(height)}
+		fb.Dst = rl.Rectangle{Width: float32(width), Height: float32(height)}
+	}
 }
 
 // TODO: check and do better
