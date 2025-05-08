@@ -318,13 +318,13 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 				return false
 			})
 			rl.EndTextureMode()
-
 		case config.MinimapCameraLayer:
 			rl.BeginTextureMode(fb.Texture)
 			rl.DrawRectangleLines(2, 2, fb.Texture.Texture.Width-2, fb.Texture.Texture.Height-2, rl.Green)
 			rl.EndTextureMode()
+		default:
+			panic("not implemented")
 		}
-
 		return true
 	})
 

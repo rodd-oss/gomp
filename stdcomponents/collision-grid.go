@@ -30,12 +30,14 @@ func NewCollisionGrid(collisionLayer CollisionLayer, cellSize float32) Collision
 	return g
 }
 
+// CollisionGrid is a grid of cells that can be used for collision detection
 type CollisionGrid struct {
 	Layer    CollisionLayer // Layer of the grid
 	CellSize float32        // Size of a cell
 
 	CreateCellsAccumulator []ecs.GenMap[SpatialCellIndex, struct{}]
 	CellMap                ecs.GenMap[SpatialCellIndex, ecs.Entity]
+	// TODO: add chunks with fixed number of cells (32 x 32)
 }
 
 type SpatialCellIndex struct {
