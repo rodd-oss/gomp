@@ -33,14 +33,9 @@ type RenderSystem struct {
 
 	renderTextures []rl.RenderTexture2D
 	frames         []stdcomponents.FrameBuffer2D
-
-	monitorWidth  int
-	monitorHeight int
 }
 
 func (s *RenderSystem) Init() {
-	s.monitorWidth = rl.GetScreenWidth()
-	s.monitorHeight = rl.GetScreenHeight()
 	s.renderTextures = make([]rl.RenderTexture2D, 0, s.FrameBuffer2D.Len())
 	s.frames = make([]stdcomponents.FrameBuffer2D, 0, s.FrameBuffer2D.Len())
 }

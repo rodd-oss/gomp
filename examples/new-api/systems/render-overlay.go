@@ -81,7 +81,7 @@ func (s *RenderOverlaySystem) Init() {
 		Frame:     rl.Rectangle{X: 0, Y: 0, Width: float32(s.monitorWidth), Height: float32(s.monitorHeight)},
 		Texture:   rl.LoadRenderTexture(int32(s.monitorWidth), int32(s.monitorHeight)),
 		Layer:     config.DebugLayer,
-		BlendMode: rl.BlendAlpha,
+		BlendMode: rl.BlendAlphaPremultiply,
 		Tint:      rl.White,
 		Dst:       rl.Rectangle{Width: float32(s.monitorWidth), Height: float32(s.monitorHeight)},
 	})
@@ -121,42 +121,43 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 	s.frameCount++
 	s.lastFrameDuration = dt
 
-	// Store current frame FPS in samples
-	frameFPS := 0
-	if dt > 0 {
-		// Correct calculation: convert duration to frames per second
-		frameFPS = int(time.Second / dt)
-	}
-	s.fpsSampleSum -= s.fpsSamples[s.fpsSampleIdx]
-	s.fpsSamples[s.fpsSampleIdx] = frameFPS
-	s.fpsSampleSum += frameFPS
-	s.fpsSampleIdx = (s.fpsSampleIdx + 1) % len(s.fpsSamples)
+	{ // Store current frame FPS in samples
+		frameFPS := 0
+		if dt > 0 {
+			// Correct calculation: convert duration to frames per second
+			frameFPS = int(time.Second / dt)
+		}
+		s.fpsSampleSum -= s.fpsSamples[s.fpsSampleIdx]
+		s.fpsSamples[s.fpsSampleIdx] = frameFPS
+		s.fpsSampleSum += frameFPS
+		s.fpsSampleIdx = (s.fpsSampleIdx + 1) % len(s.fpsSamples)
 
-	// Calculate average FPS over samples
-	s.avgFPS = float64(s.fpsSampleSum) / float64(len(s.fpsSamples))
+		// Calculate average FPS over samples
+		s.avgFPS = float64(s.fpsSampleSum) / float64(len(s.fpsSamples))
 
-	// Calculate 1% FPS (lowest 1% frame in the sample window)
-	s.lowestFps = slices.Min(s.fpsSamples)
+		// Calculate 1% FPS (lowest 1% frame in the sample window)
+		s.lowestFps = slices.Min(s.fpsSamples)
 
-	// Update frame time history (ms) on every frame
-	// Use average of last two frames for smoother graph
-	var ms float64
-	if s.lastFrameDuration > 0 {
-		ms = float64(s.lastFrameDuration.Microseconds()) / 1000.0
-		s.msHistory[s.msHistoryIdx] = ms
-		s.msHistoryIdx = (s.msHistoryIdx + 1) % len(s.msHistory)
-	}
+		// Update frame time history (ms) on every frame
+		// Use average of last two frames for smoother graph
+		var ms float64
+		if s.lastFrameDuration > 0 {
+			ms = float64(s.lastFrameDuration.Microseconds()) / 1000.0
+			s.msHistory[s.msHistoryIdx] = ms
+			s.msHistoryIdx = (s.msHistoryIdx + 1) % len(s.msHistory)
+		}
 
-	if now.Sub(s.lastFPSTime) >= time.Second {
-		s.currentFPS = s.frameCount
-		s.frameCount = 0
-		s.lastFPSTime = now
+		if now.Sub(s.lastFPSTime) >= time.Second {
+			s.currentFPS = s.frameCount
+			s.frameCount = 0
+			s.lastFPSTime = now
+		}
 	}
 
 	s.Cameras.EachEntity()(func(entity ecs.Entity) bool {
 		camera := s.Cameras.GetUnsafe(entity)
-		frame := s.FrameBuffer2D.GetUnsafe(entity)
-		switch frame.Layer {
+		fb := s.FrameBuffer2D.GetUnsafe(entity)
+		switch fb.Layer {
 		case config.MainCameraLayer:
 			overlayFrame := s.FrameBuffer2D.GetUnsafe(s.frameBuffer)
 			rl.BeginTextureMode(overlayFrame.Texture)
@@ -165,8 +166,8 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 			// Debug mode: BVH tree and dots
 			if s.debug {
 				rl.BeginMode2D(camera.Camera2D)
-
 				cameraRect := camera.Rect()
+
 				s.CollisionCells.EachEntity()(func(e ecs.Entity) bool {
 					cell := s.CollisionCells.GetUnsafe(e)
 					assert.NotNil(cell)
@@ -266,18 +267,30 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 				})
 				s.Collisions.EachEntity()(func(entity ecs.Entity) bool {
 					pos := s.Positions.GetUnsafe(entity)
-					rl.DrawRectangle(int32(pos.XY.X-8), int32(pos.XY.Y-8), 16, 16, rl.Red)
+					rec := vectors.Rectangle{
+						X:      pos.XY.X - 8,
+						Y:      pos.XY.Y - 8,
+						Width:  16,
+						Height: 16,
+					}
+					if s.intersects(cameraRect, rec) {
+						rl.DrawRectangleRec(rl.Rectangle(rec), rl.Red)
+					}
 					return true
 				})
 				s.Textures.EachComponent()(func(r *stdcomponents.RLTexturePro) bool {
-					rl.DrawRectanglePro(rl.Rectangle{
+					rec := vectors.Rectangle{
 						X:      r.Dest.X - 2,
 						Y:      r.Dest.Y - 2,
 						Width:  4,
 						Height: 4,
-					}, rl.Vector2{}, r.Rotation, rl.Red)
+					}
+					if s.intersects(cameraRect, rec) {
+						rl.DrawRectanglePro(rl.Rectangle(rec), rl.Vector2{}, r.Rotation, rl.Red)
+					}
 					return true
 				})
+
 				rl.EndMode2D()
 			}
 
@@ -307,13 +320,23 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 			rl.EndTextureMode()
 
 		case config.MinimapCameraLayer:
-			rl.BeginTextureMode(frame.Texture)
-			rl.DrawRectangleLines(1, 1, frame.Texture.Texture.Width-1, frame.Texture.Texture.Height-1, rl.Green)
+			rl.BeginTextureMode(fb.Texture)
+			rl.DrawRectangleLines(2, 2, fb.Texture.Texture.Width-2, fb.Texture.Texture.Height-2, rl.Green)
 			rl.EndTextureMode()
 		}
 
 		return true
 	})
+
+	if rl.IsWindowResized() {
+		s.monitorWidth = rl.GetScreenWidth()
+		s.monitorHeight = rl.GetScreenHeight()
+		fb := s.FrameBuffer2D.GetUnsafe(s.frameBuffer)
+		rl.UnloadRenderTexture(fb.Texture)
+		fb.Texture = rl.LoadRenderTexture(int32(s.monitorWidth), int32(s.monitorHeight))
+		fb.Frame = rl.Rectangle{X: 0, Y: 0, Width: float32(s.monitorWidth), Height: float32(s.monitorHeight)}
+		fb.Dst = rl.Rectangle{Width: float32(s.monitorWidth), Height: float32(s.monitorHeight)}
+	}
 	return true
 }
 
@@ -328,7 +351,6 @@ func (s *RenderOverlaySystem) drawCustomFPS(x, y int32) {
 	}
 
 	avgFPS := int32(s.avgFPS)
-	percentileFPS := int32(s.lowestFps)
 
 	// Colors
 	fontColor := rl.Lime
@@ -350,7 +372,7 @@ func (s *RenderOverlaySystem) drawCustomFPS(x, y int32) {
 	rl.DrawText(fmt.Sprintf("FPS: %d", fps), x, y, fontSize, fontColor)
 	rl.DrawText(fmt.Sprintf("Frame: %.2f ms", frameTimeMs), x, y+fontSize, fontSize, frameTimeColor)
 	rl.DrawText(fmt.Sprintf("Avg %d: %d", fpsAvgSamples, avgFPS), x, y+fontSize*2, fontSize, fontColor)
-	rl.DrawText(fmt.Sprintf("Low: %d", percentileFPS), x, y+fontSize*3, fontSize, fontColor)
+	rl.DrawText(fmt.Sprintf("Low: %d", s.lowestFps), x, y+fontSize*3, fontSize, fontColor)
 
 	// Draw ms graph
 	s.drawMsGraph(x+180, y)

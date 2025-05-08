@@ -90,6 +90,17 @@ func (s *MinimapSystem) Run(dt time.Duration) bool {
 		c.Camera2D.Rotation = -float32(rotation.Degrees())
 		return false
 	})
+	if rl.IsWindowResized() {
+		width, height := rl.GetScreenWidth(), rl.GetScreenHeight()
+		c := s.Cameras.GetUnsafe(s.minimapCamera)
+		c.Dst = vectors.Rectangle{X: 0, Y: float32(width) - float32(height)*0.1666666666666667, Width: float32(width) * 0.1666666666666667, Height: float32(height) * 0.1666666666666667}
+		c.Offset = rl.Vector2(vectors.Vec2{X: float32(width), Y: float32(height)}.Scale(0.5))
+		fb := s.FrameBuffer2D.GetUnsafe(s.minimapCamera)
+		rl.UnloadRenderTexture(fb.Texture)
+		fb.Texture = rl.LoadRenderTexture(int32(width), int32(height))
+		fb.Frame = rl.NewRectangle(0, 0, float32(width), float32(height))
+		fb.Dst = rl.Rectangle{Y: float32(height) - float32(height)*0.1666666666666667, Width: float32(width) * 0.1666666666666667, Height: float32(height) * 0.1666666666666667}
+	}
 	return false
 }
 
