@@ -101,3 +101,14 @@ tasks:
       - codesign --timestamp --options=runtime --deep -fs milanrodd-cert -v ./.dist/game.app
       - xattr -cr ./.dist/game.app
       - /usr/bin/ditto -c -k --keepParent ./.dist/game.app ./.dist/game.zip
+
+  build-wasm:
+    env:
+      GOOS: wasip1
+      GOARCH: wasm
+    watch: true
+    sources:
+      - 'internal/wasyan**/*.go'
+    cmds:
+      - go build -buildmode=c-shared -o ./hello.wasm ./internal/wasyan-wasm
+      - curl http://127.0.0.1:3000/update/hello.wasm
