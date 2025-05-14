@@ -52,7 +52,7 @@ func (s *CullingSystem) Run(dt time.Duration) {
 		r.Observed = false
 	})
 
-	s.Cameras.EachEntity()(func(entity ecs.Entity) bool {
+	s.Cameras.EachEntity(func(entity ecs.Entity) bool {
 		camera := s.Cameras.GetUnsafe(entity)
 		cameraRect := camera.Rect()
 

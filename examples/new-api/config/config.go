@@ -17,6 +17,11 @@ package config
 import "gomp/stdcomponents"
 
 const (
+	TickRate  = 20
+	FrameRate = 0
+)
+
+const (
 	DefaultCollisionLayer stdcomponents.CollisionLayer = iota
 	PlayerCollisionLayer
 	BulletCollisionLayer

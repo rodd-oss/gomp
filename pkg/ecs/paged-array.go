@@ -115,7 +115,6 @@ func (a *PagedArray[T]) extend() {
 }
 
 func (a *PagedArray[T]) Append(value T) *T {
-	var result *T
 	if a.currentPageIndex >= len(a.book) {
 		a.extend()
 	}
@@ -130,7 +129,7 @@ func (a *PagedArray[T]) Append(value T) *T {
 		page = a.book[a.currentPageIndex]
 	}
 	page.data[page.len] = value
-	result = &page.data[page.len]
+	result := &page.data[page.len]
 	page.len++
 	a.len++
 	return result
@@ -298,43 +297,39 @@ func (a *PagedArray[T]) EachParallel(numWorkers int) func(yield func(int, *T, in
 	}
 }
 
-func (a *PagedArray[T]) EachData() func(yield func(*T) bool) {
-	return func(yield func(*T) bool) {
-		var page *ArrayPage[T]
-		var book = a.book
+func (a *PagedArray[T]) EachData(yield func(*T) bool) {
+	var page *ArrayPage[T]
+	var book = a.book
 
-		if a.len == 0 {
-			return
-		}
+	if a.len == 0 {
+		return
+	}
 
-		for i := a.currentPageIndex; i >= 0; i-- {
-			page = book[i]
+	for i := a.currentPageIndex; i >= 0; i-- {
+		page = book[i]
 
-			for j := page.len - 1; j >= 0; j-- {
-				if !yield(&page.data[j]) {
-					return
-				}
+		for j := page.len - 1; j >= 0; j-- {
+			if !yield(&page.data[j]) {
+				return
 			}
 		}
 	}
 }
 
-func (a *PagedArray[T]) EachDataValue() func(yield func(T) bool) {
-	return func(yield func(T) bool) {
-		var page *ArrayPage[T]
-		var book = a.book
+func (a *PagedArray[T]) EachDataValue(yield func(T) bool) {
+	var page *ArrayPage[T]
+	var book = a.book
 
-		if a.len == 0 {
-			return
-		}
+	if a.len == 0 {
+		return
+	}
 
-		for i := a.currentPageIndex; i >= 0; i-- {
-			page = book[i]
+	for i := a.currentPageIndex; i >= 0; i-- {
+		page = book[i]
 
-			for j := page.len - 1; j >= 0; j-- {
-				if !yield(page.data[j]) {
-					return
-				}
+		for j := page.len - 1; j >= 0; j-- {
+			if !yield(page.data[j]) {
+				return
 			}
 		}
 	}

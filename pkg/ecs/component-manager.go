@@ -244,16 +244,16 @@ func (c *ComponentManager[T]) Clean() {
 // Iterators
 // ========================================================
 
-func (c *ComponentManager[T]) EachComponent() func(yield func(entity *T) bool) {
+func (c *ComponentManager[T]) EachComponent(yield func(entity *T) bool) {
 	c.assertBegin()
 	defer c.assertEnd()
-	return c.components.EachData()
+	c.components.EachData(yield)
 }
 
-func (c *ComponentManager[T]) EachEntity() func(yield func(entity Entity) bool) {
+func (c *ComponentManager[T]) EachEntity(yield func(entity Entity) bool) {
 	c.assertBegin()
 	defer c.assertEnd()
-	return c.entities.EachDataValue()
+	c.entities.EachDataValue(yield)
 }
 
 func (c *ComponentManager[T]) Each() func(yield func(entity Entity, component *T) bool) {
@@ -369,7 +369,7 @@ func (c *ComponentManager[T]) getChangesBinary(source *PagedArray[Entity]) Compo
 	components := make([]T, 0, changesLen)
 	entities := make([]Entity, 0, changesLen)
 
-	source.EachData()(func(e *Entity) bool {
+	source.EachData(func(e *Entity) bool {
 		assert.True(e != nil)
 		entId := *e
 		assert.True(c.Has(entId))

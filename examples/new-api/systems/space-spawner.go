@@ -47,7 +47,7 @@ type SpaceSpawnerSystem struct {
 
 func (s *SpaceSpawnerSystem) Init() {}
 func (s *SpaceSpawnerSystem) Run(dt time.Duration) {
-	s.SpaceSpawners.EachEntity()(func(e ecs.Entity) bool {
+	s.SpaceSpawners.EachEntity(func(e ecs.Entity) bool {
 		position := s.Positions.GetUnsafe(e)
 		velocity := s.Velocities.GetUnsafe(e)
 

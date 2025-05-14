@@ -17,6 +17,7 @@ package stdsystems
 import (
 	"github.com/negrel/assert"
 	"gomp/pkg/ecs"
+	"gomp/pkg/worker"
 	"gomp/stdcomponents"
 	"gomp/vectors"
 	"time"
@@ -36,7 +37,7 @@ type CollisionResolutionSystem struct {
 
 func (s *CollisionResolutionSystem) Init() {}
 func (s *CollisionResolutionSystem) Run(dt time.Duration) {
-	s.Collisions.EachComponent()(func(collision *stdcomponents.Collision) bool {
+	s.Collisions.ProcessComponents(func(collision *stdcomponents.Collision, _ worker.WorkerId) {
 		if collision.State == stdcomponents.CollisionStateEnter || collision.State == stdcomponents.CollisionStateStay {
 			// Resolve penetration
 			var displacement vectors.Vec2
@@ -46,7 +47,7 @@ func (s *CollisionResolutionSystem) Run(dt time.Duration) {
 			rigidbody2 := s.RigidBodies.GetUnsafe(collision.E2)
 
 			if rigidbody1 == nil || rigidbody2 == nil {
-				return true
+				return
 			}
 
 			if !rigidbody1.IsStatic && !rigidbody2.IsStatic {
@@ -79,7 +80,7 @@ func (s *CollisionResolutionSystem) Run(dt time.Duration) {
 			velocityAlongNormal := relativeVelocity.Dot(collision.Normal)
 
 			if velocityAlongNormal > 0 {
-				return true
+				return
 			}
 
 			e := float32(1.0) // Coefficient of restitution (elasticity)
@@ -96,7 +97,6 @@ func (s *CollisionResolutionSystem) Run(dt time.Duration) {
 				velocity2.SetVec2(velocity2.Vec2().Add(impulse.Scale(1 / rigidbody2.Mass)))
 			}
 		}
-		return true
 	})
 }
 func (s *CollisionResolutionSystem) Destroy() {}

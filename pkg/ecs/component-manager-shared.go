@@ -221,16 +221,16 @@ func (c *SharedComponentManager[T]) Clean() {
 // Iterators
 // ========================================================
 
-func (c *SharedComponentManager[T]) EachComponent() func(yield func(*T) bool) {
+func (c *SharedComponentManager[T]) EachComponent(yield func(*T) bool) {
 	c.assertBegin()
 	defer c.assertEnd()
-	return c.components.EachData()
+	c.components.EachData(yield)
 }
 
-func (c *SharedComponentManager[T]) EachEntity() func(yield func(Entity) bool) {
+func (c *SharedComponentManager[T]) EachEntity(yield func(Entity) bool) {
 	c.assertBegin()
 	defer c.assertEnd()
-	return c.entities.EachDataValue()
+	c.entities.EachDataValue(yield)
 }
 
 func (c *SharedComponentManager[T]) Each() func(yield func(Entity, *T) bool) {

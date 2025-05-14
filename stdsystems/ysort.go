@@ -16,6 +16,7 @@ package stdsystems
 
 import (
 	"gomp/pkg/ecs"
+	"gomp/pkg/worker"
 	"gomp/stdcomponents"
 )
 
@@ -34,7 +35,7 @@ type YSortSystem struct {
 
 func (s *YSortSystem) Init() {}
 func (s *YSortSystem) Run() {
-	s.YSorts.EachEntity()(func(entity ecs.Entity) bool {
+	s.YSorts.ProcessEntities(func(entity ecs.Entity, _ worker.WorkerId) {
 		pos := s.Positions.GetUnsafe(entity)
 		renderOrder := s.RenderOrders.GetUnsafe(entity)
 
@@ -44,8 +45,6 @@ func (s *YSortSystem) Run() {
 		// Preserve original Z layer but add Y-based offset
 		//renderOrder.CalculatedZ = float32(int(pos.Z)) + yDepth
 		renderOrder.CalculatedZ = yDepth
-
-		return true
 	})
 }
 func (s *YSortSystem) Destroy() {}

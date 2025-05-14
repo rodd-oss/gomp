@@ -62,7 +62,7 @@ func (s *SpaceshipIntentsSystem) Run(dt time.Duration) {
 
 	dtSec := float32(dt.Seconds())
 
-	s.SpaceshipIntents.EachEntity()(func(entity ecs.Entity) bool {
+	s.SpaceshipIntents.EachEntity(func(entity ecs.Entity) bool {
 		intent := s.SpaceshipIntents.GetUnsafe(entity)
 		vel := s.Velocities.GetUnsafe(entity)
 		rot := s.Rotations.GetUnsafe(entity)

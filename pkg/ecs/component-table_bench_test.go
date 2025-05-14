@@ -7,7 +7,20 @@ const maxComponentsLen = 1024
 
 func BenchmarkComponentBitTable_SetAndTest(b *testing.B) {
 	// using a fixed maximum components length
+	// create and extend the table
 	table := NewComponentBitTable(maxComponentsLen)
+	for i := Entity(0); i < testEntitiesLen; i++ {
+		comp := ComponentId(i % maxComponentsLen)
+		table.Create(i)
+		table.Set(i, comp)
+		if !table.Test(i, comp) {
+			b.Fatalf("BitTable: expected entity %d to have component %d set", i, comp)
+		}
+	}
+	for i := Entity(0); i < testEntitiesLen; i++ {
+		table.Delete(i)
+	}
+
 	b.ReportAllocs()
 	for b.Loop() {
 		for i := Entity(0); i < testEntitiesLen; i++ {

@@ -79,7 +79,7 @@ func (s *CollisionDetectionBVHSystem) Run(dt time.Duration) {
 	}
 
 	// Fill trees
-	s.GenericCollider.EachEntity()(func(entity ecs.Entity) bool {
+	s.GenericCollider.EachEntity(func(entity ecs.Entity) bool {
 		aabb := s.AABB.GetUnsafe(entity)
 		layer := s.GenericCollider.GetUnsafe(entity).Layer
 
@@ -126,7 +126,7 @@ func (s *CollisionDetectionBVHSystem) findEntityCollisions() {
 func (s *CollisionDetectionBVHSystem) registerCollisionEvents() {
 	for i := range s.collisionEvents {
 		events := &s.collisionEvents[i]
-		events.EachData()(func(event *CollisionEvent) bool {
+		events.EachData(func(event *CollisionEvent) bool {
 			pair := CollisionPair{event.entityA, event.entityB}
 			s.currentCollisions[pair] = struct{}{}
 			displacement := event.normal.Scale(event.depth)

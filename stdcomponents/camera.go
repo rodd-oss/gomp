@@ -49,7 +49,7 @@ type Camera struct {
 	Tint      color.RGBA
 }
 
-func (c Camera) Rect() vectors.Rectangle {
+func (c *Camera) Rect() vectors.Rectangle {
 	// Calculate the non-rotated top-left corner of the view rectangle
 	x := c.Target.X - (c.Offset.X / c.Zoom)
 	y := c.Target.Y - (c.Offset.Y / c.Zoom)

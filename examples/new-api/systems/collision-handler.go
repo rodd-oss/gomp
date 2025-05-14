@@ -49,7 +49,7 @@ type CollisionHandlerSystem struct {
 
 func (s *CollisionHandlerSystem) Init() {}
 func (s *CollisionHandlerSystem) Run(dt time.Duration) {
-	s.Collisions.EachComponent()(func(collision *stdcomponents.Collision) bool {
+	s.Collisions.EachComponent(func(collision *stdcomponents.Collision) bool {
 		switch collision.State {
 		case stdcomponents.CollisionStateEnter:
 			if s.checkBulletCollisionEnter(collision.E1, collision.E2) {

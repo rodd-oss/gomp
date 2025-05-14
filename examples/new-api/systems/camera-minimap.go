@@ -81,7 +81,7 @@ func (s *MinimapSystem) Run(dt time.Duration) bool {
 	if s.disabled {
 		return false
 	}
-	s.Player.EachEntity()(func(entity ecs.Entity) bool {
+	s.Player.EachEntity(func(entity ecs.Entity) bool {
 		playerPosition := s.Position.GetUnsafe(entity)
 		rotation := s.Rotation.GetUnsafe(entity)
 

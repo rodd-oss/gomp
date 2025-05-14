@@ -7,7 +7,9 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 package systems
 
 import (
+	"gomp/examples/new-api/config"
 	"gomp/pkg/ecs"
+	"gomp/pkg/worker"
 	"gomp/stdcomponents"
 	"time"
 )
@@ -29,13 +31,13 @@ const (
 func (s *DampingSystem) Init() {}
 
 func (s *DampingSystem) Run(dt time.Duration) {
-	s.Velocities.EachEntity()(func(e ecs.Entity) bool {
+	s.Velocities.ProcessEntities(func(e ecs.Entity, _ worker.WorkerId) {
 		velocity := s.Velocities.GetUnsafe(e)
 		rigidbody := s.RigidBodies.GetUnsafe(e)
 
 		if rigidbody != nil && !rigidbody.IsStatic {
-			velocity.X *= dampingFactor
-			velocity.Y *= dampingFactor
+			velocity.X *= dampingFactor / (config.TickRate * float32(dt.Seconds()))
+			velocity.Y *= dampingFactor / (config.TickRate * float32(dt.Seconds()))
 			if velocity.X < 0.1 && velocity.X > -0.1 {
 				velocity.X = 0
 			}
@@ -43,7 +45,6 @@ func (s *DampingSystem) Run(dt time.Duration) {
 				velocity.Y = 0
 			}
 		}
-		return true
 	})
 }
 

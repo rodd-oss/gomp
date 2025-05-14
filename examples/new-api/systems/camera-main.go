@@ -95,7 +95,7 @@ func (s *MainCameraSystem) Run(dt time.Duration) {
 	if rl.IsKeyPressed(rl.KeyR) {
 		s.shouldRotate = !s.shouldRotate
 	}
-	s.Player.EachEntity()(func(entity ecs.Entity) bool {
+	s.Player.EachEntity(func(entity ecs.Entity) bool {
 		playerPosition := s.Position.GetUnsafe(entity)
 		c := s.Cameras.GetUnsafe(s.mainCamera)
 		//decay := 40.0 // DECAY IS TICKRATE DEPENDENT
