@@ -28,6 +28,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"unsafe"
 )
 
 func main() {
@@ -41,35 +42,35 @@ func main() {
 	nodeManager.runtime = wazero.NewRuntime(ctx)
 	defer nodeManager.runtime.Close(ctx)
 
-	//var sizeOfGame = int(unsafe.Sizeof(game))
-	//var getGameModule = Module{
-	//	Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
-	//		gameBytes := unsafe.Slice((*byte)(unsafe.Pointer(&game)), sizeOfGame)
-	//		gameRef := api.DecodeU32(stack[0])
-	//		mod.Memory().Write(gameRef, gameBytes)
-	//	}),
-	//	Params:  []api.ValueType{api.ValueTypeI32},
-	//	Results: []api.ValueType{},
-	//}
-	//
-	//var setGameModule = Module{
-	//	Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
-	//		gameRef := api.DecodeU32(stack[0])
-	//		r, _ := mod.Memory().Read(gameRef, uint32(unsafe.Sizeof(game)))
-	//		localGame := (*wasyan.Game)(unsafe.Pointer(unsafe.SliceData(r)))
-	//		game = *localGame
-	//	}),
-	//	Params:  []api.ValueType{api.ValueTypeI32},
-	//	Results: []api.ValueType{},
-	//}
+	var sizeOfGame = int(unsafe.Sizeof(game))
+	var getGameModule = Module{
+		Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
+			gameBytes := unsafe.Slice((*byte)(unsafe.Pointer(&game)), sizeOfGame)
+			gameRef := api.DecodeU32(stack[0])
+			mod.Memory().Write(gameRef, gameBytes)
+		}),
+		Params:  []api.ValueType{api.ValueTypeI32},
+		Results: []api.ValueType{},
+	}
+
+	var setGameModule = Module{
+		Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
+			gameRef := api.DecodeU32(stack[0])
+			r, _ := mod.Memory().Read(gameRef, uint32(unsafe.Sizeof(game)))
+			localGame := (*wasyan.Game)(unsafe.Pointer(unsafe.SliceData(r)))
+			game = *localGame
+		}),
+		Params:  []api.ValueType{api.ValueTypeI32},
+		Results: []api.ValueType{},
+	}
 
 	_, err := nodeManager.runtime.NewHostModuleBuilder("env").
-		//NewFunctionBuilder().
-		//WithGoModuleFunction(getGameModule.Fn, getGameModule.Params, getGameModule.Results).
-		//Export("get_game").
-		//NewFunctionBuilder().
-		//WithGoModuleFunction(setGameModule.Fn, setGameModule.Params, setGameModule.Results).
-		//Export("set_game").
+		NewFunctionBuilder().
+		WithGoModuleFunction(getGameModule.Fn, getGameModule.Params, getGameModule.Results).
+		Export("get_game").
+		NewFunctionBuilder().
+		WithGoModuleFunction(setGameModule.Fn, setGameModule.Params, setGameModule.Results).
+		Export("set_game").
 		Instantiate(ctx)
 	if err != nil {
 		log.Panicln(err)
@@ -79,6 +80,7 @@ func main() {
 
 	// Configure the module to initialize the reactor.
 	nodeManager.config = wazero.NewModuleConfig().
+		WithStartFunctions("_start", "_initialize").
 		WithStdout(os.Stdout).
 		WithStderr(os.Stderr)
 

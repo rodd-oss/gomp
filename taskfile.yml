@@ -122,5 +122,5 @@ tasks:
     sources:
       - 'internal/wasyan-wasm/*.go'
     cmds:
-      - tinygo build -o ./hello.wasm -target=wasi ./internal/wasyan-wasm
+      - tinygo build -buildmode=c-shared -o ./hello.wasm -target=wasi ./internal/wasyan-wasm
       - curl http://127.0.0.1:3000/update/hello.wasm
