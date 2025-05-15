@@ -16,6 +16,7 @@ package wasyan
 
 import (
 	"gomp/vectors"
+	"math"
 	"sync"
 )
 
@@ -33,6 +34,17 @@ func Add(a, b int32) int32 {
 	wg.Wait()
 
 	return int32(c)
+}
+
+func UpdateGame(game *Game, newVelocity vectors.Vec2) {
+	game.Velocity = newVelocity
+	for i := 0; i < 1_000_000; i++ {
+		j := float32(i)
+		game.Velocity.X = float32(math.Sin(float64(j + game.Velocity.Y)))
+		game.Velocity.Y = float32(math.Cos(float64(j + game.Velocity.X)))
+	}
+	game.Position.X += game.Velocity.X
+	game.Position.Y += game.Velocity.Y
 }
 
 type Game struct {

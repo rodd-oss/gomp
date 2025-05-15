@@ -7,7 +7,8 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 Donations during this file development:
 -===-===-===-===-===-===-===-===-===-===
 
-none :)
+<- HromRU Donated 2 500 RUB
+<- Еблан Donated 228 RUB
 
 Thank you for your support!
 */
@@ -16,7 +17,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/tetratelabs/wazero"
@@ -27,73 +27,49 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 )
-
-type NodeInstance struct {
-	Module api.Module
-}
-
-type NodeManager struct {
-	Instances             [2]NodeInstance
-	LastUsedInstanceIndex atomic.Int32
-	config                wazero.ModuleConfig
-	runtime               wazero.Runtime
-	mx                    sync.Mutex
-}
-
-func (nm *NodeManager) LoadWasm(ctx context.Context, file string) error {
-	wasm, err := os.ReadFile(file)
-	if err != nil {
-		return errors.New("Error opening file:" + err.Error())
-	}
-
-	compiledWasm, err := nm.runtime.CompileModule(ctx, wasm)
-	if err != nil {
-		return errors.New("Error compiling module:" + err.Error())
-	}
-
-	instance1, err := nm.runtime.InstantiateModule(ctx, compiledWasm, nm.config)
-	if err != nil {
-		return errors.New("Error creating instance1:" + err.Error())
-	}
-
-	instance2, err := nm.runtime.InstantiateModule(ctx, compiledWasm, nm.config)
-	if err != nil {
-		return errors.New("Error creating instance2:" + err.Error())
-	}
-
-	{
-		nm.mx.Lock()
-		defer nm.mx.Unlock()
-		nm.Instances[0].Module = instance1
-		nm.Instances[1].Module = instance2
-		nm.LastUsedInstanceIndex.Store(0)
-	}
-
-	return nil
-}
 
 func main() {
 	var ctx = context.Background()
 	var nodeManager = NodeManager{}
 	var game = wasyan.Game{
-		Position: vectors.Vec2{X: 0, Y: 0},
-		Velocity: vectors.Vec2{X: 50, Y: 10},
+		Position: vectors.Vec2{X: 1, Y: 2},
+		Velocity: vectors.Vec2{X: 3, Y: 4},
 	}
 
 	nodeManager.runtime = wazero.NewRuntime(ctx)
 	defer nodeManager.runtime.Close(ctx)
 
+	//var sizeOfGame = int(unsafe.Sizeof(game))
+	//var getGameModule = Module{
+	//	Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
+	//		gameBytes := unsafe.Slice((*byte)(unsafe.Pointer(&game)), sizeOfGame)
+	//		gameRef := api.DecodeU32(stack[0])
+	//		mod.Memory().Write(gameRef, gameBytes)
+	//	}),
+	//	Params:  []api.ValueType{api.ValueTypeI32},
+	//	Results: []api.ValueType{},
+	//}
+	//
+	//var setGameModule = Module{
+	//	Fn: api.GoModuleFunc(func(ctx context.Context, mod api.Module, stack []uint64) {
+	//		gameRef := api.DecodeU32(stack[0])
+	//		r, _ := mod.Memory().Read(gameRef, uint32(unsafe.Sizeof(game)))
+	//		localGame := (*wasyan.Game)(unsafe.Pointer(unsafe.SliceData(r)))
+	//		game = *localGame
+	//	}),
+	//	Params:  []api.ValueType{api.ValueTypeI32},
+	//	Results: []api.ValueType{},
+	//}
+
 	_, err := nodeManager.runtime.NewHostModuleBuilder("env").
-		NewFunctionBuilder().
-		WithFunc(func(ctx context.Context) uint64 {
-			return api.EncodeExternref(uintptr(unsafe.Pointer(&game)))
-		}).
-		Export("get_game").
+		//NewFunctionBuilder().
+		//WithGoModuleFunction(getGameModule.Fn, getGameModule.Params, getGameModule.Results).
+		//Export("get_game").
+		//NewFunctionBuilder().
+		//WithGoModuleFunction(setGameModule.Fn, setGameModule.Params, setGameModule.Results).
+		//Export("set_game").
 		Instantiate(ctx)
 	if err != nil {
 		log.Panicln(err)
@@ -102,7 +78,9 @@ func main() {
 	wasi_snapshot_preview1.MustInstantiate(ctx, nodeManager.runtime)
 
 	// Configure the module to initialize the reactor.
-	nodeManager.config = wazero.NewModuleConfig().WithStartFunctions("_initialize")
+	nodeManager.config = wazero.NewModuleConfig().
+		WithStdout(os.Stdout).
+		WithStderr(os.Stderr)
 
 	var app = fiber.New()
 
@@ -118,11 +96,12 @@ func main() {
 		if err != nil {
 			return c.SendString("Error loading module:\n" + err.Error())
 		}
+		log.Println("Instance updated")
 
 		return c.SendString("Instance updated")
 	})
 
-	app.Get("/add", func(c *fiber.Ctx) error {
+	app.Get("/internal/add", func(c *fiber.Ctx) error {
 		a, err := strconv.Atoi(c.Query("a"))
 		if err != nil {
 			return c.SendString("Error parsing a:" + err.Error())
@@ -133,10 +112,10 @@ func main() {
 		}
 
 		start := time.Now()
-		result := wasyan.Add(int32(a), int32(b))
+		wasyan.UpdateGame(&game, vectors.Vec2{X: float32(a), Y: float32(b)})
 		duration := time.Since(start).String()
 
-		return c.SendString("Result is " + fmt.Sprint(result) + "\n" + duration)
+		return c.SendString("Result is " + fmt.Sprint(game) + "\n" + duration)
 	})
 
 	app.Get("/call/:name", func(c *fiber.Ctx) error {
@@ -150,8 +129,7 @@ func main() {
 			return c.SendString("Error parsing b:" + err.Error())
 		}
 
-		index := nodeManager.LastUsedInstanceIndex.Add(1) % int32(len(nodeManager.Instances))
-		instance := &nodeManager.Instances[index]
+		instance := &nodeManager.Instances
 		module := instance.Module
 		if module == nil {
 			return c.SendString("Module not found")
@@ -163,15 +141,14 @@ func main() {
 		}
 
 		start := time.Now()
-		results, err := fn.Call(c.Context(), api.EncodeI32(int32(a)), api.EncodeI32(int32(b)))
+		results, err := fn.Call(c.Context(), api.EncodeU32(uint32(a)), api.EncodeU32(uint32(b)))
 		duration := time.Since(start).String()
 		if err != nil {
-			return c.SendString("Error calling RPC" + err.Error())
+			log.Println(err)
+			return c.SendString("Error calling RPC\n" + err.Error())
 		}
-		result := (*float32)(unsafe.Pointer(api.DecodeExternref(results[0])))
-		game.Velocity.X += *result
 
-		return c.SendString("Result is " + fmt.Sprint(*result) + "\n" + "Game is " + fmt.Sprint(game) + "\n" + duration)
+		return c.SendString("Result is " + fmt.Sprint(results) + "\n" + "Game is " + fmt.Sprint(game) + "\n" + duration)
 	})
 
 	log.Fatal(app.Listen(":3000"))

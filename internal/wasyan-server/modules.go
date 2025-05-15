@@ -1,5 +1,3 @@
-//go:build wasm
-
 /*
 This Source Code Form is subject to the terms of the Mozilla
 Public License, v. 2.0. If a copy of the MPL was not distributed
@@ -17,20 +15,11 @@ Thank you for your support!
 package main
 
 import (
-	"gomp/internal/wasyan"
-	"unsafe"
+	"github.com/tetratelabs/wazero/api"
 )
 
-//go:wasmimport env get_game
-func get_game(gameRef uint32)
-
-//go:wasmimport env set_game
-func set_game(gameRef uint32)
-
-func GetGame(game *wasyan.Game) {
-	get_game(uint32(uintptr(unsafe.Pointer(game))))
-}
-
-func SetGame(game *wasyan.Game) {
-	set_game(uint32(uintptr(unsafe.Pointer(game))))
+type Module struct {
+	Fn      api.GoModuleFunction
+	Params  []api.ValueType
+	Results []api.ValueType
 }

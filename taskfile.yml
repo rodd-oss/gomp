@@ -112,3 +112,15 @@ tasks:
     cmds:
       - go build -buildmode=c-shared -o ./hello.wasm ./internal/wasyan-wasm
       - curl http://127.0.0.1:3000/update/hello.wasm
+
+
+  build-tiny-wasm:
+    env:
+      GOOS: wasip1
+      GOARCH: wasm
+    watch: true
+    sources:
+      - 'internal/wasyan-wasm/*.go'
+    cmds:
+      - tinygo build -o ./hello.wasm -target=wasi ./internal/wasyan-wasm
+      - curl http://127.0.0.1:3000/update/hello.wasm
