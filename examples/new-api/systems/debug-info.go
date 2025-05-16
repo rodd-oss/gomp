@@ -60,7 +60,7 @@ func (s *DebugInfoSystem) Init() {
 func (s *DebugInfoSystem) Run(dt time.Duration) bool {
 	if rl.IsKeyPressed(rl.KeyF6) {
 		if !s.debug {
-			s.BoxColliders.EachEntity()(func(e ecs.Entity) bool {
+			s.BoxColliders.EachEntity(func(e ecs.Entity) bool {
 				col := s.BoxColliders.GetUnsafe(e)
 				scale := s.Scales.GetUnsafe(e)
 				position := s.Positions.GetUnsafe(e)
@@ -76,7 +76,7 @@ func (s *DebugInfoSystem) Run(dt time.Duration) bool {
 				}, float32(rotation.Degrees()), rl.DarkGreen, e)
 				return true
 			})
-			s.CircleColliders.EachEntity()(func(e ecs.Entity) bool {
+			s.CircleColliders.EachEntity(func(e ecs.Entity) bool {
 				col := s.CircleColliders.GetUnsafe(e)
 				scale := s.Scales.GetUnsafe(e)
 				pos := s.Positions.GetUnsafe(e)
@@ -103,7 +103,7 @@ func (s *DebugInfoSystem) Run(dt time.Duration) bool {
 
 		// TODO: Parallelize this with future batches feature
 		// Follow child to texture of parent box collider
-		s.BoxColliders.EachEntity()(func(e ecs.Entity) bool {
+		s.BoxColliders.EachEntity(func(e ecs.Entity) bool {
 			parentAABB := s.AABBs.GetUnsafe(e)
 			parentPosition := s.Positions.GetUnsafe(e)
 			col := s.BoxColliders.GetUnsafe(e)
@@ -145,7 +145,7 @@ func (s *DebugInfoSystem) Run(dt time.Duration) bool {
 		})
 		// TODO: Parallelize this with future batches feature
 		// Follow child to texture of parent circle collider
-		s.CircleColliders.EachEntity()(func(e ecs.Entity) bool {
+		s.CircleColliders.EachEntity(func(e ecs.Entity) bool {
 			parentAABB := s.AABBs.GetUnsafe(e)
 			pos := s.Positions.GetUnsafe(e)
 			col := s.CircleColliders.GetUnsafe(e)

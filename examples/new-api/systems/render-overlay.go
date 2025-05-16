@@ -154,7 +154,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 		}
 	}
 
-	s.Cameras.EachEntity()(func(entity ecs.Entity) bool {
+	s.Cameras.EachEntity(func(entity ecs.Entity) bool {
 		camera := s.Cameras.GetUnsafe(entity)
 		fb := s.FrameBuffer2D.GetUnsafe(entity)
 		switch fb.Layer {
@@ -168,7 +168,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 				rl.BeginMode2D(camera.Camera2D)
 				cameraRect := camera.Rect()
 
-				s.CollisionCells.EachEntity()(func(e ecs.Entity) bool {
+				s.CollisionCells.EachEntity(func(e ecs.Entity) bool {
 					cell := s.CollisionCells.GetUnsafe(e)
 					assert.NotNil(cell)
 
@@ -200,7 +200,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 					}
 					return true
 				})
-				s.CollisionChunks.EachEntity()(func(e ecs.Entity) bool {
+				s.CollisionChunks.EachEntity(func(e ecs.Entity) bool {
 					chunk := s.CollisionChunks.GetUnsafe(e)
 					assert.NotNil(chunk)
 
@@ -217,7 +217,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 					tree := s.BvhTrees.GetUnsafe(e)
 					assert.NotNil(tree)
 
-					tree.AabbNodes.EachData()(func(a *stdcomponents.AABB) bool {
+					tree.AabbNodes.EachData(func(a *stdcomponents.AABB) bool {
 						// Simple AABB culling
 						if s.intersects(cameraRect, a.Rect()) {
 							rl.DrawRectangleRec(rl.Rectangle{
@@ -248,7 +248,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 					}
 					return true
 				})
-				s.AABBs.EachEntity()(func(e ecs.Entity) bool {
+				s.AABBs.EachEntity(func(e ecs.Entity) bool {
 					aabb := s.AABBs.GetUnsafe(e)
 					clr := rl.Green
 					isSleeping := s.ColliderSleepStateComponentManager.GetUnsafe(e)
@@ -265,7 +265,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 					}
 					return true
 				})
-				s.Collisions.EachEntity()(func(entity ecs.Entity) bool {
+				s.Collisions.EachEntity(func(entity ecs.Entity) bool {
 					pos := s.Positions.GetUnsafe(entity)
 					rec := vectors.Rectangle{
 						X:      pos.XY.X - 8,
@@ -278,7 +278,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 					}
 					return true
 				})
-				s.Textures.EachComponent()(func(r *stdcomponents.RLTexturePro) bool {
+				s.Textures.EachComponent(func(r *stdcomponents.RLTexturePro) bool {
 					rec := vectors.Rectangle{
 						X:      r.Dest.X - 2,
 						Y:      r.Dest.Y - 2,
@@ -304,7 +304,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 			rl.DrawText(fmt.Sprintf("%d entities", s.EntityManager.Size()), x, y+fontSize*6, fontSize, rl.RayWhite)
 			rl.DrawText(fmt.Sprintf("%d debugLvl", s.debugLvl), x, y+fontSize*7, 20, rl.RayWhite)
 			// Game over
-			s.SceneManager.EachComponent()(func(a *components.AsteroidSceneManager) bool {
+			s.SceneManager.EachComponent(func(a *components.AsteroidSceneManager) bool {
 				rl.DrawText(fmt.Sprintf("Player HP: %d", a.PlayerHp), x, y+fontSize*4, 20, rl.RayWhite)
 				rl.DrawText(fmt.Sprintf("Score: %d", a.PlayerScore), x, y+fontSize*5, 20, rl.RayWhite)
 				if a.PlayerHp <= 0 {

@@ -83,7 +83,7 @@ func (s *CollisionSetupSystem) Destroy() {
 }
 func (s *CollisionSetupSystem) setup() {
 	// Prepare grids
-	s.CollisionGridComponentManager.EachEntity()(func(entity ecs.Entity) bool {
+	s.CollisionGridComponentManager.EachEntity(func(entity ecs.Entity) bool {
 		grid := s.CollisionGridComponentManager.GetUnsafe(entity)
 		assert.NotNil(grid)
 
@@ -308,7 +308,7 @@ func (s *CollisionSetupSystem) setup() {
 	})
 	for i := range s.clearCellAccumulator {
 		v := &s.clearCellAccumulator[i]
-		v.EachDataValue()(func(cellEntity ecs.Entity) bool {
+		v.EachDataValue(func(cellEntity ecs.Entity) bool {
 			cell := s.CollisionCellComponentManager.GetUnsafe(cellEntity)
 			assert.NotNil(cell)
 
@@ -318,7 +318,7 @@ func (s *CollisionSetupSystem) setup() {
 			grid.CellMap.Delete(cell.Index)
 			return true
 		})
-		v.EachDataValue()(func(cellEntity ecs.Entity) bool {
+		v.EachDataValue(func(cellEntity ecs.Entity) bool {
 			s.EntityManager.Delete(cellEntity)
 			return true
 		})

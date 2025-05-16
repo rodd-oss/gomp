@@ -73,7 +73,7 @@ func (s *Render2DCamerasSystem) Run(dt time.Duration) {
 		s.renderObjectsSorted = make([]renderObjectSorted, 0, max(s.RenderVisibles.Len(), cap(s.renderObjects)*2))
 	}
 
-	s.RenderVisibles.EachEntity()(func(entity ecs.Entity) bool {
+	s.RenderVisibles.EachEntity(func(entity ecs.Entity) bool {
 		o := s.RenderOrders.GetUnsafe(entity)
 		assert.NotNil(o)
 
@@ -110,7 +110,7 @@ func (s *Render2DCamerasSystem) Run(dt time.Duration) {
 		})
 	}
 
-	s.Cameras.EachEntity()(func(cameraEntity ecs.Entity) bool {
+	s.Cameras.EachEntity(func(cameraEntity ecs.Entity) bool {
 		camera := s.Cameras.GetUnsafe(cameraEntity)
 		assert.NotNil(camera)
 		renderTexture := s.RenderTexture2D.GetUnsafe(cameraEntity)

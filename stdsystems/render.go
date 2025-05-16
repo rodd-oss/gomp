@@ -41,7 +41,7 @@ func (s *RenderSystem) Init() {
 }
 
 func (s *RenderSystem) Run(dt time.Duration) bool {
-	s.FrameBuffer2D.EachComponent()(func(c *stdcomponents.FrameBuffer2D) bool {
+	s.FrameBuffer2D.EachComponent(func(c *stdcomponents.FrameBuffer2D) bool {
 		s.frames = append(s.frames, *c)
 		return true
 	})

@@ -58,7 +58,7 @@ func (s *SpatialAudioSystem) Run(dt time.Duration) {
 	var mainCamera ecs.Entity
 
 	// TODO: Add listener component? Then we need position component on it...
-	s.Cameras.EachEntity()(func(entity ecs.Entity) bool {
+	s.Cameras.EachEntity(func(entity ecs.Entity) bool {
 		camera := s.Cameras.GetUnsafe(entity)
 		assert.NotNil(camera)
 		if camera.Layer == config.MainCameraLayer {

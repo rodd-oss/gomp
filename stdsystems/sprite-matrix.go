@@ -26,7 +26,7 @@ type SpriteMatrixSystem struct {
 
 func (s *SpriteMatrixSystem) Init() {}
 func (s *SpriteMatrixSystem) Run() {
-	s.SpriteMatrixes.EachEntity()(func(entity ecs.Entity) bool {
+	s.SpriteMatrixes.EachEntity(func(entity ecs.Entity) bool {
 		spriteMatrix := s.SpriteMatrixes.Get(entity) //
 		position := s.Positions.GetUnsafe(entity)
 		animationState := s.AnimationStates.GetUnsafe(entity) //

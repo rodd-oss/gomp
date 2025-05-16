@@ -25,7 +25,7 @@ type AnimationSpriteMatrixSystem struct {
 
 func (s *AnimationSpriteMatrixSystem) Init() {}
 func (s *AnimationSpriteMatrixSystem) Run() {
-	s.AnimationPlayers.EachEntity()(func(e ecs.Entity) bool {
+	s.AnimationPlayers.EachEntity(func(e ecs.Entity) bool {
 		animationPlayer := s.AnimationPlayers.GetUnsafe(e)
 		spriteMatrix := s.SpriteMatrixes.Get(e)
 		if spriteMatrix == nil {

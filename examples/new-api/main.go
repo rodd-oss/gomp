@@ -18,6 +18,7 @@ import (
 	"github.com/hajimehoshi/go-steamworks"
 	"golang.org/x/text/language"
 	"gomp"
+	"gomp/examples/new-api/config"
 	"gomp/examples/new-api/scenes"
 	"os"
 )
@@ -53,5 +54,5 @@ func main() {
 	game := NewGame(&initialScene)
 
 	engine := gomp.NewEngine(&game)
-	engine.Run(20, 0)
+	engine.Run(config.TickRate, config.FrameRate)
 }

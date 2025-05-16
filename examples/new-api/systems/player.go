@@ -75,7 +75,7 @@ func (s *PlayerSystem) Run() {
 
 	var speed float32 = 300
 
-	for e := range s.Controllers.EachEntity() {
+	s.Controllers.EachEntity(func(e ecs.Entity) bool {
 		velocity := s.Velocities.GetUnsafe(e)
 		flip := s.Flips.GetUnsafe(e)
 		animationState := s.AnimationStates.GetUnsafe(e)
@@ -110,7 +110,7 @@ func (s *PlayerSystem) Run() {
 		if rl.IsKeyPressed(rl.KeyK) {
 			s.EntityManager.Delete(e)
 		}
-	}
-
+		return true
+	})
 }
 func (s *PlayerSystem) Destroy() {}

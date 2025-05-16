@@ -69,7 +69,7 @@ func (s *CollisionDetectionSystem) Init() {
 }
 
 func (s *CollisionDetectionSystem) Run(dt time.Duration) {
-	s.CollisionGridComponentManager.EachComponent()(func(grid *stdcomponents.CollisionGrid) bool {
+	s.CollisionGridComponentManager.EachComponent(func(grid *stdcomponents.CollisionGrid) bool {
 		s.gridLookup[grid.Layer] = grid
 		return true
 	})
@@ -188,7 +188,7 @@ func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEnti
 		Scale:    scaleA.XY,
 	}
 
-	for entityB := range potentialEntities.EachDataValue() {
+	for entityB := range potentialEntities.EachDataValue {
 		aabbB := s.AABB.GetUnsafe(entityB)
 		assert.NotNil(aabbB)
 
@@ -262,7 +262,7 @@ func (s *CollisionDetectionSystem) narrowPhase(entityA ecs.Entity, potentialEnti
 func (s *CollisionDetectionSystem) registerCollisionEvents() {
 	for i := range s.collisionEventAcc {
 		events := &s.collisionEventAcc[i]
-		events.EachData()(func(event *CollisionEvent) bool {
+		events.EachData(func(event *CollisionEvent) bool {
 			pair := CollisionPair{event.entityA, event.entityB}
 			s.currentCollisions[pair] = struct{}{}
 			displacement := event.normal.Scale(event.depth)
