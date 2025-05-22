@@ -15,13 +15,12 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
+//go:generate go tool component -std
 type AABB struct {
-	Min vectors.Vec2
-	Max vectors.Vec2
+	Min, Max vectors.Vec2
 }
 
 func (a AABB) Center() vectors.Vec2 {
@@ -35,10 +34,4 @@ func (a AABB) Rect() vectors.Rectangle {
 		Width:  a.Max.X - a.Min.X,
 		Height: a.Max.Y - a.Min.Y,
 	}
-}
-
-type AABBComponentManager = ecs.ComponentManager[AABB]
-
-func NewAABBComponentManager() AABBComponentManager {
-	return ecs.NewComponentManager[AABB](AABBComponentId)
 }

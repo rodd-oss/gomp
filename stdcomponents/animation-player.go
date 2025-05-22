@@ -15,10 +15,10 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"time"
 )
 
+//go:generate go tool component -std
 type AnimationPlayer struct {
 	First         uint8
 	Last          uint8
@@ -30,10 +30,4 @@ type AnimationPlayer struct {
 	FrameDuration time.Duration
 	State         AnimationState
 	IsInitialized bool
-}
-
-type AnimationPlayerComponentManager = ecs.ComponentManager[AnimationPlayer]
-
-func NewAnimationPlayerComponentManager() AnimationPlayerComponentManager {
-	return ecs.NewComponentManager[AnimationPlayer](AnimationPlayerComponentId)
 }

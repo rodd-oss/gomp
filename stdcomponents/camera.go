@@ -16,7 +16,6 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 	"image/color"
 	"math"
@@ -38,6 +37,8 @@ type CameraLayer uint64
 // Dst defines the camera's destination on the renderer screen
 // Layer defines the camera's layer, default is 0 - disabled
 // Order defines the camera's order, ascending order
+//
+//go:generate go tool component -std
 type Camera struct {
 	rl.Camera2D
 	Dst       vectors.Rectangle // TODO: remove?
@@ -114,10 +115,4 @@ func rotatePoint(p, pivot vectors.Vec2, angle float64) vectors.Vec2 {
 		X: rotatedX + pivot.X,
 		Y: rotatedY + pivot.Y,
 	}
-}
-
-type CameraComponentManager = ecs.ComponentManager[Camera]
-
-func NewCameraComponentManager() CameraComponentManager {
-	return ecs.NewComponentManager[Camera](CameraComponentId)
 }

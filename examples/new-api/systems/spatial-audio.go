@@ -38,7 +38,7 @@ func NewSpatialAudioSystem() SpatialAudioSystem {
 
 type SpatialAudioSystem struct {
 	EntityManager         *ecs.EntityManager
-	SoundEffects          *components.SoundEffectsComponentManager
+	SoundEffects          *components.SoundEffectComponentManager
 	Positions             *stdcomponents.PositionComponentManager
 	SpatialAudio          *components.SpatialAudioComponentManager
 	Cameras               *stdcomponents.CameraComponentManager

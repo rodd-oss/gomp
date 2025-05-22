@@ -15,7 +15,6 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 	"math"
 )
@@ -45,6 +44,7 @@ const (
 // Box Collider
 // ===========================
 
+//go:generate go tool component -std
 type BoxCollider struct {
 	WH         vectors.Vec2
 	Offset     vectors.Vec2
@@ -82,16 +82,11 @@ func (c *BoxCollider) GetSupport(direction vectors.Vec2, transform Transform2d) 
 	return rotated.Mul(transform.Scale).Add(transform.Position)
 }
 
-type BoxColliderComponentManager = ecs.ComponentManager[BoxCollider]
-
-func NewBoxColliderComponentManager() BoxColliderComponentManager {
-	return ecs.NewComponentManager[BoxCollider](ColliderBoxComponentId)
-}
-
 // ===========================
 // Circle Collider
 // ===========================
 
+//go:generate go tool component -std
 type CircleCollider struct {
 	Radius     float32
 	Layer      CollisionLayer
@@ -122,16 +117,11 @@ func (c *CircleCollider) GetSupport(direction vectors.Vec2, transform Transform2
 	return transform.Position.Add(radiusWithOffset)
 }
 
-type CircleColliderComponentManager = ecs.ComponentManager[CircleCollider]
-
-func NewCircleColliderComponentManager() CircleColliderComponentManager {
-	return ecs.NewComponentManager[CircleCollider](ColliderCircleComponentId)
-}
-
 // ===========================
 // Polygon Collider
 // ===========================
 
+//go:generate go tool component -std
 type PolygonCollider struct {
 	Vertices   []vectors.Vec2
 	Layer      CollisionLayer
@@ -157,16 +147,11 @@ func (c *PolygonCollider) GetSupport(direction vectors.Vec2, transform Transform
 	return maxVertex
 }
 
-type PolygonColliderComponentManager = ecs.ComponentManager[PolygonCollider]
-
-func NewPolygonColliderComponentManager() PolygonColliderComponentManager {
-	return ecs.NewComponentManager[PolygonCollider](PolygonColliderComponentId)
-}
-
 // ===========================
 // Generic Collider
 // ===========================
 
+//go:generate go tool component -std
 type GenericCollider struct {
 	Shape      ColliderShape
 	Layer      CollisionLayer
@@ -175,16 +160,9 @@ type GenericCollider struct {
 	AllowSleep bool
 }
 
-type GenericColliderComponentManager = ecs.ComponentManager[GenericCollider]
+// ===========================
+// Collider Sleep State
+// ===========================
 
-func NewGenericColliderComponentManager() GenericColliderComponentManager {
-	return ecs.NewComponentManager[GenericCollider](GenericColliderComponentId)
-}
-
+//go:generate go tool component -std
 type ColliderSleepState struct{}
-
-type ColliderSleepStateComponentManager = ecs.ComponentManager[ColliderSleepState]
-
-func NewColliderSleepStateComponentManager() ColliderSleepStateComponentManager {
-	return ecs.NewComponentManager[ColliderSleepState](ColliderSleepStateComponentId)
-}

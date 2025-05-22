@@ -86,7 +86,7 @@ func CreatePlayer(
 	player.Velocity = velocities.Create(entity, velocity)
 
 	// Adding Tint component
-	tint := stdcomponents.Tint{R: 255, G: 255, B: 255, A: 255}
+	tint := stdcomponents.Tint{}
 	player.Tint = tints.Create(entity, tint)
 
 	// Adding sprite matrix component

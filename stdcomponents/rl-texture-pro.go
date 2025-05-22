@@ -16,11 +16,11 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 	"image/color"
 )
 
+//go:generate go tool component -std
 type RLTexturePro struct {
 	Texture  *rl.Texture2D
 	Frame    rl.Rectangle
@@ -37,10 +37,4 @@ func (t *RLTexturePro) Rect() vectors.Rectangle {
 		Width:  t.Dest.Width,
 		Height: t.Dest.Height,
 	}
-}
-
-type RLTextureProComponentManager = ecs.ComponentManager[RLTexturePro]
-
-func NewRlTextureProComponentManager() RLTextureProComponentManager {
-	return ecs.NewComponentManager[RLTexturePro](RLTextureProComponentId)
 }

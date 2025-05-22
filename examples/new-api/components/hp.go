@@ -14,14 +14,7 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type Hp struct {
 	Hp, MaxHp int32
-}
-
-type HpComponentManager = ecs.ComponentManager[Hp]
-
-func NewHealthComponentManager() HpComponentManager {
-	return ecs.NewComponentManager[Hp](HealthComponentId)
 }

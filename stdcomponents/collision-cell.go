@@ -96,16 +96,11 @@ func (ml *MemberList) Has(member ecs.Entity) bool {
 	return ml.Lookup.Has(member)
 }
 
+//go:generate go tool component -std
 type CollisionCell struct {
 	Index   SpatialCellIndex
 	Layer   CollisionLayer
 	Grid    ecs.Entity
 	Size    float32
 	Members *MemberList
-}
-
-type CollisionCellComponentManager = ecs.ComponentManager[CollisionCell]
-
-func NewCollisionCellComponentManager() CollisionCellComponentManager {
-	return ecs.NewComponentManager[CollisionCell](CollisionCellComponentId)
 }

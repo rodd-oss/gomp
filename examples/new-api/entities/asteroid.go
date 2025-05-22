@@ -34,7 +34,7 @@ type CreateAsteroidManagers struct {
 	Velocities      *stdcomponents.VelocityComponentManager
 	CircleColliders *stdcomponents.CircleColliderComponentManager
 	Sprites         *stdcomponents.SpriteComponentManager
-	AsteroidTags    *components.AsteroidComponentManager
+	AsteroidTags    *components.AsteroidTagComponentManager
 	Hp              *components.HpComponentManager
 	RigidBodies     *stdcomponents.RigidBodyComponentManager
 	Renderables     *stdcomponents.RenderableComponentManager

@@ -15,16 +15,10 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
+//go:generate go tool component -std
 type Position struct {
 	XY vectors.Vec2
-}
-
-type PositionComponentManager = ecs.ComponentManager[Position]
-
-func NewPositionComponentManager() PositionComponentManager {
-	return ecs.NewComponentManager[Position](PositionComponentId)
 }

@@ -36,7 +36,7 @@ type CreateSatelliteManagers struct {
 	RigidBodies   *stdcomponents.RigidBodyComponentManager
 	Velocities    *stdcomponents.VelocityComponentManager
 	Renderables   *stdcomponents.RenderableComponentManager
-	SoundEffects  *components.SoundEffectsComponentManager
+	SoundEffects  *components.SoundEffectComponentManager
 }
 
 func CreateSatellite(

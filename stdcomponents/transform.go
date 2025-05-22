@@ -15,18 +15,12 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
+//go:generate go tool component -std
 type Transform2d struct {
 	Position vectors.Vec2
 	Rotation vectors.Radians
 	Scale    vectors.Vec2
-}
-
-type TransformComponentManager = ecs.ComponentManager[Transform2d]
-
-func NewTransformComponentManager() TransformComponentManager {
-	return ecs.NewComponentManager[Transform2d](TransformComponentId)
 }

@@ -14,13 +14,6 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -std
 type YSort struct {
-}
-
-type YSortComponentManager = ecs.ComponentManager[YSort]
-
-func NewYSortComponentManager() YSortComponentManager {
-	return ecs.NewComponentManager[YSort](YSortComponentId)
 }

@@ -31,6 +31,8 @@ func NewCollisionGrid(collisionLayer CollisionLayer, cellSize float32) Collision
 }
 
 // CollisionGrid is a grid of cells that can be used for collision detection
+//
+//go:generate go tool component -std
 type CollisionGrid struct {
 	Layer    CollisionLayer // Layer of the grid
 	CellSize float32        // Size of a cell
@@ -79,10 +81,4 @@ func (g *CollisionGrid) CalculateSpatialHash(bb AABB) SpatialHash {
 		Min: g.GetCellIndex(bb.Min),
 		Max: g.GetCellIndex(bb.Max),
 	}
-}
-
-type CollisionGridComponentManager = ecs.ComponentManager[CollisionGrid]
-
-func NewCollisionGridComponentManager() CollisionGridComponentManager {
-	return ecs.NewComponentManager[CollisionGrid](CollisionGridComponentId)
 }

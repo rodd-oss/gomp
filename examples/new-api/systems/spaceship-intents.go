@@ -44,7 +44,7 @@ type SpaceshipIntentsSystem struct {
 	RigidBodies           *stdcomponents.RigidBodyComponentManager
 	Weapons               *components.WeaponComponentManager
 	Hps                   *components.HpComponentManager
-	SoundEffects          *components.SoundEffectsComponentManager
+	SoundEffects          *components.SoundEffectComponentManager
 	TexturePositionSmooth *stdcomponents.TexturePositionSmoothComponentManager
 	Renderables           *stdcomponents.RenderableComponentManager
 	RenderOrders          *stdcomponents.RenderOrderComponentManager

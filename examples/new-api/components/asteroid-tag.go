@@ -14,13 +14,6 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type AsteroidTag struct {
-}
-
-type AsteroidComponentManager = ecs.ComponentManager[AsteroidTag]
-
-func NewAsteroidTagComponentManager() AsteroidComponentManager {
-	return ecs.NewComponentManager[AsteroidTag](AsteroidTagComponentId)
 }

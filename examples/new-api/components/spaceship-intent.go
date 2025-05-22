@@ -14,18 +14,11 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type SpaceshipIntent struct {
 	MoveUp      bool
 	MoveDown    bool
 	RotateLeft  bool
 	RotateRight bool
 	Fire        bool
-}
-
-type SpaceshipIntentComponentManager = ecs.ComponentManager[SpaceshipIntent]
-
-func NewSpaceshipIntentComponentManager() SpaceshipIntentComponentManager {
-	return ecs.NewComponentManager[SpaceshipIntent](SpaceshipIntentComponentId)
 }

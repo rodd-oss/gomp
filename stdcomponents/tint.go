@@ -15,14 +15,14 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"image/color"
 )
 
-type Tint = color.RGBA // TODO: remove type alias
+//go:generate go tool component -std
+type Tint struct {
+	R, G, B, A uint8
+}
 
-type TintComponentManager = ecs.ComponentManager[Tint]
-
-func NewTintComponentManager() TintComponentManager {
-	return ecs.NewComponentManager[Tint](TintComponentId)
+func (t Tint) RGBA() color.RGBA {
+	return color.RGBA{t.R, t.G, t.B, t.A}
 }

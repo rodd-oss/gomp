@@ -31,20 +31,20 @@ type CollisionHandlerSystem struct {
 	Collisions       *stdcomponents.CollisionComponentManager
 	Players          *components.PlayerTagComponentManager
 	PlayerTags       *components.PlayerTagComponentManager
-	AsteroidTags     *components.AsteroidComponentManager
+	AsteroidTags     *components.AsteroidTagComponentManager
 	BulletTags       *components.BulletTagComponentManager
 	Hps              *components.HpComponentManager
 	Weapons          *components.WeaponComponentManager
 	SpaceshipIntents *components.SpaceshipIntentComponentManager
-	SpaceSpawnerTags *components.SpaceSpawnerComponentManager
+	SpaceSpawnerTags *components.SpaceSpawnerTagComponentManager
 	Positions        *stdcomponents.PositionComponentManager
 	Rotations        *stdcomponents.RotationComponentManager
 	Scales           *stdcomponents.ScaleComponentManager
 	Velocities       *stdcomponents.VelocityComponentManager
 	Sprites          *stdcomponents.SpriteComponentManager
 	BoxColliders     *stdcomponents.BoxColliderComponentManager
-	WallTags         *components.WallTagComponentManager
-	SoundEffects     *components.SoundEffectsComponentManager
+	WallTags         *components.WallComponentManager
+	SoundEffects     *components.SoundEffectComponentManager
 }
 
 func (s *CollisionHandlerSystem) Init() {}

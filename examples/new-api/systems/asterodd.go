@@ -48,16 +48,16 @@ type AssteroddSystem struct {
 	CollisionGrids        *stdcomponents.CollisionGridComponentManager
 
 	PlayerTags       *components.PlayerTagComponentManager
-	AsteroidTags     *components.AsteroidComponentManager
+	AsteroidTags     *components.AsteroidTagComponentManager
 	BulletTags       *components.BulletTagComponentManager
 	Hps              *components.HpComponentManager
 	Weapons          *components.WeaponComponentManager
 	SpaceshipIntents *components.SpaceshipIntentComponentManager
-	SpaceSpawnerTags *components.SpaceSpawnerComponentManager
+	SpaceSpawnerTags *components.SpaceSpawnerTagComponentManager
 	Collisions       *stdcomponents.CollisionComponentManager
 	SceneManager     *components.AsteroidSceneManagerComponentManager
-	WallTags         *components.WallTagComponentManager
-	SoundEffects     *components.SoundEffectsComponentManager
+	WallTags         *components.WallComponentManager
+	SoundEffects     *components.SoundEffectComponentManager
 }
 
 func (s *AssteroddSystem) Init() {

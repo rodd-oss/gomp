@@ -14,10 +14,6 @@ Thank you for your support!
 
 package stdcomponents
 
-import (
-	"gomp/pkg/ecs"
-)
-
 const (
 	TexturePositionSmoothOff TexturePositionSmooth = iota
 	TexturePositionSmoothLerp
@@ -26,10 +22,6 @@ const (
 
 // TexturePositionSmooth is the component tag for stdsystems.TexturePositionSmoothSystem
 // TODO: refactor or make stable realization
+//
+//go:generate go tool component -std
 type TexturePositionSmooth uint8
-
-type TexturePositionSmoothComponentManager = ecs.ComponentManager[TexturePositionSmooth]
-
-func NewTexturePositionSmoothComponentManager() TexturePositionSmoothComponentManager {
-	return ecs.NewComponentManager[TexturePositionSmooth](TexturePositionSmoothComponentId)
-}

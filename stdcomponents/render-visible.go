@@ -14,12 +14,5 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -std
 type RenderVisible struct{}
-
-type RenderVisibleComponentManager = ecs.ComponentManager[RenderVisible]
-
-func NewRenderVisibleComponentManager() RenderVisibleComponentManager {
-	return ecs.NewComponentManager[RenderVisible](RenderVisibleComponentId)
-}

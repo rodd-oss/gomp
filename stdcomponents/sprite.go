@@ -16,19 +16,13 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"image/color"
 )
 
+//go:generate go tool component -std
 type Sprite struct {
 	Texture *rl.Texture2D
 	Frame   rl.Rectangle
 	Origin  rl.Vector2
 	Tint    color.RGBA
-}
-
-type SpriteComponentManager = ecs.ComponentManager[Sprite]
-
-func NewSpriteComponentManager() SpriteComponentManager {
-	return ecs.NewComponentManager[Sprite](SpriteComponentId)
 }

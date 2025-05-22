@@ -30,8 +30,8 @@ func NewSpaceSpawnerSystem() SpaceSpawnerSystem {
 type SpaceSpawnerSystem struct {
 	EntityManager   *ecs.EntityManager
 	Positions       *stdcomponents.PositionComponentManager
-	SpaceSpawners   *components.SpaceSpawnerComponentManager
-	Asteroids       *components.AsteroidComponentManager
+	SpaceSpawners   *components.SpaceSpawnerTagComponentManager
+	Asteroids       *components.AsteroidTagComponentManager
 	Hp              *components.HpComponentManager
 	Sprites         *stdcomponents.SpriteComponentManager
 	CircleColliders *stdcomponents.CircleColliderComponentManager

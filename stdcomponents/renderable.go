@@ -14,14 +14,13 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
 const (
 	InvalidRenderableType RenderableType = iota
 	SpriteRenderableType
 	SpriteMatrixRenderableType
 )
 
+//go:generate go tool component -std
 type Renderable struct {
 	CameraMask CameraLayer
 	Type       RenderableType
@@ -29,9 +28,3 @@ type Renderable struct {
 }
 
 type RenderableType uint8
-
-type RenderableComponentManager = ecs.ComponentManager[Renderable]
-
-func NewRenderableComponentManager() RenderableComponentManager {
-	return ecs.NewComponentManager[Renderable](RenderableComponentId)
-}

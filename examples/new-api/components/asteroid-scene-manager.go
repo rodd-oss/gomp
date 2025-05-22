@@ -14,15 +14,8 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type AsteroidSceneManager struct {
 	PlayerScore int32
 	PlayerHp    int32
-}
-
-type AsteroidSceneManagerComponentManager = ecs.ComponentManager[AsteroidSceneManager]
-
-func NewAsteroidSceneManagerComponentManager() AsteroidSceneManagerComponentManager {
-	return ecs.NewComponentManager[AsteroidSceneManager](AsteroidSceneManagerComponentId)
 }

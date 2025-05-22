@@ -14,17 +14,8 @@ Thank you for your support!
 
 package stdcomponents
 
-import (
-	"gomp/pkg/ecs"
-)
-
+//go:generate go tool component -std
 type SpatialHash struct {
 	Min SpatialCellIndex
 	Max SpatialCellIndex
-}
-
-type SpatialHashComponentManager = ecs.ComponentManager[SpatialHash]
-
-func NewSpatialHashComponentManager() SpatialHashComponentManager {
-	return ecs.NewComponentManager[SpatialHash](SpatialHashComponentId)
 }

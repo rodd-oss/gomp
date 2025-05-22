@@ -14,13 +14,6 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type Wall struct {
-}
-
-type WallTagComponentManager = ecs.ComponentManager[Wall]
-
-func NewWallComponentManager() WallTagComponentManager {
-	return ecs.NewComponentManager[Wall](WallComponentId)
 }

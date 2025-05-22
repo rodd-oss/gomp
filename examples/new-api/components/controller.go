@@ -14,12 +14,5 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type Controller struct{}
-
-type ControllerComponentManager = ecs.ComponentManager[Controller]
-
-func NewControllerComponentManager() ControllerComponentManager {
-	return ecs.NewComponentManager[Controller](ControllerComponentId)
-}

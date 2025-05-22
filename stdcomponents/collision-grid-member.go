@@ -16,12 +16,7 @@ package stdcomponents
 
 import "gomp/pkg/ecs"
 
+//go:generate go tool component -std
 type CollisionGridMember struct {
 	Grid ecs.Entity
-}
-
-type CollisionGridMemberComponentManager = ecs.ComponentManager[CollisionGridMember]
-
-func NewCollisionGridMemberComponentManager() CollisionGridMemberComponentManager {
-	return ecs.NewComponentManager[CollisionGridMember](CollisionGridMemberComponentId)
 }

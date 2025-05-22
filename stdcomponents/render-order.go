@@ -14,14 +14,7 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -std
 type RenderOrder struct {
 	CalculatedZ float32
-}
-
-type RenderOrderComponentManager = ecs.ComponentManager[RenderOrder]
-
-func NewRenderOrderComponentManager() RenderOrderComponentManager {
-	return ecs.NewComponentManager[RenderOrder](RenderOrderComponentId)
 }

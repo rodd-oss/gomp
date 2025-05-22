@@ -14,14 +14,5 @@ Thank you for your support!
 
 package stdcomponents
 
-import (
-	"gomp/pkg/ecs"
-)
-
+//go:generate go tool component -std
 type AnimationState int32
-
-type AnimationStateComponentManager = ecs.ComponentManager[AnimationState]
-
-func NewAnimationStateComponentManager() AnimationStateComponentManager {
-	return ecs.NewComponentManager[AnimationState](AnimationStateComponentId)
-}

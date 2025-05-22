@@ -33,12 +33,14 @@ type BvhLeaf struct {
 	Id ecs.Entity
 }
 
+//go:generate go tool component -std
 type BvhComponent struct {
 	Entity ecs.Entity
 	Aabb   AABB
 	Code   uint64
 }
 
+//go:generate go tool component -std
 type BvhTree struct {
 	Nodes      ecs.PagedArray[BvhNode]
 	AabbNodes  ecs.PagedArray[AABB]
@@ -316,10 +318,4 @@ func (t *BvhTree) mergeAABB(a, b *AABB) AABB {
 			Y: max(a.Max.Y, b.Max.Y),
 		},
 	}
-}
-
-type BvhTreeComponentManager = ecs.ComponentManager[BvhTree]
-
-func NewBvhTreeComponentManager() BvhTreeComponentManager {
-	return ecs.NewComponentManager[BvhTree](BvhTreeComponentId)
 }

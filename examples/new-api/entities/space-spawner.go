@@ -26,7 +26,7 @@ type CreateSpaceSpawnerManagers struct {
 	EntityManager *ecs.EntityManager
 	Positions     *stdcomponents.PositionComponentManager
 	Velocities    *stdcomponents.VelocityComponentManager
-	SpaceSpawners *components.SpaceSpawnerComponentManager
+	SpaceSpawners *components.SpaceSpawnerTagComponentManager
 }
 
 func CreateSpaceSpawner(
