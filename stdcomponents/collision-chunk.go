@@ -14,17 +14,8 @@ Thank you for your support!
 
 package stdcomponents
 
-import (
-	"gomp/pkg/ecs"
-)
-
+//go:generate go tool component -std
 type CollisionChunk struct {
 	Size  float32
 	Layer CollisionLayer
-}
-
-type CollisionChunkComponentManager = ecs.ComponentManager[CollisionChunk]
-
-func NewCollisionChunkComponentManager() CollisionChunkComponentManager {
-	return ecs.NewComponentManager[CollisionChunk](CollisionChunkComponentId)
 }

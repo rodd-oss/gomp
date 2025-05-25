@@ -225,7 +225,7 @@ func (s *RenderOverlaySystem) Run(dt time.Duration) bool {
 								Y:      a.Min.Y,
 								Width:  a.Max.X - a.Min.X,
 								Height: a.Max.Y - a.Min.Y,
-							}, *tint)
+							}, tint.RGBA())
 						}
 						return true
 					})

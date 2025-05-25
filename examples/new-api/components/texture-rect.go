@@ -16,19 +16,13 @@ package components
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"image/color"
 )
 
+//go:generate go tool component -example
 type TextureRect struct {
 	Dest     rl.Rectangle
 	Origin   rl.Vector2
 	Rotation float32
 	Color    color.RGBA
-}
-
-type TextureRectComponentManager = ecs.ComponentManager[TextureRect]
-
-func NewTextureRectComponentManager() TextureRectComponentManager {
-	return ecs.NewComponentManager[TextureRect](TextureRectComponentId)
 }

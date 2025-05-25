@@ -16,7 +16,6 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
@@ -28,6 +27,7 @@ type SpriteMatrixAnimation struct {
 	Loop        bool
 }
 
+//go:generate go tool component -std -shared
 type SpriteMatrix struct {
 	Texture    *rl.Texture2D
 	Origin     rl.Vector2
@@ -35,10 +35,4 @@ type SpriteMatrix struct {
 	FPS        int32
 	Animations []SpriteMatrixAnimation
 	Rotation   vectors.Radians
-}
-
-type SpriteMatrixComponentManager = ecs.SharedComponentManager[SpriteMatrix]
-
-func NewSpriteMatrixComponentManager() SpriteMatrixComponentManager {
-	return ecs.NewSharedComponentManager[SpriteMatrix](SpriteMatrixComponentId)
 }

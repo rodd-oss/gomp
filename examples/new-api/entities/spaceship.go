@@ -41,7 +41,7 @@ type CreateSpaceShipManagers struct {
 	Hps              *components.HpComponentManager
 	Weapons          *components.WeaponComponentManager
 	SpaceshipIntents *components.SpaceshipIntentComponentManager
-	SoundEffects     *components.SoundEffectsComponentManager
+	SoundEffects     *components.SoundEffectComponentManager
 }
 
 func createMask(layers ...stdcomponents.CollisionLayer) (mask stdcomponents.CollisionMask) {

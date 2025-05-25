@@ -14,14 +14,7 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -std
 type Flip struct {
 	X, Y bool
-}
-
-type FlipComponentManager = ecs.ComponentManager[Flip]
-
-func NewFlipComponentManager() FlipComponentManager {
-	return ecs.NewComponentManager[Flip](FlipComponentId)
 }

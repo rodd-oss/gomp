@@ -16,9 +16,9 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 )
 
+//go:generate go tool component -std
 type SpriteSheet struct {
 	Texture     *rl.Texture2D
 	Frame       rl.Rectangle
@@ -26,10 +26,4 @@ type SpriteSheet struct {
 	NumOfFrames int32
 	FPS         int32
 	Vertical    bool
-}
-
-type SpriteSheetComponentManager = ecs.ComponentManager[SpriteSheet]
-
-func NewSpriteSheetComponentManager() SpriteSheetComponentManager {
-	return ecs.NewComponentManager[SpriteSheet](SpriteSheetComponentId)
 }

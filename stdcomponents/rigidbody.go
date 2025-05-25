@@ -14,15 +14,8 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -std
 type RigidBody struct {
 	IsStatic bool
 	Mass     float32
-}
-
-type RigidBodyComponentManager = ecs.ComponentManager[RigidBody]
-
-func NewRigidBodyComponentManager() RigidBodyComponentManager {
-	return ecs.NewComponentManager[RigidBody](RigidBodyComponentId)
 }

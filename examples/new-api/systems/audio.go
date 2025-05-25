@@ -32,7 +32,7 @@ func NewAudioSystem() AudioSystem {
 
 type AudioSystem struct {
 	EntityManager         *ecs.EntityManager
-	SoundEffects          *components.SoundEffectsComponentManager
+	SoundEffects          *components.SoundEffectComponentManager
 	accSoundEffectsDelete [][]ecs.Entity
 	numWorkers            int
 	Engine                *core.Engine
@@ -102,7 +102,7 @@ func NewAudioSettingsSystem() AudioSettingsSystem {
 
 type AudioSettingsSystem struct {
 	EntityManager *ecs.EntityManager
-	SoundEffects  *components.SoundEffectsComponentManager
+	SoundEffects  *components.SoundEffectComponentManager
 	SpatialAudio  *components.SpatialAudioComponentManager
 }
 

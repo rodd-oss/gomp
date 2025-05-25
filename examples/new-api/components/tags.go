@@ -14,13 +14,6 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type PlayerTag struct {
-}
-
-type PlayerTagComponentManager = ecs.ComponentManager[PlayerTag]
-
-func NewPlayerTagComponentManager() PlayerTagComponentManager {
-	return ecs.NewComponentManager[PlayerTag](PlayerTagComponentId)
 }

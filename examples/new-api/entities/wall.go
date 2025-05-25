@@ -36,7 +36,7 @@ type CreateWallManagers struct {
 	RigidBodies   *stdcomponents.RigidBodyComponentManager
 	Renderables   *stdcomponents.RenderableComponentManager
 	Velocities    *stdcomponents.VelocityComponentManager
-	WallTags      *components.WallTagComponentManager
+	WallTags      *components.WallComponentManager
 }
 
 func CreateWall(

@@ -27,7 +27,7 @@ func NewHpSystem() HpSystem {
 type HpSystem struct {
 	EntityManager        *ecs.EntityManager
 	Hps                  *components.HpComponentManager
-	Asteroids            *components.AsteroidComponentManager
+	Asteroids            *components.AsteroidTagComponentManager
 	Players              *components.PlayerTagComponentManager
 	Hp                   *components.HpComponentManager
 	AsteroidSceneManager *components.AsteroidSceneManagerComponentManager

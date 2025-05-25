@@ -56,16 +56,16 @@ type ComponentList struct {
 	Controller           components.ControllerComponentManager
 	PlayerTag            components.PlayerTagComponentManager
 	BulletTag            components.BulletTagComponentManager
-	AsteroidTag          components.AsteroidComponentManager
-	SpaceSpawnerTag      components.SpaceSpawnerComponentManager
-	Wall                 components.WallTagComponentManager
+	AsteroidTag          components.AsteroidTagComponentManager
+	SpaceSpawnerTag      components.SpaceSpawnerTagComponentManager
+	Wall                 components.WallComponentManager
 	Weapon               components.WeaponComponentManager
 	SpaceshipIntent      components.SpaceshipIntentComponentManager
 	AsteroidSceneManager components.AsteroidSceneManagerComponentManager
-	SoundEffects         components.SoundEffectsComponentManager
+	SoundEffects         components.SoundEffectComponentManager
 	SpatialAudio         components.SpatialAudioComponentManager
 	TextureRect          components.TextureRectComponentManager
-	PrimitiveCircle      components.PrimitiveCircleComponentManager
+	PrimitiveCircle      components.TextureCircleComponentManager
 	RenderVisible        stdcomponents.RenderVisibleComponentManager
 }
 
@@ -81,7 +81,7 @@ func NewComponentList() ComponentList {
 		Tint:                  stdcomponents.NewTintComponentManager(),
 		AnimationPlayer:       stdcomponents.NewAnimationPlayerComponentManager(),
 		AnimationState:        stdcomponents.NewAnimationStateComponentManager(),
-		RLTexturePro:          stdcomponents.NewRlTextureProComponentManager(),
+		RLTexturePro:          stdcomponents.NewRLTextureProComponentManager(),
 		Network:               stdcomponents.NewNetworkComponentManager(),
 		Renderable:            stdcomponents.NewRenderableComponentManager(),
 		RenderVisible:         stdcomponents.NewRenderVisibleComponentManager(),
@@ -104,7 +104,7 @@ func NewComponentList() ComponentList {
 		CollisionCell:         stdcomponents.NewCollisionCellComponentManager(),
 		CollisionGridMember:   stdcomponents.NewCollisionGridMemberComponentManager(),
 
-		Health:               components.NewHealthComponentManager(),
+		Health:               components.NewHpComponentManager(),
 		Controller:           components.NewControllerComponentManager(),
 		PlayerTag:            components.NewPlayerTagComponentManager(),
 		BulletTag:            components.NewBulletTagComponentManager(),
@@ -114,7 +114,7 @@ func NewComponentList() ComponentList {
 		Weapon:               components.NewWeaponComponentManager(),
 		SpaceshipIntent:      components.NewSpaceshipIntentComponentManager(),
 		AsteroidSceneManager: components.NewAsteroidSceneManagerComponentManager(),
-		SoundEffects:         components.NewSoundEffectsComponentManager(),
+		SoundEffects:         components.NewSoundEffectComponentManager(),
 		SpatialAudio:         components.NewSpatialAudioComponentManager(),
 		TextureRect:          components.NewTextureRectComponentManager(),
 		PrimitiveCircle:      components.NewTextureCircleComponentManager(),

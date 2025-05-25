@@ -29,15 +29,11 @@ const (
 )
 
 // Collision Marks a proxy entity as representing a collision pair between E1 and E2
+//
+//go:generate go tool component -std
 type Collision struct {
 	E1, E2 ecs.Entity
 	State  CollisionState
 	Normal vectors.Vec2 // Collision normal (direction)
 	Depth  float32      // Penetration depth
-}
-
-type CollisionComponentManager = ecs.ComponentManager[Collision]
-
-func NewCollisionComponentManager() CollisionComponentManager {
-	return ecs.NewComponentManager[Collision](CollisionComponentId)
 }

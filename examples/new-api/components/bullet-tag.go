@@ -14,13 +14,6 @@ Thank you for your support!
 
 package components
 
-import "gomp/pkg/ecs"
-
+//go:generate go tool component -example
 type BulletTag struct {
-}
-
-type BulletTagComponentManager = ecs.ComponentManager[BulletTag]
-
-func NewBulletTagComponentManager() BulletTagComponentManager {
-	return ecs.NewComponentManager[BulletTag](BulletTagComponentId)
 }

@@ -15,18 +15,12 @@ Thank you for your support!
 package components
 
 import (
-	"gomp/pkg/ecs"
 	"time"
 )
 
+//go:generate go tool component -example
 type Weapon struct {
 	Damage       int
 	Cooldown     time.Duration
 	CooldownLeft time.Duration
-}
-
-type WeaponComponentManager = ecs.ComponentManager[Weapon]
-
-func NewWeaponComponentManager() WeaponComponentManager {
-	return ecs.NewComponentManager[Weapon](WeaponComponentId)
 }

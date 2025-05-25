@@ -22,7 +22,7 @@ func NewTextureCircleSystem() TextureCircleSystem {
 }
 
 type TextureCircleSystem struct {
-	Circles  *components.PrimitiveCircleComponentManager
+	Circles  *components.TextureCircleComponentManager
 	Textures *stdcomponents.RLTextureProComponentManager
 	texture  rl.RenderTexture2D
 

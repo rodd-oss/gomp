@@ -31,7 +31,7 @@ func NewDesktopComponents() DesktopComponents {
 		Tint:            stdcomponents.NewTintComponentManager(),
 		AnimationPlayer: stdcomponents.NewAnimationPlayerComponentManager(),
 		AnimationState:  stdcomponents.NewAnimationStateComponentManager(),
-		RlTexturePro:    stdcomponents.NewRlTextureProComponentManager(),
+		RlTexturePro:    stdcomponents.NewRLTextureProComponentManager(),
 		Network:         stdcomponents.NewNetworkComponentManager(),
 	}
 }

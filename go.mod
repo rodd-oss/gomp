@@ -75,3 +75,5 @@ require (
 	golang.org/x/text v0.25.0
 	google.golang.org/protobuf v1.36.1
 )
+
+tool gomp/cmd/component

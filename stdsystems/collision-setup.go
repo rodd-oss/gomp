@@ -22,7 +22,6 @@ import (
 	"gomp/pkg/ecs"
 	"gomp/pkg/worker"
 	"gomp/stdcomponents"
-	"image/color"
 	"math/rand"
 	"time"
 
@@ -209,7 +208,7 @@ func (s *CollisionSetupSystem) setup() {
 					XY: cellIndex.ToVec2().Scale(grid.CellSize),
 				})
 				const colorbase uint8 = 120
-				s.Tints.Create(cellEntity, color.RGBA{
+				s.Tints.Create(cellEntity, stdcomponents.Tint{
 					R: colorbase + uint8(rand.Intn(int(255-colorbase))),
 					G: colorbase + uint8(rand.Intn(int(255-colorbase))),
 					B: colorbase + uint8(rand.Intn(int(255-colorbase))),

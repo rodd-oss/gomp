@@ -31,15 +31,15 @@ type DebugInfoSystem struct {
 	BoxColliders                       *stdcomponents.BoxColliderComponentManager
 	Cameras                            *stdcomponents.CameraComponentManager
 	RenderTexture2D                    *stdcomponents.FrameBuffer2DComponentManager
-	TextureRect                        *components.TextureRectComponentManager
 	Texture                            *stdcomponents.RLTextureProComponentManager
 	Renderable                         *stdcomponents.RenderableComponentManager
 	RenderOrders                       *stdcomponents.RenderOrderComponentManager
 	AABBs                              *stdcomponents.AABBComponentManager
-	Circle                             *components.PrimitiveCircleComponentManager
 	CollisionChunks                    *stdcomponents.CollisionChunkComponentManager
 	Tints                              *stdcomponents.TintComponentManager
 	BvhTrees                           *stdcomponents.BvhTreeComponentManager
+	TextureRect                        *components.TextureRectComponentManager
+	Circle                             *components.TextureCircleComponentManager
 
 	debug       bool
 	children    children

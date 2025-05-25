@@ -14,17 +14,11 @@ Thank you for your support!
 
 package stdcomponents
 
-import "gomp/pkg/ecs"
-
 type NetworkId int32
+
+//go:generate go tool component -std
 type Network struct {
 	Id       NetworkId
 	PatchIn  []byte
 	PatchOut []byte
-}
-
-type NetworkComponentManager = ecs.ComponentManager[Network]
-
-func NewNetworkComponentManager() NetworkComponentManager {
-	return ecs.NewComponentManager[Network](NetworkComponentId)
 }

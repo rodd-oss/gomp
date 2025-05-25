@@ -15,16 +15,10 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
+//go:generate go tool component -std
 type Scale struct {
 	XY vectors.Vec2
-}
-
-type ScaleComponentManager = ecs.ComponentManager[Scale]
-
-func NewScaleComponentManager() ScaleComponentManager {
-	return ecs.NewComponentManager[Scale](ScaleComponentId)
 }

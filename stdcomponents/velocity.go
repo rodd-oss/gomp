@@ -15,10 +15,10 @@ Thank you for your support!
 package stdcomponents
 
 import (
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 )
 
+//go:generate go tool component -std
 type Velocity struct {
 	X, Y float32
 }
@@ -30,10 +30,4 @@ func (v Velocity) Vec2() vectors.Vec2 {
 func (v *Velocity) SetVec2(velocity vectors.Vec2) {
 	v.X = velocity.X
 	v.Y = velocity.Y
-}
-
-type VelocityComponentManager = ecs.ComponentManager[Velocity]
-
-func NewVelocityComponentManager() VelocityComponentManager {
-	return ecs.NewComponentManager[Velocity](VelocityComponentId)
 }

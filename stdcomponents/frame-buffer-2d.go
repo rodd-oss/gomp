@@ -16,11 +16,11 @@ package stdcomponents
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"gomp/vectors"
 	"image/color"
 )
 
+//go:generate go tool component -std
 type FrameBuffer2D struct {
 	Position  rl.Vector2
 	Frame     rl.Rectangle
@@ -39,10 +39,4 @@ func (d FrameBuffer2D) FrameRect() vectors.Rectangle {
 		Width:  d.Frame.Width,
 		Height: d.Frame.Height,
 	}
-}
-
-type FrameBuffer2DComponentManager = ecs.ComponentManager[FrameBuffer2D]
-
-func NewFrameBuffer2DComponentManager() FrameBuffer2DComponentManager {
-	return ecs.NewComponentManager[FrameBuffer2D](FrameBuffer2DComponentId)
 }

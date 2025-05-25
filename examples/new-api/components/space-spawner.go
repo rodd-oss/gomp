@@ -15,17 +15,11 @@ Thank you for your support!
 package components
 
 import (
-	"gomp/pkg/ecs"
 	"time"
 )
 
+//go:generate go tool component -example
 type SpaceSpawnerTag struct {
 	Cooldown     time.Duration
 	CooldownLeft time.Duration
-}
-
-type SpaceSpawnerComponentManager = ecs.ComponentManager[SpaceSpawnerTag]
-
-func NewSpaceSpawnerTagComponentManager() SpaceSpawnerComponentManager {
-	return ecs.NewComponentManager[SpaceSpawnerTag](SpaceSpawnerTagComponentId)
 }

@@ -16,10 +16,10 @@ package components
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"gomp/pkg/ecs"
 	"image/color"
 )
 
+//go:generate go tool component -example
 type TextureCircle struct {
 	CenterX  float32
 	CenterY  float32
@@ -27,10 +27,4 @@ type TextureCircle struct {
 	Rotation float32
 	Origin   rl.Vector2
 	Color    color.RGBA
-}
-
-type PrimitiveCircleComponentManager = ecs.ComponentManager[TextureCircle]
-
-func NewTextureCircleComponentManager() PrimitiveCircleComponentManager {
-	return ecs.NewComponentManager[TextureCircle](TextureCircleComponentId)
 }
