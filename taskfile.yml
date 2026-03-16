@@ -2,8 +2,16 @@ version: "3"
 
 tasks:
   dev:
+    env:
+      CGO_ENABLED: 1
     cmds:
-      - air
+      - go run ./examples/new-api
+
+  dev-assert:
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - go run ./examples/new-api -tags assert
 
   server:
     cmds:
@@ -30,10 +38,89 @@ tasks:
     cmds:
       - protoc --go_out=. internal/**/*.proto
 
-  pprof:
+  gpprof-cpu:
     cmds:
-      - go tool pprof -http=":8000" 'http://localhost:3000/debug/pprof/profile?seconds=10'
+      - go tool pprof --http=:6061 http://localhost:6060/debug/fgprof?seconds=20
 
   pprof-cpu:
     cmds:
       - go tool pprof -http=":8000" ./cpu.out
+
+  pprof-mem:
+    cmds:
+      - go tool pprof -http=":8001" ./mem.out
+
+  pprof-trace:
+    cmds:
+      - go tool trace -http='127.0.0.1:8002' ./trace.out
+
+  build-sdl:
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - go build -o ./.dist/sdl3-cgo-game.exe internal/sdl3-cgo/sdl3cgo-game.go
+      - go build -o ./.dist/sdl3-purego-game.exe internal/sdl3-pure/sdl-game.go
+      - go build -o ./.dist/sdl3-purego-zukko-game.exe internal/sdl3-pure-zukko/sdl-zukko.go
+
+  build-win64:
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - go build -ldflags="-s -w" -o ./.dist/game-win64.exe -tags opengl43 ./examples/new-api
+
+  build-mac:
+    - task: build-darwin-amd64
+    - task: build-darwin-arm64
+    - task: build-darwin-universal
+    - task: sign-darwin-universal
+
+  build-darwin-amd64:
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - env CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o ./.dist/game-darwin-amd64 -tags opengl43 examples/new-api/game.go
+      - chmod +x ./.dist/game-darwin-amd64
+
+  build-darwin-arm64:
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - env CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o ./.dist/game-darwin-arm64 -tags opengl43 examples/new-api/game.go
+      - chmod +x ./.dist/game-darwin-arm64
+
+  build-darwin-universal:
+    cmds:
+      - lipo -create -output ./.dist/game-universal ./.dist/game-darwin-amd64 ./.dist/game-darwin-arm64
+      - chmod +x ./.dist/game-universal
+
+  sign-darwin-universal:
+    cmds:
+      - mkdir -p ./.dist/game.app/Contents/MacOS
+      - mv ./.dist/game-universal ./.dist/game.app/Contents/MacOS/game
+      - chmod +x ./.dist/game.app
+      - codesign --timestamp --options=runtime --deep -fs milanrodd-cert -v ./.dist/game.app
+      - xattr -cr ./.dist/game.app
+      - /usr/bin/ditto -c -k --keepParent ./.dist/game.app ./.dist/game.zip
+
+  build-wasm:
+    env:
+      GOOS: wasip1
+      GOARCH: wasm
+    watch: true
+    sources:
+      - 'internal/wasyan**/*.go'
+    cmds:
+      - go build -buildmode=c-shared -o ./hello.wasm ./internal/wasyan-wasm
+      - curl http://127.0.0.1:3000/update/hello.wasm
+
+
+  build-tiny-wasm:
+    env:
+      GOOS: wasip1
+      GOARCH: wasm
+    watch: true
+    sources:
+      - 'internal/wasyan-wasm/*.go'
+    cmds:
+      - tinygo build -buildmode=c-shared -o ./hello.wasm -target=wasi ./internal/wasyan-wasm
+      - curl http://127.0.0.1:3000/update/hello.wasm

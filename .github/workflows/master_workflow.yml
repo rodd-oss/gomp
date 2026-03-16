@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ 'ubuntu-latest' ]
-        go-version: [ '1.23.5' ]
+        go-version: [ '1.24.0' ]
     uses: ./.github/workflows/go_ci.yml
     with:
       go-version: ${{ matrix.go-version }}
@@ -21,4 +21,4 @@ jobs:
   security-analysis:
     uses: ./.github/workflows/gosec_security_check.yml
     with:
-      go-version: '1.23.5'
+      go-version: '1.24.0'

@@ -6,87 +6,105 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package ecs
 
-import (
-	"github.com/negrel/assert"
-)
-
 const (
-	page_size_shift int32 = 10
-	page_size       int32 = 1 << page_size_shift
-	book_size       int32 = 1 << 10
+	pageSizeShift   = 10
+	pageSize        = 1 << pageSizeShift
+	pageSizeMask    = pageSize - 1
+	initialBookSize = 32 // Starting with a small initial book size
 )
 
-type MapPage[K Entity, V any] map[K]V
-type PagedMap[K Entity, V any] struct {
-	len  int32
+type PagedMap[K Entity | SharedComponentInstanceId, V any] struct {
+	len  int
 	book []SlicePage[MapValue[V]]
 }
+
 type MapValue[V any] struct {
 	value V
 	ok    bool
 }
 
-func NewPagedMap[K Entity, V any]() *PagedMap[K, V] {
-	return &PagedMap[K, V]{
-		book: make([]SlicePage[MapValue[V]], book_size),
+func NewPagedMap[K Entity | SharedComponentInstanceId, V any]() PagedMap[K, V] {
+	return PagedMap[K, V]{
+		book: make([]SlicePage[MapValue[V]], 0, initialBookSize),
 	}
 }
 
 func (m *PagedMap[K, V]) Get(key K) (value V, ok bool) {
-	page_id, index := m.getPageIdAndIndex(key)
-	if page_id >= cap(m.book) {
+	pageID, index := m.getPageIDAndIndex(key)
+	if pageID >= len(m.book) {
 		return value, false
 	}
-	page := m.book[page_id]
+	page := &m.book[pageID]
 	if page.data == nil {
 		return value, false
 	}
-	if index >= cap(page.data) {
-		return value, false
-	}
-	d := page.data[index]
+	d := &page.data[index]
 	return d.value, d.ok
 }
 
 func (m *PagedMap[K, V]) Set(key K, value V) {
-	page_id, index := m.getPageIdAndIndex(key)
-	if page_id >= cap(m.book) {
-		// extend the pages slice
-		new_pages := make([]SlicePage[MapValue[V]], cap(m.book)*2)
-		m.book = append(m.book, new_pages...)
-		m.Set(key, value)
-		return
+	pageID, index := m.getPageIDAndIndex(key)
+	if pageID >= len(m.book) {
+		m.expandBook(pageID + 1)
 	}
-	page := m.book[page_id]
+	page := &m.book[pageID]
 	if page.data == nil {
-		page.data = make([]MapValue[V], page_size)
-		m.book[page_id] = page
+		page.data = make([]MapValue[V], pageSize)
 	}
-	d := &page.data[index]
-	if !d.ok {
+	entry := &page.data[index]
+	if !entry.ok {
 		m.len++
-		d.ok = true
+		entry.ok = true
 	}
-	d.value = value
+	entry.value = value
 }
 
 func (m *PagedMap[K, V]) Delete(key K) {
-	page_id, index := m.getPageIdAndIndex(key)
-	// Do not attempt to delete a value that does not exist
-	assert.True(page_id < cap(m.book))
-	page := &m.book[page_id]
-	// Do not attempt to delete a value that does not exist
-	assert.True(page != nil)
-	page.data[index].ok = false
-	m.len--
+	pageID, index := m.getPageIDAndIndex(key)
+	if pageID >= len(m.book) {
+		return
+	}
+	page := &m.book[pageID]
+	if page.data == nil {
+		return
+	}
+	entry := &page.data[index]
+	if entry.ok {
+		entry.ok = false
+		m.len--
+	}
 }
 
-func (m *PagedMap[K, V]) getPageIdAndIndex(key K) (page_id int, index int) {
-	page_id = int(key) >> page_size_shift
-	index = int(int32(key) % page_size)
-	return
+func (m *PagedMap[K, V]) Has(key K) bool {
+	pageID, index := m.getPageIDAndIndex(key)
+	if pageID >= len(m.book) {
+		return false
+	}
+	page := &m.book[pageID]
+	if page.data == nil {
+		return false
+	}
+	return page.data[index].ok
 }
 
-func (m *PagedMap[K, V]) Len() int32 {
+func (m *PagedMap[K, V]) getPageIDAndIndex(key K) (pageID int, index int) {
+	return int(key) >> pageSizeShift, int(key) & pageSizeMask
+}
+
+func (m *PagedMap[K, V]) expandBook(minLen int) {
+	if minLen <= cap(m.book) {
+		m.book = m.book[:minLen]
+		return
+	}
+	newCap := minLen
+	if newCap < 2*cap(m.book) {
+		newCap = 2 * cap(m.book)
+	}
+	newBook := make([]SlicePage[MapValue[V]], minLen, newCap)
+	copy(newBook, m.book)
+	m.book = newBook
+}
+
+func (m *PagedMap[K, V]) Len() int {
 	return m.len
 }

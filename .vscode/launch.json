@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "debug",
       "buildFlags": "-tags 'assert'",
-      "program": "./cmd/raylib-ecs"
+      "program": "./examples/new-api"
     }
   ]
 }
